@@ -20,7 +20,7 @@ concurrency:
 jobs:
   daily:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 150
     env:
       ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}   # optional; Energy-Charts is the default backup and needs no key
     steps:

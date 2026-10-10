@@ -171,17 +171,44 @@ def backfill(cfg: Settings, days: int = 30) -> int:
     return n
 
 
-def forecast_area(cfg: Settings, day: date, forecast_wide: pd.DataFrame | None, load: pd.Series | None = None) -> dict:
+HEAL_BUDGET_MIN = 75   # stop starting repairs after this many minutes; the rest waits for tomorrow
+
+
+def heal(cfg: Settings, started: pd.Timestamp | None = None, budget_min: float = HEAL_BUDGET_MIN) -> list[str]:
+    """Fill what a grid region is missing, so it never stays empty on the page.
+
+    The full analysis normally comes from the first-run and monthly jobs. If those
+    haven't run since the region was added (or failed), the daily job does the
+    missing parts itself: 30 days of backfilled forecasts and the savings analysis.
+    """
+    done = []
+    started = started or pd.Timestamp.now(tz="UTC")
+    def time_left() -> bool:
+        return (pd.Timestamp.now(tz="UTC") - started).total_seconds() / 60 < budget_min
+    if all_forecasts(cfg).empty and time_left():
+        backfill(cfg, days=30)
+        done.append("backfill")
+    if not (cfg.path("results") / "savings.json").exists() and time_left():
+        from ..analysis import savings
+        savings.run(cfg, savings.prepare(cfg), light=True)
+        done.append("savings")
+    return done
+
+
+def forecast_area(cfg: Settings, day: date, forecast_wide: pd.DataFrame | None, load: pd.Series | None = None,
+                  started: pd.Timestamp | None = None) -> dict:
     """Calibrate the range, forecast tomorrow and score past days for one measured area."""
     load = dataset.load_series(cfg) if load is None else load
     if operational.load_current(cfg) is None:
         operational.train(cfg, load, dataset.weather_observed(cfg), force=True)
+    healed = heal(cfg, started) if cfg.area != areas.COUNTRY else []
     cal = calibration.compute(all_forecasts(cfg), load)
     calibration.save(cfg, cal)
     fc = issue_forecast(cfg, day, load=load, forecast_wide=forecast_wide)
     sc = score(cfg, load)
     return {"range_scale": cal["scale"], "forecast_for": fc["target_date"].iloc[0],
-            "forecast_total_gwh": round(float(fc["forecast_mwh"].sum() / 1000), 1), "days_scored": int(len(sc))}
+            "forecast_total_gwh": round(float(fc["forecast_mwh"].sum() / 1000), 1), "days_scored": int(len(sc)),
+            **({"repaired": healed} if healed else {})}
 
 
 def run(cfg: Settings, skip_download: bool = False, issue_day: date | None = None) -> dict:
@@ -203,7 +230,8 @@ def run(cfg: Settings, skip_download: bool = False, issue_day: date | None = Non
     status["areas"] = {}
     for code in areas.region_codes(cfg):
         try:
-            status["areas"][code] = forecast_area(areas.scoped(cfg, code), day, wide)
+            status["areas"][code] = forecast_area(areas.scoped(cfg, code), day, wide,
+                                                  started=pd.Timestamp(status["started_utc"]))
         except Exception as e:  # noqa: BLE001 - report it, keep Germany and the other regions
             status["areas"][code] = {"error": f"{type(e).__name__}: {e}"}
             log.warning("Daily forecast for %s failed: %s", code, e)

@@ -19,6 +19,7 @@
   --red: #E2392D; --blue: #4A9EFF; --grey: #8C97A3; --check: #56616D;
   --shade: rgba(236,239,243,0.06); --warn-bg: #3A2F10; --warn-ink: #F3D68A;
   --map-land: #141B24; --map-edge: #3B5068; --on-gold: #0A0D12;
+  --reg-1: #3987E5; --reg-2: #D95926; --reg-3: #199E70; --reg-4: #D55181;
   --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: Barlow, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
@@ -32,6 +33,7 @@
     --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
     --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
     --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
+    --reg-1: #2A78D6; --reg-2: #EB6834; --reg-3: #1BAF7A; --reg-4: #E87BA4;
   }
 }
 :root[data-theme="light"] {
@@ -42,6 +44,7 @@
   --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
   --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
   --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
+  --reg-1: #2A78D6; --reg-2: #EB6834; --reg-3: #1BAF7A; --reg-4: #E87BA4;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -126,6 +129,10 @@ nav.sections a.cta { color: var(--on-gold); background: var(--gold); font-weight
 .stage .chips button { font: 600 12px/1 var(--body); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2);
   border-radius: 999px; padding: 8px 10px; cursor: pointer; min-height: 32px; }
 .stage .chips button[aria-pressed="true"] { color: var(--on-gold); background: var(--gold); border-color: var(--gold); }
+.stage .chips .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.stage .city.lbl-region { font: 700 13px/1 var(--display); letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink); }
+.stage .city.lbl-region::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--dot); margin-right: 6px; }
+.stage .city.lbl-state { font: 600 12px/1 var(--body); color: var(--ink); }
 .hidden-sec { display: none; }
 
 /* kpis */
@@ -320,7 +327,7 @@ footer { border-top: 1px solid var(--line); padding-block: 28px 44px; display: f
   </section>
 
   <footer>
-    <span>Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst · Energy-Charts (Fraunhofer ISE) · Eurostat · map: Natural Earth</span>
+    <span>Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst · Energy-Charts (Fraunhofer ISE) · Eurostat · map: Natural Earth, state outlines DIVA-GIS via deutschlandGeoJSON (public domain)</span>
     <span style="font-family: var(--mono)">Times: German time (MEZ/MESZ)</span>
   </footer>
 </div>
@@ -532,7 +539,7 @@ const Area = (() => {
     $("area").innerHTML = html;
     $("area").addEventListener("change", e => set(e.target.value));
     $("chips").innerHTML = [["DE", "Germany"], ...h.regions.map(r => [r.code, r.name])]
-      .map(([c, t]) => `<button type="button" data-area="${esc(c)}" aria-pressed="false">${esc(t)}</button>`).join("");
+      .map(([c, t]) => `<button type="button" data-area="${esc(c)}" aria-pressed="false">${c === "DE" ? "" : `<span class="dot" style="background: var(${regionVar(c)})"></span>`}${esc(t)}</button>`).join("");
     $("chips").querySelectorAll("button").forEach(b => b.addEventListener("click", () => set(b.dataset.area)));
   }
   function showBar() {
@@ -554,7 +561,7 @@ const Area = (() => {
     cur = a;
     try { history.replaceState(null, "", code === "DE" ? location.pathname + location.search : "#area-" + encodeURIComponent(code)); } catch (e) {}
     showBar();
-    if (!quiet) { render(); Grid3D.focus(view(), members(view())); Hero.refresh(); }
+    if (!quiet) { render(); Grid3D.focus(view()); Map2D.focus(view()); Hero.refresh(); }
   }
   function init() {
     buildPicker();
@@ -603,35 +610,54 @@ const Hero = (() => {
 })();
 
 // ---------------------------------------------------------------- the 3D grid
-// Germany is lifted out of its real outline. Cities glow and grow with tomorrow's forecast, hour by hour;
-// light pulses run along the main power corridors (north to south, the way wind power travels);
-// wind turbines turn in the North Sea and the Baltic. Drag to turn.
+// Germany's 16 states, each coloured by the grid region that serves it. Each region's land rises and glows
+// with ITS OWN measured forecast for tomorrow, hour by hour. Light pulses run along the main power corridors
+// (north to south, the way wind power travels); wind turbines turn in the North Sea and the Baltic.
+// Drag to turn, click a state or a city to open it.
+const REGION_VARS = ["--reg-1", "--reg-2", "--reg-3", "--reg-4"];
+const regionVar = (code) => { const i = ((D && D.hierarchy && D.hierarchy.regions) || []).findIndex(r => r.code === code); return REGION_VARS[i] || "--grey"; };
+const stateRegion = (code) => { const s = ((D && D.hierarchy && D.hierarchy.states) || []).find(x => x.code === code); return s ? s.region : null; };
+function regionLevel(code, hf) {
+  const t = D && D.areas && D.areas[code] && D.areas[code].tomorrow;
+  const f = t && t.forecast_gw && t.forecast_gw.length >= 23 ? t.forecast_gw : Hero.forecast();
+  const i0 = Math.floor(hf) % f.length, i1 = (i0 + 1) % f.length, a = hf - Math.floor(hf);
+  const v = f[i0] * (1 - a) + f[i1] * a, lo = Math.min(...f), hi = Math.max(...f);
+  return (v - lo) / Math.max(1e-6, hi - lo);
+}
+function selectedStates(v) { return v.level === "country" ? null : new Set(v.states || []); }
+
 const Grid3D = (() => {
   const CORRIDORS = [
     ["Kiel", "Hamburg"], ["Hamburg", "Hannover"], ["Bremen", "Hannover"], ["Hannover", "Frankfurt"], ["Frankfurt", "Stuttgart"],
     ["Stuttgart", "Muenchen"], ["Stuttgart", "Freiburg"], ["Rostock", "Berlin"], ["Berlin", "Leipzig"], ["Magdeburg", "Leipzig"],
     ["Leipzig", "Nuernberg"], ["Erfurt", "Nuernberg"], ["Nuernberg", "Muenchen"], ["Hannover", "Dortmund"], ["Dortmund", "Koeln"],
     ["Koeln", "Mainz"], ["Mainz", "Frankfurt"], ["Mainz", "Saarbruecken"], ["Hannover", "Magdeburg"], ["Magdeburg", "Berlin"],
-    ["Hamburg", "Rostock"], ["Leipzig", "Erfurt"], ["Berlin", "Potsdam"],
+    ["Hamburg", "Rostock"], ["Leipzig", "Erfurt"],
   ];
-  const LABELS = ["Berlin", "Hamburg", "Muenchen", "Koeln", "Frankfurt"];
-  const NAMES = {Muenchen: "München", Koeln: "Köln", Nuernberg: "Nürnberg", Saarbruecken: "Saarbrücken"};
   const WIND = [[54.05, 6.55], [54.35, 7.05], [54.65, 6.25], [54.75, 13.85], [54.55, 14.25]];
   const K = Math.cos(51.2 * Math.PI / 180), S = 10;
   const P = (lat, lon) => [(lon - 10.4) * K * S, (lat - 51.2) * -S];   // x east, z south
+  const LINE_Y = 3.6;                                                    // power lines float above the tallest land
   let st = null;
 
   function glowTexture(THREE) {
     const c = document.createElement("canvas"); c.width = c.height = 64;
     const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
-    r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.25, "rgba(255,255,255,0.55)"); r.addColorStop(1, "rgba(255,255,255,0)");
+    r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.3, "rgba(255,255,255,0.5)"); r.addColorStop(1, "rgba(255,255,255,0)");
     g.fillStyle = r; g.fillRect(0, 0, 64, 64);
     return new THREE.CanvasTexture(c);
   }
+  function path(THREE, ring, Cls) {
+    const s = new Cls();
+    ring.forEach(([lon, lat], i) => { const [x, z] = P(lat, lon); if (i) s.lineTo(x, -z); else s.moveTo(x, -z); });
+    return s;
+  }
+  function label(stage, text, cls) { const d = document.createElement("div"); d.className = "city " + (cls || ""); d.textContent = text; d.hidden = true; stage.appendChild(d); return d; }
 
   function init(stage, data) {
     const THREE = window.THREE;
     if (!THREE) throw new Error("3D library not loaded");
+    if (!data.states_geo) throw new Error("no state outlines");
     const probe = document.createElement("canvas");
     if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) throw new Error("WebGL not available");
     const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, powerPreference: "low-power"});
@@ -641,41 +667,46 @@ const Grid3D = (() => {
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 500);
     const root = new THREE.Group(); scene.add(root);
-    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0a0d12, 0.9));
-    const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(-20, 40, 25); scene.add(sun);
+    scene.add(new THREE.HemisphereLight(0xdde6ff, 0x0a0d12, 0.95));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(-25, 45, 30); scene.add(sun);
+    const gridHelper = new THREE.GridHelper(170, 34, 0x1e2833, 0x1e2833);
+    gridHelper.position.y = -0.05; gridHelper.material.transparent = true; gridHelper.material.opacity = 0.5; root.add(gridHelper);
 
-    // land: the real outline, extruded (main land and islands)
-    const shapes = data.geo.map(ring => { const s = new THREE.Shape(); ring.forEach(([lon, lat], i) => { const [x, z] = P(lat, lon); if (i) s.lineTo(x, -z); else s.moveTo(x, -z); }); return s; });
-    const landGeo = new THREE.ExtrudeGeometry(shapes, {depth: 1.1, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.18, bevelSegments: 2});
-    landGeo.rotateX(-Math.PI / 2);
-    const landMat = new THREE.MeshStandardMaterial({color: 0x141b24, roughness: 0.85, metalness: 0.1});
-    root.add(new THREE.Mesh(landGeo, landMat));
-    const edgeMat = new THREE.LineBasicMaterial({color: 0x3b5068, transparent: true, opacity: 0.9});
-    root.add(new THREE.LineSegments(new THREE.EdgesGeometry(landGeo, 30), edgeMat));
-    const gridHelper = new THREE.GridHelper(160, 32, 0x1e2833, 0x1e2833);
-    gridHelper.position.y = -0.4; gridHelper.material.transparent = true; gridHelper.material.opacity = 0.5; root.add(gridHelper);
-
-    // cities: a pillar and a glow each, sized by population
-    const glow = glowTexture(THREE), top = 1.45, byName = {};
-    const pillarGeo = new THREE.CylinderGeometry(0.28, 0.28, 1, 18); pillarGeo.translate(0, 0.5, 0);
-    const pillarMat = new THREE.MeshStandardMaterial({color: 0xf2b705, emissive: 0xf2b705, emissiveIntensity: 0.7, roughness: 0.4, transparent: true, opacity: 0.92});
-    const cities = data.points.map(p => {
-      const [x, z] = P(p.lat, p.lon);
-      const mat = pillarMat.clone();   // one light per city, so cities outside the chosen area can be dimmed
-      const pillar = new THREE.Mesh(pillarGeo, mat); pillar.position.set(x, top, z); root.add(pillar);
-      const halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glow, color: 0xf2b705, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
-      halo.position.set(x, top + 0.1, z); root.add(halo);
-      return (byName[p.name] = {name: p.name, x, z, w: p.weight, pillar, halo, mat, dim: false});
+    // the 16 states, extruded, coloured by grid region
+    const edgeMat = new THREE.LineBasicMaterial({color: 0x0a0d12, transparent: true, opacity: 0.85});
+    const states = Object.entries(data.states_geo).map(([code, polys]) => {
+      const shapes = polys.map(poly => { const sh = path(THREE, poly[0], THREE.Shape); poly.slice(1).forEach(h => sh.holes.push(path(THREE, h, THREE.Path))); return sh; });
+      const geo = new THREE.ExtrudeGeometry(shapes, {depth: 1, bevelEnabled: false});
+      geo.rotateX(-Math.PI / 2); geo.computeBoundingBox();
+      const mat = new THREE.MeshStandardMaterial({color: 0x888888, roughness: 0.55, metalness: 0.05, emissive: 0x888888, emissiveIntensity: 0.12, transparent: true, opacity: 0.97});
+      const mesh = new THREE.Mesh(geo, mat); mesh.userData.state = code; root.add(mesh);
+      mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo, 25), edgeMat));
+      const bb = geo.boundingBox, cx = (bb.min.x + bb.max.x) / 2, cz = (bb.min.z + bb.max.z) / 2;
+      return {code, region: stateRegion(code), mesh, mat, cx, cz, ext: Math.hypot(bb.max.x - bb.min.x, bb.max.z - bb.min.z) / 2, h: 1};
     });
+    const stateBy = {}; states.forEach(x => { stateBy[x.code] = x; });
+
+    // cities: a small light on top of their state
+    const glow = glowTexture(THREE), cityInfo = {};
+    ((data.hierarchy && data.hierarchy.cities) || []).forEach(c => { cityInfo[c.code] = c; });
+    const dotGeo = new THREE.SphereGeometry(0.34, 14, 14), dotMat = new THREE.MeshBasicMaterial({color: 0xfff4cc});
+    const cities = data.points.map(p => {
+      const [x, z] = P(p.lat, p.lon), info = cityInfo[p.name] || {};
+      const dot = new THREE.Mesh(dotGeo, dotMat); dot.position.set(x, 1.3, z); root.add(dot);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glow, color: 0xf2b705, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
+      halo.position.set(x, 1.3, z); halo.scale.set(2.6, 2.6, 2.6); root.add(halo);
+      return {name: p.name, nice: info.name || p.name, state: info.state, x, z, dot, halo};
+    });
+    const cityBy = {}; cities.forEach(c => { cityBy[c.name] = c; });
 
     // power corridors with travelling pulses
-    const lineMat = new THREE.LineBasicMaterial({color: 0xf2b705, transparent: true, opacity: 0.45});
-    const pulseGeo = new THREE.SphereGeometry(0.22, 10, 10), pulseMat = new THREE.MeshBasicMaterial({color: 0xffe38a});
+    const lineMat = new THREE.LineBasicMaterial({color: 0xf2b705, transparent: true, opacity: 0.55});
+    const pulseGeo = new THREE.SphereGeometry(0.24, 10, 10), pulseMat = new THREE.MeshBasicMaterial({color: 0xffe38a});
     const corridors = [];
     CORRIDORS.forEach(([a, b], idx) => {
-      const A = byName[a], B = byName[b]; if (!A || !B) return;
-      const mid = new THREE.Vector3((A.x + B.x) / 2, top + 1.6 + Math.hypot(A.x - B.x, A.z - B.z) * 0.08, (A.z + B.z) / 2);
-      const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(A.x, top + 0.2, A.z), mid, new THREE.Vector3(B.x, top + 0.2, B.z));
+      const A = cityBy[a], B = cityBy[b]; if (!A || !B) return;
+      const mid = new THREE.Vector3((A.x + B.x) / 2, LINE_Y + 1.2 + Math.hypot(A.x - B.x, A.z - B.z) * 0.07, (A.z + B.z) / 2);
+      const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(A.x, LINE_Y, A.z), mid, new THREE.Vector3(B.x, LINE_Y, B.z));
       root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)), lineMat));
       const pulses = [0, 0.33, 0.66].map(off => { const m = new THREE.Mesh(pulseGeo, pulseMat); root.add(m); return {m, off}; });
       corridors.push({curve, pulses, speed: 0.08 + (idx % 5) * 0.012});
@@ -693,19 +724,27 @@ const Grid3D = (() => {
       }
       g.add(rotor); root.add(g); return rotor;
     });
-    const cableMat = new THREE.LineDashedMaterial({color: 0x4a9eff, dashSize: 0.5, gapSize: 0.4, transparent: true, opacity: 0.7});
+    const cableMat = new THREE.LineDashedMaterial({color: 0x4a9eff, dashSize: 0.5, gapSize: 0.4, transparent: true, opacity: 0.8});
     [[WIND[1], "Bremen"], [WIND[3], "Rostock"]].forEach(([[lat, lon], to]) => {
-      const [x, z] = P(lat, lon), B = byName[to]; if (!B) return;
-      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 0.3, z), new THREE.Vector3(B.x, top, B.z)]), cableMat);
+      const [x, z] = P(lat, lon), B = cityBy[to]; if (!B) return;
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 0.3, z), new THREE.Vector3(B.x, LINE_Y, B.z)]), cableMat);
       l.computeLineDistances(); root.add(l);
     });
 
-    const nice = {}; ((data.hierarchy && data.hierarchy.cities) || []).forEach(c => { nice[c.code] = c.name; });
-    const labels = cities.map(c => { const d = document.createElement("div"); d.className = "city"; d.textContent = nice[c.name] || NAMES[c.name] || c.name; d.hidden = true; stage.appendChild(d); return {d, c}; });
+    // labels: regions (whole country), states (inside a region), cities (inside a state)
+    const H = data.hierarchy || {regions: [], states: []};
+    const regionLabels = H.regions.map(r => {
+      const own = states.filter(x => x.region === r.code), d = label(stage, r.name, "lbl-region");
+      d.style.setProperty("--dot", `var(${regionVar(r.code)})`);
+      return {d, code: r.code, x: own.reduce((a, x) => a + x.cx, 0) / Math.max(1, own.length), z: own.reduce((a, x) => a + x.cz, 0) / Math.max(1, own.length)};
+    });
+    const stateLabels = states.map(x => ({d: label(stage, ((H.states.find(s => s.code === x.code) || {}).name) || x.code, "lbl-state"), code: x.code, x: x.cx, z: x.cz}));
+    const cityLabels = cities.map(c => ({d: label(stage, c.nice, ""), code: c.name, c}));
 
-    st = {THREE, renderer, scene, camera, cities, corridors, turbines, labels, stage, landMat, edgeMat, gridHelper, lineMat, pillarMat, pulseMat, cableMat,
-      yaw: -0.28, targetYaw: -0.28, pitch: 1.0, dist: 172, visible: true, t0: performance.now(), last: performance.now(), drag: null,
-      look: new THREE.Vector3(0, 0, 6), lookTarget: new THREE.Vector3(0, 0, 6), zoom: 1, zoomTarget: 1, labelSet: new Set(LABELS)};
+    st = {THREE, renderer, scene, camera, states, stateBy, cities, cityBy, corridors, turbines, stage, edgeMat, gridHelper, lineMat, pulseMat, cableMat, dotMat,
+      regionLabels, stateLabels, cityLabels, sel: null, view: {level: "country"},
+      yaw: -0.28, targetYaw: -0.28, pitch: 1.0, dist: 182, visible: true, t0: performance.now(), last: performance.now(), drag: null,
+      look: new THREE.Vector3(0, 0, 6), lookTarget: new THREE.Vector3(0, 0, 6), zoom: 1, zoomTarget: 1};
     applyTheme(); resize(); bind();
     requestAnimationFrame(loop);
   }
@@ -713,19 +752,21 @@ const Grid3D = (() => {
   function applyTheme() {
     if (!st) return;
     const light = isLight(), hex = (v, d) => { const s = cssv(v); return /^#[0-9a-f]{6}$/i.test(s) ? parseInt(s.slice(1), 16) : d; };
-    st.landMat.color.setHex(light ? 0xe4e0d4 : 0x141b24);
-    st.edgeMat.color.setHex(light ? 0x8c8574 : 0x3b5068);
+    const grey = new st.THREE.Color(light ? 0xd9d5c9 : 0x2a333f);
+    st.states.forEach(x => {
+      const on = !st.sel || st.sel.has(x.code), c = new st.THREE.Color(hex(regionVar(x.region), 0x888888));
+      if (!on) c.lerp(grey, 0.72);
+      x.mat.color.copy(c); x.mat.emissive.copy(c);
+      x.mat.opacity = on ? 0.97 : 0.55; x.on = on;
+    });
+    st.edgeMat.color.setHex(light ? 0xfbfaf6 : 0x0a0d12);
     st.gridHelper.material.color.setHex(light ? 0xd9d5c9 : 0x1e2833);
     const gold = hex("--gold", 0xf2b705);
     st.lineMat.color.setHex(gold);
     st.pulseMat.color.setHex(light ? 0xa87a00 : 0xffe38a);
     st.cableMat.color.setHex(hex("--blue", 0x4a9eff));
-    st.cities.forEach(c => {
-      c.mat.color.setHex(gold); c.mat.emissive.setHex(gold);
-      c.mat.emissiveIntensity = (light ? 0.25 : 0.7) * (c.dim ? 0.2 : 1);
-      c.mat.opacity = c.dim ? 0.18 : 0.92;
-      c.halo.material.color.setHex(gold); c.halo.material.opacity = (light ? 0.45 : 1) * (c.dim ? 0.12 : 1);
-    });
+    st.dotMat.color.setHex(light ? 0x14181d : 0xfff4cc);
+    st.cities.forEach(c => { c.halo.material.color.setHex(gold); c.halo.material.opacity = light ? 0.35 : 0.9; });
   }
 
   function resize() {
@@ -736,30 +777,34 @@ const Grid3D = (() => {
     st.camera.updateProjectionMatrix();
   }
 
-  function focus(v, mem) {
+  function focus(v) {
     if (!st) return;
-    const sel = st.cities.filter(c => mem.has(c.name));
-    if (v.level === "country" || !sel.length) { st.lookTarget.set(0, 0, 6); st.zoomTarget = 1; }
+    st.view = v; st.sel = selectedStates(v);
+    const sel = st.sel ? st.states.filter(x => st.sel.has(x.code)) : [];
+    if (!sel.length) { st.lookTarget.set(0, 0, 6); st.zoomTarget = 1; }
     else {
-      const cx = sel.reduce((a, c) => a + c.x, 0) / sel.length, cz = sel.reduce((a, c) => a + c.z, 0) / sel.length;
-      const ext = Math.max(7, ...sel.map(c => Math.hypot(c.x - cx, c.z - cz)));
-      st.lookTarget.set(cx, 0, cz + 2); st.zoomTarget = Math.min(1, 0.32 + ext / 38);
+      let cx = sel.reduce((a, x) => a + x.cx, 0) / sel.length, cz = sel.reduce((a, x) => a + x.cz, 0) / sel.length;
+      let ext = Math.max(...sel.map(x => Math.hypot(x.cx - cx, x.cz - cz) + x.ext));
+      if (v.level === "city" && st.cityBy[v.city]) { const c = st.cityBy[v.city]; cx = c.x; cz = c.z; ext = Math.min(ext, 9); }
+      st.lookTarget.set(cx, 0, cz + 2); st.zoomTarget = Math.max(0.3, Math.min(1, 0.18 + ext / 34));
     }
-    st.labelSet = v.level === "country" ? new Set(LABELS) : new Set(sel.map(c => c.name));
-    st.cities.forEach(c => { c.dim = !mem.has(c.name); });
     applyTheme();
   }
 
   function pick(e) {
     const cv = st.renderer.domElement, r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
-    let best = null, bd = 28;
     const v = new st.THREE.Vector3();
+    let best = null, bd = 16;
     st.cities.forEach(c => {
-      v.set(c.x, (c.pillar.position.y + c.halo.position.y) / 2, c.z).project(st.camera);
+      v.copy(c.dot.position).project(st.camera);
       const dd = Math.hypot((v.x + 1) / 2 * r.width - mx, (1 - v.y) / 2 * r.height - my);
       if (dd < bd) { bd = dd; best = c; }
     });
-    if (best) Area.set(best.name);
+    if (best) return Area.set(best.name);
+    const ray = new st.THREE.Raycaster();
+    ray.setFromCamera(new st.THREE.Vector2(mx / r.width * 2 - 1, -(my / r.height) * 2 + 1), st.camera);
+    const hit = ray.intersectObjects(st.states.map(x => x.mesh), false)[0];
+    if (hit) Area.set(hit.object.userData.state);
   }
 
   function bind() {
@@ -774,34 +819,42 @@ const Grid3D = (() => {
 
   function frame(now) {
     const dt = Math.min(0.1, (now - st.last) / 1000); st.last = now;
-    const t = (now - st.t0) / 1000, f = Hero.forecast(), hf = Hero.hourFloat();
-    const fmax = Math.max(...f), fmin = Math.min(...f);
-    const i0 = Math.floor(hf) % 24, i1 = (i0 + 1) % 24, a = hf - Math.floor(hf);
-    const gw = f[i0] * (1 - a) + f[i1] * a, level = (gw - fmin) / Math.max(1e-6, fmax - fmin);
-    st.cities.forEach(c => {
-      const h = 0.5 + c.w * 42 * (0.5 + 0.5 * level);
-      c.pillar.scale.set(1, h, 1);
-      c.halo.position.y = 1.45 + h + 0.15;
-      const s = 2.2 + c.w * 22 * (0.6 + 0.6 * level); c.halo.scale.set(s, s, s);
+    const t = (now - st.t0) / 1000, hf = Hero.hourFloat(), ease = Math.min(1, dt * 4);
+    const levels = {};
+    st.states.forEach(x => {
+      const lvl = levels[x.region] ?? (levels[x.region] = regionLevel(x.region, hf));
+      const lift = st.sel && x.on ? 0.5 : 0;
+      x.h += (0.45 + 2.0 * lvl + lift - x.h) * ease;
+      x.mesh.scale.y = x.h;
+      x.mat.emissiveIntensity = (x.on ? 0.1 + 0.35 * lvl : 0.03) * (isLight() ? 0.5 : 1);
     });
-    const speed = reduceMotion ? 0 : 0.6 + 1.4 * level;
+    st.cities.forEach(c => {
+      const sx = st.stateBy[c.state], y = (sx ? sx.h : 1) + 0.35;
+      c.dot.position.y = y; c.halo.position.y = y;
+      const on = !st.sel || st.sel.has(c.state); c.dot.visible = on; c.halo.visible = on;
+    });
+    const nat = regionLevel(null, hf), speed = reduceMotion ? 0 : 0.6 + 1.4 * nat;
     st.corridors.forEach(k => k.pulses.forEach(p => { const u = ((t * k.speed * speed) + p.off) % 1; p.m.position.copy(k.curve.getPoint(u)); }));
     if (!reduceMotion) st.turbines.forEach(r => { r.rotation.z -= dt * 1.8; });
     if (!st.drag && !reduceMotion) st.targetYaw += (Math.sin(t * 0.12) * 0.35 - 0.28 - st.targetYaw) * Math.min(1, dt * 0.5);
     st.yaw += (st.targetYaw - st.yaw) * Math.min(1, dt * 3);
-    const ease = Math.min(1, dt * 2.5);
-    st.look.lerp(st.lookTarget, ease); st.zoom += (st.zoomTarget - st.zoom) * ease;
+    const e2 = Math.min(1, dt * 2.5);
+    st.look.lerp(st.lookTarget, e2); st.zoom += (st.zoomTarget - st.zoom) * e2;
     const cam = st.camera, d = st.dist * st.zoom;
     cam.position.set(st.look.x + Math.sin(st.yaw) * Math.cos(st.pitch) * d * 0.55, Math.sin(st.pitch) * d * 0.62,
                      st.look.z + Math.cos(st.yaw) * Math.cos(st.pitch) * d * 0.55 + 1);
     cam.lookAt(st.look);
     st.renderer.render(st.scene, cam);
-    const w = st.stage.clientWidth, hgt = st.stage.clientHeight, v = new st.THREE.Vector3();
-    st.labels.forEach(({d: el2, c}) => {
-      v.set(c.x, c.halo.position.y, c.z).project(cam);
-      el2.style.left = ((v.x + 1) / 2 * w) + "px"; el2.style.top = ((1 - v.y) / 2 * hgt) + "px";
-      el2.hidden = v.z > 1 || !st.labelSet.has(c.name);
-    });
+    // labels follow the level: regions for Germany, states inside a region, cities inside a state
+    const w = st.stage.clientWidth, hgt = st.stage.clientHeight, v = new st.THREE.Vector3(), lv = st.view.level;
+    const place = (d, x, y, z, show) => {
+      if (!show) { d.hidden = true; return; }
+      v.set(x, y, z).project(cam);
+      d.style.left = ((v.x + 1) / 2 * w) + "px"; d.style.top = ((1 - v.y) / 2 * hgt) + "px"; d.hidden = v.z > 1;
+    };
+    st.regionLabels.forEach(l => place(l.d, l.x, LINE_Y + 2.5, l.z, lv === "country"));
+    st.stateLabels.forEach(l => { const sx = st.stateBy[l.code]; place(l.d, l.x, sx.h + 0.4, l.z, lv === "region" && st.sel && st.sel.has(l.code)); });
+    st.cityLabels.forEach(l => place(l.d, l.c.x, l.c.dot.position.y + 0.3, l.c.z, (lv === "state" || lv === "city") && st.sel && st.sel.has(l.c.state)));
     Hero.tick(hf);
   }
   function loop(now) {
@@ -813,27 +866,39 @@ const Grid3D = (() => {
   return {init, resize, applyTheme, focus, frame: (n) => st && frame(n), get active() { return !!st; }};
 })();
 
-// when 3D is not possible (very old device, WebGL switched off): the same map, flat and tilted
-function map2D(stage, data) {
-  const K = Math.cos(51.2 * Math.PI / 180), W = 440, H = 560;
-  const ring = data.geo[0], xs = ring.map(p => (p[0] - 5.8) * K), ys = ring.map(p => 55.1 - p[1]);
-  const s = Math.min((W - 20) / (Math.max(...xs) - Math.min(...xs)), (H - 20) / (Math.max(...ys) - Math.min(...ys)));
-  const ox = (W - (Math.max(...xs) - Math.min(...xs)) * s) / 2 - Math.min(...xs) * s, oy = (H - (Math.max(...ys) - Math.min(...ys)) * s) / 2 - Math.min(...ys) * s;
-  const P = (lon, lat) => [((lon - 5.8) * K * s + ox).toFixed(1), ((55.1 - lat) * s + oy).toFixed(1)];
-  const d = data.geo.map(r => "M" + r.map(([lon, lat]) => P(lon, lat).join(",")).join("L") + "Z").join("");
-  const by = {}; data.points.forEach(p => { by[p.name] = P(p.lon, p.lat); });
-  const lines = [["Kiel", "Hamburg", "Hannover", "Frankfurt", "Stuttgart", "Muenchen"], ["Rostock", "Berlin", "Leipzig", "Nuernberg", "Muenchen"],
-    ["Hannover", "Dortmund", "Koeln", "Mainz", "Frankfurt"], ["Hannover", "Magdeburg", "Berlin"]]
-    .map(path => path.filter(n => by[n]).map((n, i) => (i ? "L" : "M") + by[n].join(",")).join(""));
-  const wrap = document.createElement("div"); wrap.className = "map2d"; wrap.setAttribute("aria-hidden", "true");
-  wrap.innerHTML = `<div><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width: 100%">
-    <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color: var(--gold); stop-opacity: 0.9"/><stop offset="100%" style="stop-color: var(--gold); stop-opacity: 0"/></radialGradient></defs>
-    <path d="${d}" style="fill: var(--map-land); stroke: var(--map-edge)" stroke-width="1.5"/>
-    ${lines.map(l => `<path d="${l}" fill="none" style="stroke: var(--gold)" stroke-width="2" opacity="0.8"/><path class="flow" d="${l}" fill="none" style="stroke: var(--gold-hi)" stroke-width="4" stroke-linecap="round"/>`).join("")}
-    ${data.points.map(p => { const [x, y] = by[p.name]; const r = 6 + p.weight * 90; return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#g2)"/><circle cx="${x}" cy="${y}" r="3.5" style="fill: var(--ink)"/>`; }).join("")}
-  </svg></div>`;
-  stage.insertBefore(wrap, stage.firstChild);
-}
+// when 3D is not possible (very old device, WebGL switched off): the same states, flat and tilted, still clickable
+const Map2D = (() => {
+  let wrap = null;
+  function init(stage, data) {
+    const K = Math.cos(51.2 * Math.PI / 180), W = 440, H = 560;
+    const ring = data.geo[0], xs = ring.map(p => (p[0] - 5.8) * K), ys = ring.map(p => 55.1 - p[1]);
+    const s = Math.min((W - 20) / (Math.max(...xs) - Math.min(...xs)), (H - 20) / (Math.max(...ys) - Math.min(...ys)));
+    const ox = (W - (Math.max(...xs) - Math.min(...xs)) * s) / 2 - Math.min(...xs) * s, oy = (H - (Math.max(...ys) - Math.min(...ys)) * s) / 2 - Math.min(...ys) * s;
+    const P = (lon, lat) => [((lon - 5.8) * K * s + ox).toFixed(1), ((55.1 - lat) * s + oy).toFixed(1)];
+    const ringPath = (r) => "M" + r.map(([lon, lat]) => P(lon, lat).join(",")).join("L") + "Z";
+    const by = {}; data.points.forEach(p => { by[p.name] = P(p.lon, p.lat); });
+    const lines = [["Kiel", "Hamburg", "Hannover", "Frankfurt", "Stuttgart", "Muenchen"], ["Rostock", "Berlin", "Leipzig", "Nuernberg", "Muenchen"],
+      ["Hannover", "Dortmund", "Koeln", "Mainz", "Frankfurt"], ["Hannover", "Magdeburg", "Berlin"]]
+      .map(pp => pp.filter(n => by[n]).map((n, i) => (i ? "L" : "M") + by[n].join(",")).join(""));
+    const statesSvg = data.states_geo ? Object.entries(data.states_geo).map(([code, polys]) =>
+      `<path class="st" data-state="${esc(code)}" fill-rule="evenodd" d="${polys.map(poly => poly.map(ringPath).join("")).join("")}" style="fill: var(${regionVar(stateRegion(code))}); stroke: var(--ground); cursor: pointer" stroke-width="1"/>`).join("")
+      : `<path d="${data.geo.map(ringPath).join("")}" style="fill: var(--map-land); stroke: var(--map-edge)" stroke-width="1.5"/>`;
+    wrap = document.createElement("div"); wrap.className = "map2d";
+    wrap.innerHTML = `<div><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width: 100%" aria-hidden="true">
+      ${statesSvg}
+      ${lines.map(l => `<path d="${l}" fill="none" style="stroke: var(--gold)" stroke-width="2" opacity="0.85"/><path class="flow" d="${l}" fill="none" style="stroke: var(--gold-hi)" stroke-width="4" stroke-linecap="round"/>`).join("")}
+      ${data.points.map(p => { const [x, y] = by[p.name]; return `<circle cx="${x}" cy="${y}" r="3.5" style="fill: var(--ink)"/>`; }).join("")}
+    </svg></div>`;
+    stage.insertBefore(wrap, stage.firstChild);
+    wrap.querySelectorAll(".st").forEach(el => el.addEventListener("click", () => Area.set(el.dataset.state)));
+  }
+  function focus(v) {
+    if (!wrap) return;
+    const sel = selectedStates(v);
+    wrap.querySelectorAll(".st").forEach(el => { el.style.opacity = !sel || sel.has(el.dataset.state) ? "1" : "0.25"; });
+  }
+  return {init, focus};
+})();
 
 // ---------------------------------------------------------------- page content (follows the chosen area)
 function render() {
@@ -983,8 +1048,8 @@ render();
 section("stage", () => {
   Hero.init();
   if (!D || !D.geo || !D.points) { $("stage-note").textContent = ""; return; }
-  try { Grid3D.init($("stage"), D); Grid3D.focus(Area.view(), Area.members(Area.view())); }
-  catch (e) { console.warn("3D map not shown:", e.message); map2D($("stage"), D); $("stage-note").textContent = ""; }
+  try { Grid3D.init($("stage"), D); Grid3D.focus(Area.view()); }
+  catch (e) { console.warn("3D map not shown:", e.message); Map2D.init($("stage"), D); Map2D.focus(Area.view()); $("stage-note").textContent = "click a state"; }
 });
 let resizeTimer;
 window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { render(); Grid3D.resize(); }, 150); });

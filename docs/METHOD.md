@@ -139,10 +139,12 @@ drops mix weather, the economy and real saving; the weather-adjusted winter figu
 ## 11. The website
 
 The page draws everything itself: the charts are plain SVG and the 3D map uses three.js, copied
-into the site, so no outside server can break it. The 3D map extrudes Germany's real outline (Natural
-Earth, via world-atlas), places the same 19 population-weighted points used for the weather, and
-scales each city's light with tomorrow's forecast hour by hour; light pulses run along the main power
-corridors faster at busy hours. If a device has no WebGL, a flat tilted map takes its place, and with
+into the site, so no outside server can break it. The 3D map raises the 16 states (outlines from
+DIVA-GIS via deutschlandGeoJSON, public domain) and colours each one by its grid region, so the four
+regions show as coloured areas. Each region's height follows its own forecast for the hour shown, the
+area you pick is lifted and lit while the rest dims, the 19 population-weighted weather points glow as
+cities, and light pulses run along the main power corridors faster at busy hours. Click a state or a
+city to open it. If a device has no WebGL, a flat tilted map takes its place, and with
 "reduce motion" switched on nothing moves on its own.
 
 ## 12. From Germany down to cities
@@ -164,3 +166,6 @@ Notes:
   come from their own tests on normal winters, so a less accurate model simply shows wider ranges.
 - The stand-in data plants a *different* saving in each region (east 4.5% … west 8% at the peak), and the
   tests require each region's range to contain its own planted value.
+- If a region has no results yet (for example, the monthly job hasn't run since regions were added), the daily
+  job fills it in by itself: 30 days of backfilled forecasts and the savings analysis. It stops starting such
+  repairs after 75 minutes, and anything left waits for the next day.

@@ -46,7 +46,7 @@ yesterday's forecast, and publishes everything on a small web page.
 | **Honest range** | The daily forecast's 90% range widens itself every morning, based on the last weeks, so that about 9 hours in 10 really fall inside it. |
 | **Official check** | Our raw yearly totals compared with the Bundesnetzagentur's published grid load, to prove the download is complete. |
 | **Monthly retrain** | The daily model retrains on all data each month, and only replaces the old one if it beats the baseline on the last 4 weeks. |
-| **Tests** | 95 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
+| **Tests** | 98 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
 
 Full results with all charts: **[reports/REPORT.md](reports/REPORT.md)** (written automatically).
 Method in detail: **[docs/METHOD.md](docs/METHOD.md)**.
@@ -155,7 +155,7 @@ src/desave/
   pipeline/retrain.py         the monthly job
   web/                        the static web page
   demo/                       stand-in data and a local fake server
-tests/                        95 tests
+tests/                        98 tests
 .github/workflows/            tests, daily, monthly, first run
 ```
 

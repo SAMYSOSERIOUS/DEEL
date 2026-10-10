@@ -20,7 +20,7 @@ def test_only_local_scripts():
 
 def test_charts_and_3d_are_guarded():
     html = TEMPLATE.read_text(encoding="utf-8")
-    for fn in ("function lineChart(", "function barChart(", "function chartFailed(", "function map2D(", "const Grid3D"):
+    for fn in ("function lineChart(", "function barChart(", "function chartFailed(", "const Map2D", "const Grid3D"):
         assert fn in html
     for chart in ("chart-tomorrow", "chart-history", "chart-scores", "chart-savings"):
         assert f'Chart("{chart}"' in html
@@ -69,6 +69,7 @@ def test_build_writes_everything(tmp_cfg):
         assert (site / f).exists(), f
     data = json.loads((site / "data.json").read_text())
     assert data["geo"] and len(data["points"]) == 19
+    assert len(data["states_geo"]) == 16 and set(data["states_geo"]) == {s["code"] for s in data["hierarchy"]["states"]}
     assert len(data["hierarchy"]["regions"]) == 4 and set(data["areas"]) == {"50Hertz", "TenneT", "Amprion", "TransnetBW"}
     assert abs(sum(p["weight"] for p in data["points"]) - 1) < 0.01
     page = (site / "index.html").read_text()

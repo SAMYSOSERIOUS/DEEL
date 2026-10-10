@@ -25,6 +25,7 @@ log = logging.getLogger(__name__)
 HERE = Path(__file__).parent
 TEMPLATE = HERE / "template.html"
 GEO = HERE / "germany.json"
+STATES = HERE / "states.json"   # state outlines: DIVA-GIS via deutschlandGeoJSON (public domain)
 VENDOR = HERE / "vendor"
 
 
@@ -57,7 +58,8 @@ def collect(cfg: Settings) -> dict:
     data.update({"generated_utc": pd.Timestamp.now(tz="UTC").isoformat(timespec="minutes"),
                  "demo": bool(cfg.get("demo")), "tz": cfg.tz,
                  "geo": json.loads(GEO.read_text()) if GEO.exists() else None, "points": _points(cfg),
-                 "hierarchy": areas.tree(cfg)})
+                 "hierarchy": areas.tree(cfg),
+                 "states_geo": json.loads(STATES.read_text()) if STATES.exists() else None})
     data["status"] = _read_json(cfg.path("results") / "last_run.json")
     data["areas"] = {}
     for code in areas.region_codes(cfg):
