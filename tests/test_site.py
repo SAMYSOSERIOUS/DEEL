@@ -1,22 +1,33 @@
-"""The web page must load its chart library from a working address, and one
-broken chart must never blank the rest of the page."""
+"""The web page draws its charts itself (no outside chart library that could fail
+to load), and one broken chart must never blank the rest of the page."""
 import re
 
 from desave.web.build import TEMPLATE
 
 
-def test_chart_library_address():
+def test_no_outside_scripts():
     html = TEMPLATE.read_text(encoding="utf-8")
-    srcs = re.findall(r'<script src="([^"]+)"', html)
-    # the cdnjs address used at first does not exist; the npm package is published here
-    assert srcs[0] == "https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"
-    assert not any("cdnjs" in s for s in srcs)
-    assert "unpkg.com/plotly.js-dist-min@2.35.2" in html          # second source if the first fails
+    assert re.findall(r"<script[^>]*\bsrc=", html) == []
+    assert "Plotly" not in html
+
+
+def test_charts_are_drawn_by_the_page():
+    html = TEMPLATE.read_text(encoding="utf-8")
+    for fn in ("function lineChart(", "function barChart(", "function chartFailed("):
+        assert fn in html
+    for chart in ("chart-tomorrow", "chart-history", "chart-scores", "chart-savings"):
+        assert f'Chart("{chart}"' in html
 
 
 def test_sections_are_independent():
     html = TEMPLATE.read_text(encoding="utf-8")
-    assert "Plotly.newPlot(id" in html and html.count("Plotly.newPlot") == 1   # only inside the safe helper
     for name in ("tomorrow", "history", "scores", "savings"):
         assert f'section("{name}"' in html
     assert "/*__DATA__*/null" in html
+
+
+def test_test_winters_keep_their_label():
+    """Regression: the 'kind' field from the data used to overwrite 'check', so test winters
+    were drawn orange without '(test)'."""
+    html = TEMPLATE.read_text(encoding="utf-8")
+    assert 'Object.assign({}, r, {kind: "check"})' in html

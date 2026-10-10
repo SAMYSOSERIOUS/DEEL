@@ -7,8 +7,6 @@
 <meta name="description" content="Tomorrow's German electricity demand, how good the forecasts are, and how much Germany saved in the 2022 energy crisis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
-<script>window.Plotly || document.write('<script src="https://unpkg.com/plotly.js-dist-min@2.35.2/plotly.min.js"><\/script>');</script>
 <style>
 :root {
   color-scheme: light;
@@ -59,7 +57,13 @@ section.card h2 { font-size: 18px; margin: 0 0 4px; text-wrap: balance; }
 .legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin: 2px 0 6px; }
 .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 .legend i.band { height: 10px; }
-.chart { width: 100%; height: 320px; }
+.chart { width: 100%; height: 320px; position: relative; }
+.chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
+.chart text { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 11px; fill: var(--text-muted); }
+.chart .tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
+  border-radius: 8px; padding: 6px 9px; font-size: 12px; color: var(--text-primary); box-shadow: 0 4px 14px rgba(0,0,0,.12);
+  white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.chart .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 details { margin-top: 10px; font-size: 14px; }
 summary { cursor: pointer; color: var(--text-secondary); }
 table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
@@ -153,32 +157,182 @@ function table(cols, rows) {
   return `<table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
     rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
 }
-function layout(extra = {}) {
-  return Object.assign({
-    margin: {l: 48, r: 12, t: 8, b: 36}, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
-    font: {family: "IBM Plex Sans, system-ui, sans-serif", size: 12, color: css("--text-secondary")},
-    xaxis: {gridcolor: css("--grid"), zeroline: false, linecolor: css("--border")},
-    yaxis: {gridcolor: css("--grid"), zeroline: false, title: {text: "GW"}},
-    showlegend: false, hovermode: "x unified",
-    hoverlabel: {bgcolor: css("--surface-1"), bordercolor: css("--border"), font: {color: css("--text-primary")}}
-  }, extra);
+// ---------------------------------------------------------------- charts
+// Drawn with plain SVG by this page itself: no outside library that could fail to load.
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  if (parent) parent.appendChild(e);
+  return e;
 }
-const CFG = {displayModeBar: false, responsive: true};
+const ok = (v) => v !== null && v !== undefined && Number.isFinite(v);
+function niceTicks(lo, hi, n = 5) {
+  if (!(hi > lo)) { hi = lo + 1; }
+  const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(st => st >= raw);
+  const out = [];
+  for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(+v.toFixed(10));
+  return out;
+}
+function setupChart(id) {
+  const box = $(id);
+  if (!box) return null;
+  box.classList.remove("chart-missing");
+  box.innerHTML = "";
+  const W = box.clientWidth > 0 ? Math.max(box.clientWidth, 280) : 800, H = box.clientHeight || 320;
+  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", role: "img"}, box);
+  const tip = document.createElement("div");
+  tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
+  return {box, svg, tip, W, H};
+}
+function chartFailed(id, tableId, e) {
+  const box = $(id);
+  if (box) { box.classList.add("chart-missing"); box.textContent = "This chart could not be drawn. The numbers are in the table below."; }
+  const t = tableId && $(tableId);
+  if (t && t.closest("details")) t.closest("details").open = true;
+  console.error(e);
+}
 
-function plot(id, traces, lay, tableId) {
-  const el = $(id);
-  if (!el) return;
+// Line chart: evenly spaced points (one per hour or day), optional range band and shaded area.
+function lineChart(id, o) {
   try {
-    if (!window.Plotly) throw new Error("chart library not loaded");
-    Plotly.newPlot(id, traces, lay, CFG);
-  } catch (e) {
-    el.classList.add("chart-missing");
-    el.textContent = "This chart could not load (" + e.message + "). The numbers are in the table below.";
-    const t = tableId && $(tableId);
-    if (t && t.closest("details")) t.closest("details").open = true;
-    console.error(e);
-  }
+    const c = setupChart(id); if (!c) return;
+    const {svg, tip, W, H} = c;
+    const m = {l: 46, r: 12, t: 10, b: 30};
+    const n = o.labels.length;
+    const all = [];
+    o.series.forEach(s => s.y.forEach(v => ok(v) && all.push(v)));
+    if (o.band) [o.band.low, o.band.high].forEach(a => a.forEach(v => ok(v) && all.push(v)));
+    if (!all.length) throw new Error("no data");
+    let lo = Math.min(...all), hi = Math.max(...all);
+    const pad = (hi - lo || 1) * 0.08;
+    lo = o.fromZero ? 0 : lo - pad; hi = hi + pad;
+    const ticks = niceTicks(lo, hi);
+    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const X = i => m.l + (n <= 1 ? 0 : i * (W - m.l - m.r) / (n - 1));
+    const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
+    // grid + y labels
+    ticks.forEach(v => {
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: "stroke: var(--grid)", "stroke-width": 1}, svg);
+      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : (o.decimals ?? 1));
+    });
+    el("text", {x: 4, y: m.t + 8}, svg).textContent = o.unit || "";
+    // shaded area (e.g. backfilled days)
+    if (o.shadeTo > 0) {
+      el("rect", {x: X(0), y: m.t, width: X(o.shadeTo) - X(0), height: H - m.t - m.b, style: "fill: var(--shade)"}, svg);
+      el("text", {x: X(0) + 6, y: m.t + 14}, svg).textContent = o.shadeLabel || "";
+    }
+    // x labels
+    const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - m.l - m.r) / 90))));
+    for (let i = 0; i < n; i += every) {
+      el("text", {x: X(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = o.xLabel(o.labels[i]);
+    }
+    // band
+    if (o.band) {
+      let pts = [];
+      const flush = () => {
+        if (pts.length > 1) {
+          const d = pts.map(([i, h], k) => `${k ? "L" : "M"}${X(i)},${Y(h)}`).join("") +
+            pts.slice().reverse().map(([i, , l]) => `L${X(i)},${Y(l)}`).join("") + "Z";
+          el("path", {d, style: "fill: var(--band); stroke: none"}, svg);
+        }
+        pts = [];
+      };
+      for (let i = 0; i < n; i++) {
+        const h = o.band.high[i], l = o.band.low[i];
+        if (ok(h) && ok(l)) pts.push([i, h, l]); else flush();
+      }
+      flush();
+    }
+    // lines (breaks where values are missing)
+    o.series.forEach(s => {
+      let d = "", pen = false;
+      s.y.forEach((v, i) => { if (ok(v)) { d += `${pen ? "L" : "M"}${X(i)},${Y(v)}`; pen = true; } else pen = false; });
+      el("path", {d, fill: "none", style: `stroke: var(${s.color})`, "stroke-width": s.width || 2,
+        "stroke-dasharray": s.dash ? "4 4" : "none", "stroke-linejoin": "round", "stroke-linecap": "round"}, svg);
+      if (s.markers) s.y.forEach((v, i) => ok(v) && el("circle", {cx: X(i), cy: Y(v), r: 3, style: `fill: var(${s.color})`}, svg));
+    });
+    // hover: vertical line + values
+    const guide = el("line", {y1: m.t, y2: H - m.b, style: "stroke: var(--text-muted)", "stroke-width": 1, visibility: "hidden"}, svg);
+    const hit = el("rect", {x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent"}, svg);
+    const move = (ev) => {
+      const r = svg.getBoundingClientRect();
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+      const sx = px * W / r.width;
+      const i = Math.max(0, Math.min(n - 1, Math.round((sx - m.l) / ((W - m.l - m.r) / Math.max(1, n - 1)))));
+      guide.setAttribute("x1", X(i)); guide.setAttribute("x2", X(i)); guide.setAttribute("visibility", "visible");
+      let html = `<div style="color:var(--text-secondary);margin-bottom:3px">${esc(o.tipLabel(o.labels[i]))}</div>`;
+      o.series.slice().reverse().forEach(s => {
+        html += `<div><i style="background:var(${s.color})"></i>${esc(s.name)}: <b>${ok(s.y[i]) ? fmt(s.y[i], o.tipDecimals ?? 1) : "–"}</b> ${esc(o.tipUnit || "")}</div>`;
+      });
+      if (o.band && ok(o.band.low[i])) html += `<div style="color:var(--text-secondary)">90% range ${fmt(o.band.low[i])}–${fmt(o.band.high[i])} ${esc(o.tipUnit || "")}</div>`;
+      tip.innerHTML = html; tip.hidden = false;
+      const left = X(i) * r.width / W;
+      tip.style.left = Math.min(Math.max(0, left + 12), r.width - tip.offsetWidth - 4) + "px";
+      tip.style.top = "8px";
+    };
+    const leave = () => { tip.hidden = true; guide.setAttribute("visibility", "hidden"); };
+    hit.addEventListener("mousemove", move); hit.addEventListener("touchmove", move, {passive: true});
+    hit.addEventListener("mouseleave", leave); hit.addEventListener("touchend", leave);
+  } catch (e) { chartFailed(id, o.tableId, e); }
 }
+
+// Bar chart with a range line on each bar.
+function barChart(id, o) {
+  try {
+    const c = setupChart(id); if (!c) return;
+    const {svg, tip, W, H} = c;
+    const m = {l: 46, r: 12, t: 22, b: 40};
+    const n = o.values.length;
+    if (!n) throw new Error("no data");
+    let lo = Math.min(0, ...o.low.filter(ok)), hi = Math.max(0, ...o.high.filter(ok));
+    const pad = (hi - lo || 1) * 0.1; lo -= lo < 0 ? pad : 0; hi += pad;
+    const ticks = niceTicks(lo, hi);
+    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
+    const slot = (W - m.l - m.r) / n, bw = Math.min(56, slot * 0.55);
+    const cx = i => m.l + slot * (i + 0.5);
+    ticks.forEach(v => {
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: `stroke: var(${v === 0 ? "--text-muted" : "--grid"})`, "stroke-width": 1}, svg);
+      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : 1) + "%";
+    });
+    for (let i = 0; i < n; i++) {
+      const v = o.values[i];
+      const top = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
+      const bar = el("rect", {x: cx(i) - bw / 2, y: top, width: bw, height: Math.max(h, 1), rx: 3, style: `fill: var(${o.colors[i]})`}, svg);
+      if (ok(o.low[i]) && ok(o.high[i])) {
+        const s = "stroke: var(--text-primary)";
+        el("line", {x1: cx(i), x2: cx(i), y1: Y(o.low[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
+        el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.low[i]), y2: Y(o.low[i]), style: s, "stroke-width": 1.3}, svg);
+        el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.high[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
+      }
+      const lbl = el("text", {x: cx(i), y: Y(Math.max(o.high[i] ?? v, v)) - 6, "text-anchor": "middle", style: "fill: var(--text-primary)"}, svg);
+      lbl.textContent = fmt(v) + "%";
+      const [a, b] = o.labels[i].split(" ");
+      const xl = el("text", {x: cx(i), y: H - 22, "text-anchor": "middle"}, svg);
+      xl.textContent = a;
+      if (b) el("text", {x: cx(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = b;
+      const hit = el("rect", {x: cx(i) - slot / 2, y: m.t, width: slot, height: H - m.t - m.b, fill: "transparent"}, svg);
+      const show = () => {
+        tip.innerHTML = `<b>${esc(o.labels[i])}</b><br>${fmt(v)}% less than expected<br><span style="color:var(--text-secondary)">90% range ${fmt(o.low[i])}% to ${fmt(o.high[i])}%</span>`;
+        tip.hidden = false;
+        const r = svg.getBoundingClientRect();
+        tip.style.left = Math.min(Math.max(0, cx(i) * r.width / W - 60), r.width - tip.offsetWidth - 4) + "px";
+        tip.style.top = "4px";
+        bar.style.opacity = "0.8";
+      };
+      const hide = () => { tip.hidden = true; bar.style.opacity = ""; };
+      hit.addEventListener("mouseenter", show); hit.addEventListener("mouseleave", hide);
+      hit.addEventListener("touchstart", show, {passive: true});
+    }
+  } catch (e) { chartFailed(id, o.tableId, e); }
+}
+
+const hm = (s) => s.slice(11, 16);
+const dayMon = (s) => new Date(s.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", {day: "numeric", month: "short"});
+const dayMonHm = (s) => dayMon(s) + " " + hm(s);
+
 function section(name, fn) {
   try { fn(); } catch (e) { console.error(name, e); }
 }
@@ -204,12 +358,12 @@ function render() {
       tile("Total for the day", `${fmt(t.total_gwh, 0)} GWh`, `90% range ${fmt(t.total_low_gwh, 0)}–${fmt(t.total_high_gwh, 0)} GWh`) +
       tile("Highest hour", `${fmt(t.peak_gw, 1)} GW`, `at ${esc(t.peak_hour)}`);
     const x = t.hours;
-    plot("chart-tomorrow", [
-      {x, y: t.high_gw, type: "scatter", mode: "lines", line: {width: 0}, hoverinfo: "skip"},
-      {x, y: t.low_gw, type: "scatter", mode: "lines", line: {width: 0}, fill: "tonexty", fillcolor: css("--band"), name: "range", hovertemplate: "%{y:.1f}"},
-      {x, y: t.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
-      {x, y: t.forecast_gw, type: "scatter", mode: "lines+markers", marker: {size: 5}, line: {color: css("--model"), width: 2.5}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
-    ], layout({xaxis: {tickformat: "%H:%M", gridcolor: css("--grid")}}), "table-tomorrow");
+    lineChart("chart-tomorrow", {
+      labels: t.hours, unit: "GW", xLabel: hm, tipLabel: hm, tipUnit: "GW", tableId: "table-tomorrow",
+      band: {low: t.low_gw, high: t.high_gw},
+      series: [{name: "Same week last year", y: t.baseline_gw, color: "--base", width: 2, dash: true},
+               {name: "Forecast", y: t.forecast_gw, color: "--model", width: 2.5, markers: true}],
+    });
     $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
       t.hour_labels.map((h, i) => [h, fmt(t.forecast_gw[i]), fmt(t.low_gw[i]), fmt(t.high_gw[i]), fmt(t.baseline_gw[i])]));
   } else {
@@ -221,13 +375,14 @@ function render() {
   section("history", () => {
   const h = D.last30;
   if (h) {
-    const shapes = h.backfilled_until ? [{type: "rect", xref: "x", yref: "paper", x0: h.time[0], x1: h.backfilled_until, y0: 0, y1: 1, fillcolor: css("--shade"), line: {width: 0}}] : [];
-    const ann = h.backfilled_until ? [{x: h.time[0], y: 1, xref: "x", yref: "paper", text: "backfilled (measured weather)", showarrow: false, xanchor: "left", yanchor: "top", font: {size: 11, color: css("--text-muted")}}] : [];
-    plot("chart-history", [
-      {x: h.time, y: h.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 1.2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
-      {x: h.time, y: h.forecast_gw, type: "scatter", mode: "lines", line: {color: css("--model"), width: 1.6}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
-      {x: h.time, y: h.actual_gw, type: "scatter", mode: "lines", line: {color: css("--actual"), width: 2}, name: "Real", hovertemplate: "%{y:.1f} GW"},
-    ], layout({shapes, annotations: ann}));
+    const shadeTo = h.backfilled_until ? h.time.filter(x => x <= h.backfilled_until).length - 1 : 0;
+    lineChart("chart-history", {
+      labels: h.time, unit: "GW", xLabel: dayMon, tipLabel: dayMonHm, tipUnit: "GW",
+      shadeTo, shadeLabel: "backfilled (measured weather)",
+      series: [{name: "Same week last year", y: h.baseline_gw, color: "--base", width: 1.2, dash: true},
+               {name: "Forecast", y: h.forecast_gw, color: "--model", width: 1.6},
+               {name: "Real", y: h.actual_gw, color: "--actual", width: 2}],
+    });
   } else {
     $("chart-history").outerHTML = `<p class="empty">Not enough forecasts yet.</p>`;
   }
@@ -243,10 +398,12 @@ function render() {
       tile("Same week last year", `${fmt(s.baseline_mape, 2)}%`, better ? `our model is ${fmt(100 * (1 - s.model_mape / s.baseline_mape), 0)}% better` : "baseline is currently better") +
       tile("Inside the 90% range", `${fmt(s.inside_range_pct, 0)}%`, "of hours (should be about 90%)") +
       (s.backfilled_days ? tile("Backfilled days", s.backfilled_days, "made later with measured weather") : "");
-    plot("chart-scores", [
-      {x: s.dates, y: s.running_baseline, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2}, name: "Same week last year", hovertemplate: "%{y:.2f}%"},
-      {x: s.dates, y: s.running_model, type: "scatter", mode: "lines", line: {color: css("--model"), width: 2.5}, name: "Model", hovertemplate: "%{y:.2f}%"},
-    ], layout({yaxis: {title: {text: "error (%)"}, gridcolor: css("--grid"), rangemode: "tozero"}}), "table-scores");
+    lineChart("chart-scores", {
+      labels: s.dates, unit: "%", fromZero: true, decimals: 1, xLabel: dayMon, tipLabel: dayMon, tipUnit: "%", tipDecimals: 2,
+      tableId: "table-scores",
+      series: [{name: "Same week last year", y: s.running_baseline, color: "--base", width: 2},
+               {name: "Model", y: s.running_model, color: "--model", width: 2.5, markers: true}],
+    });
     $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
       s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", (r.model_daily_error_pct > 0 ? "+" : "") + fmt(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
   } else {
@@ -261,15 +418,12 @@ function render() {
     const hd = v.headline;
     $("headline").textContent = `Germany used ${fmt(hd.saving_pct)}% less grid electricity in winter 2022/23 than the weather predicted (90% range ${fmt(hd.low_pct)}% to ${fmt(hd.high_pct)}%).`;
     $("verdict").textContent = v.verdict;
-    const rows = v.checks.map(r => Object.assign({kind: "check"}, r)).concat(v.winters.map(r => Object.assign({kind: "crisis"}, r)));
+    const rows = v.checks.map(r => Object.assign({}, r, {kind: "check"})).concat(v.winters.map(r => Object.assign({}, r, {kind: "crisis"})));
     const labels = rows.map(r => r.winter + (r.kind === "check" ? " (test)" : (r.complete === false ? " (so far)" : "")));
-    plot("chart-savings", [{
-      x: labels, y: rows.map(r => r.saving_pct), type: "bar",
-      marker: {color: rows.map(r => r.kind === "check" ? css("--check") : css("--model"))},
-      error_y: {type: "data", symmetric: false, array: rows.map(r => r.high_pct - r.saving_pct), arrayminus: rows.map(r => r.saving_pct - r.low_pct), color: css("--text-primary"), thickness: 1.2, width: 5},
-      text: rows.map(r => fmt(r.saving_pct) + "%"), textposition: "outside", cliponaxis: false,
-      hovertemplate: "%{x}: %{y:.1f}%<extra></extra>",
-    }], layout({hovermode: "closest", bargap: 0.45, yaxis: {title: {text: "less than expected (%)"}, gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--text-muted")}}), "table-savings");
+    barChart("chart-savings", {
+      labels, values: rows.map(r => r.saving_pct), low: rows.map(r => r.low_pct), high: rows.map(r => r.high_pct),
+      colors: rows.map(r => r.kind === "check" ? "--check" : "--model"), tableId: "table-savings",
+    });
     $("table-savings").innerHTML = table(["Winter", "Saving", "90% range", "Saving (TWh)"],
       rows.map(r => [labels[rows.indexOf(r)], fmt(r.saving_pct) + "%", `${fmt(r.low_pct)}% to ${fmt(r.high_pct)}%`, r.saving_twh !== undefined ? fmt(r.saving_twh) : "–"]));
   } else {
@@ -290,6 +444,8 @@ function render() {
   });
 })();
 render();
+let resizeTimer;
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
 </script>
 </body>
 </html>
