@@ -48,6 +48,10 @@ def cmd_check_sources(cfg) -> int:
 
     report("SMARD demand", lambda: (lambda s: f"{len(s)} hours, latest {s.index.max()}")(
         need_rows(smard.download(cfg, now - pd.Timedelta(days=10)), "hours")))
+    from . import areas
+    for code in areas.region_codes(cfg):
+        report(f"SMARD region {code}", lambda code=code: (lambda s: f"{len(s)} hours, latest {s.index.max()}")(
+            need_rows(smard.download(areas.scoped(cfg, code), now - pd.Timedelta(days=10)), "hours")))
     def dwd_recent():
         st = dwd.station_list(cfg, "temp")
         berlin = next(p for p in cfg["weather_points"] if p["name"] == "Berlin")
@@ -77,8 +81,14 @@ def cmd_check_sources(cfg) -> int:
 
 
 def cmd_download(cfg, full: bool) -> None:
+    from . import areas
     from .sources import dwd, eurostat, opsd, smard
     smard.update(cfg, full=full)
+    for code in areas.region_codes(cfg):
+        try:
+            smard.update(areas.scoped(cfg, code), full=full)
+        except Exception as e:  # noqa: BLE001
+            logging.warning("SMARD %s download failed: %s", code, e)
     dwd.update(cfg, full=full)
     eurostat.download_all(cfg)
     try:
@@ -89,7 +99,7 @@ def cmd_download(cfg, full: bool) -> None:
 
 def cmd_check(cfg) -> int:
     from . import dataset, store, validate
-    raw = store.load(cfg, "load")["load_mwh"].dropna()
+    raw = store.load(cfg, cfg.load_store)["load_mwh"].dropna()
     rep = validate.check_load(raw, cfg.tz)
     w = dataset.weather_observed(cfg)
     rep_w = validate.check_weather(w["temp"].dropna(), w["sun"].dropna())
@@ -101,13 +111,20 @@ def cmd_all(cfg, skip_download: bool = False, backfill_days: int = 30) -> None:
     from .analysis import report
     from .pipeline import daily
     from .models import operational
-    from . import dataset
+    from . import areas, dataset
     if not skip_download:
         cmd_download(cfg, full=False)
     report.full(cfg)
-    operational.train(cfg, dataset.load_series(cfg), dataset.weather_observed(cfg), force=True)
-    if backfill_days:
-        daily.backfill(cfg, backfill_days)
+    for code in areas.measured(cfg):
+        c = areas.scoped(cfg, code)
+        try:
+            operational.train(c, dataset.load_series(c), dataset.weather_observed(c), force=True)
+            if backfill_days:
+                daily.backfill(c, backfill_days)
+        except Exception as e:  # noqa: BLE001
+            if code == areas.COUNTRY:
+                raise
+            logging.warning("Setting up %s failed: %s", code, e)
     daily.run(cfg, skip_download=True)
 
 
@@ -165,7 +182,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "retrain":
         from .pipeline import retrain
         out = retrain.run(cfg, include_analysis=not args.skip_analysis, force=args.force)
-        print(json.dumps(out.get("gate", {}), indent=2))
+        print(json.dumps({k: v.get("gate", v) for k, v in out.items()}, indent=2, default=str))
     elif args.cmd == "daily":
         from .pipeline import daily
         if args.backfill:

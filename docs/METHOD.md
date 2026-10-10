@@ -117,3 +117,50 @@ instead of about 2%). Fixed, with a regression test.
 - The first run fills the last 30 days with "backfilled" forecasts, made with a model trained only
   on earlier data but using measured weather (old forecasts aren't available). They are marked on
   the page because they look slightly better than real forecasts.
+
+## 9. Honest forecast range
+
+The 5% and 95% range models aim for a 90% range, but on real data only about 76-84% of hours fell
+inside it. Every morning the daily job now looks at the last (up to) 60 days of saved forecasts and
+finds the smallest widening factor that would have put at least 90% of real hours inside the range.
+That one number is applied to the next forecast and shown on the page. Backfilled days are only used
+when there are fewer than 7 days of real forecasts, because they used measured weather and look too
+good. The raw, unwidened range is saved too, so the factor is always worked out from the model's own
+range, never from an already widened one.
+
+## 10. Check against the official figures
+
+The Bundesnetzagentur publishes each January the year's total grid load from the same SMARD data
+(2022: 484.2 TWh, down 4.0%; 2023: 456.8 TWh, down 5.3%). Our own yearly totals are compared with
+these in the report and on the page. A difference under about 1% is expected, because SMARD revises
+values after publication; a bigger one would point to a download or cleaning problem. These raw yearly
+drops mix weather, the economy and real saving; the weather-adjusted winter figures separate them.
+
+## 11. The website
+
+The page draws everything itself: the charts are plain SVG and the 3D map uses three.js, copied
+into the site, so no outside server can break it. The 3D map extrudes Germany's real outline (Natural
+Earth, via world-atlas), places the same 19 population-weighted points used for the weather, and
+scales each city's light with tomorrow's forecast hour by hour; light pulses run along the main power
+corridors faster at busy hours. If a device has no WebGL, a flat tilted map takes its place, and with
+"reduce motion" switched on nothing moves on its own.
+
+## 12. From Germany down to cities
+
+| Level | Data | How it's made | Shown as |
+|---|---|---|---|
+| Germany | SMARD grid load, hourly | everything in this document | Measured |
+| 4 grid regions (50Hertz, TenneT, Amprion, TransnetBW) | SMARD grid load per control area, hourly, since 2015 | the same analysis, run separately: only that region's weather stations, only its states' holidays, its own tests on normal winters, ranges, daily model, scores and range calibration | Measured |
+| 16 states | none hourly (state statistics offices publish yearly totals only, years late) | region × the state's share of the region's people | Estimate |
+| 19 cities | only scattered local grid operator data | state estimate × the city's share of the state's people | Rough estimate |
+| Towns and villages | none (household smart-meter data is private) | not made | "No public data" |
+
+Notes:
+- Grid regions don't follow state borders exactly. Each state is counted in the region that covers most of
+  it (for example, all of Bavaria in TenneT, although a few areas are served by others).
+- Because states and cities are scaled copies of their region, their *percentage* saving is always their
+  region's. Only the amounts (GWh, TWh) differ. The page and report say this wherever an estimate appears.
+- The regions use a smaller model (700 trees, one seed) so the monthly job stays short; their ranges
+  come from their own tests on normal winters, so a less accurate model simply shows wider ranges.
+- The stand-in data plants a *different* saving in each region (east 4.5% … west 8% at the peak), and the
+  tests require each region's range to contain its own planted value.

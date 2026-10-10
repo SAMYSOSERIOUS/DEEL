@@ -18,6 +18,7 @@ from .timeutils import TZ, expected_hours, local_dates
 
 MAX_GAP_HOURS = 2
 PLAUSIBLE_MWH = (20_000, 100_000)   # German hourly grid load is roughly 35-80 GWh
+PLAUSIBLE_REGION_MWH = (500, 60_000)  # one grid region: roughly 4-30 GWh
 
 
 @dataclass
@@ -55,7 +56,7 @@ def hours_per_day(index: pd.DatetimeIndex, tz: str = TZ) -> pd.DataFrame:
 
 
 def check_load(load: pd.Series, tz: str = TZ, complete_days_only: bool = True,
-               max_gap: int = MAX_GAP_HOURS) -> Report:
+               max_gap: int = MAX_GAP_HOURS, plausible: tuple[float, float] = PLAUSIBLE_MWH) -> Report:
     rep = Report()
     if load.empty:
         rep.fail("No demand data")
@@ -73,7 +74,7 @@ def check_load(load: pd.Series, tz: str = TZ, complete_days_only: bool = True,
     neg = vals[vals <= 0]
     if len(neg):
         rep.fail(f"{len(neg)} hours with zero or negative demand, first at {neg.index[0]}")
-    lo, hi = PLAUSIBLE_MWH
+    lo, hi = plausible
     odd = vals[(vals < lo) | (vals > hi)]
     if len(odd):
         rep.warnings.append(f"{len(odd)} hours outside {lo:,}-{hi:,} MWh, first at {odd.index[0]}")

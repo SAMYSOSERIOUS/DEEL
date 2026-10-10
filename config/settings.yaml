@@ -111,3 +111,58 @@ production:
   gate_window_days: 28           # monthly retrain must beat the baseline on the last 4 weeks...
   gate_tolerance: 0.0            # ...by at least this much (0 = just beat it)
   site_days: 30
+
+# Official yearly grid load ("Netzlast") as first published by the Bundesnetzagentur from SMARD data.
+# Used only to check that our own download adds up to the same totals.
+official:
+  note: "Official figures as first published each January; SMARD values are revised later, so differences under about 1% are expected."
+  years:
+    - {year: 2021, twh: 504.5, source: bnetza_2022}
+    - {year: 2022, twh: 484.2, change_pct: -4.0, source: bnetza_2022}
+    - {year: 2023, twh: 456.8, change_pct: -5.3, source: bnetza_2023}
+  sources:
+    bnetza_2022: {name: "Bundesnetzagentur, Strommarkt 2022 (4 Jan 2023)", url: "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2023/20230104_smard.html"}
+    bnetza_2023: {name: "Bundesnetzagentur, Strommarkt 2023 (3 Jan 2024)", url: "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2024/20240103_SMARD.html"}
+
+# ---------------------------------------------------------------------------
+# Areas: Germany -> 4 grid regions (measured, SMARD) -> 16 states and cities (estimated).
+# ---------------------------------------------------------------------------
+# The four transmission grid companies' control areas ("Regelzonen"). SMARD publishes hourly
+# demand for each. They don't follow state borders exactly; each state is assigned to the
+# region that covers most of it.
+regions:
+  - {code: "50Hertz",    name: "50Hertz",    area_name: "East and Hamburg", states: [BE, BB, MV, SN, ST, TH, HH]}
+  - {code: "TenneT",     name: "TenneT",     area_name: "North, Hesse and Bavaria", states: [SH, NI, HB, HE, BY]}
+  - {code: "Amprion",    name: "Amprion",    area_name: "West", states: [NW, RP, SL]}
+  - {code: "TransnetBW", name: "TransnetBW", area_name: "Baden-Württemberg", states: [BW]}
+
+state_names: {BB: Brandenburg, BE: Berlin, BW: Baden-Württemberg, BY: Bayern, HB: Bremen, HE: Hessen,
+  HH: Hamburg, MV: Mecklenburg-Vorpommern, NI: Niedersachsen, NW: Nordrhein-Westfalen, RP: Rheinland-Pfalz,
+  SH: Schleswig-Holstein, SL: Saarland, SN: Sachsen, ST: Sachsen-Anhalt, TH: Thüringen}
+
+# City populations in thousands (Destatis, end of 2023, rounded). Only used for the rough city estimate.
+cities:
+  Berlin: {name: "Berlin", pop_k: 3755}
+  Hamburg: {name: "Hamburg", pop_k: 1892}
+  Muenchen: {name: "München", pop_k: 1510}
+  Koeln: {name: "Köln", pop_k: 1084}
+  Frankfurt: {name: "Frankfurt am Main", pop_k: 776}
+  Stuttgart: {name: "Stuttgart", pop_k: 633}
+  Leipzig: {name: "Leipzig", pop_k: 619}
+  Dortmund: {name: "Dortmund", pop_k: 595}
+  Bremen: {name: "Bremen", pop_k: 577}
+  Hannover: {name: "Hannover", pop_k: 548}
+  Nuernberg: {name: "Nürnberg", pop_k: 526}
+  Kiel: {name: "Kiel", pop_k: 248}
+  Magdeburg: {name: "Magdeburg", pop_k: 241}
+  Freiburg: {name: "Freiburg im Breisgau", pop_k: 237}
+  Mainz: {name: "Mainz", pop_k: 221}
+  Erfurt: {name: "Erfurt", pop_k: 216}
+  Rostock: {name: "Rostock", pop_k: 210}
+  Potsdam: {name: "Potsdam", pop_k: 187}
+  Saarbruecken: {name: "Saarbrücken", pop_k: 181}
+
+# Smaller models for the four regions, so the monthly job stays well under an hour.
+regional_model:
+  lightgbm: {n_estimators: 700, learning_rate: 0.05}
+  random_seeds: [1]

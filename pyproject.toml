@@ -19,6 +19,7 @@ dependencies = [
   "lightgbm>=4.1",
   "scipy>=1.11",
   "matplotlib>=3.8",
+  "markdown>=3.5",
 ]
 
 [project.optional-dependencies]
@@ -31,7 +32,7 @@ desave = "desave.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-desave = ["web/template.html"]
+desave = ["web/template.html", "web/germany.json", "web/vendor/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

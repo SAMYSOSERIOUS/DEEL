@@ -24,7 +24,7 @@ from ..http import get
 from ..timeutils import utc_index_from_ms
 
 log = logging.getLogger(__name__)
-NAME = "load"
+NAME = "load"   # Germany; grid regions use load_<region> (see Settings.load_store)
 
 
 def _url(cfg: Settings, filt: int, tail: str) -> str:
@@ -76,7 +76,7 @@ def download(cfg: Settings, start, end=None, filt: int | None = None) -> pd.Seri
 
 def update(cfg: Settings, full: bool = False) -> pd.DataFrame:
     """Download new (and recently corrected) hours and store them."""
-    last = store.last_time(cfg, NAME)
+    last = store.last_time(cfg, cfg.load_store)
     if full or last is None:
         start = pd.Timestamp(cfg["project"]["start"]).tz_localize(cfg.tz).tz_convert("UTC")
     else:
@@ -84,6 +84,6 @@ def update(cfg: Settings, full: bool = False) -> pd.DataFrame:
     s = download(cfg, start)
     df = s.to_frame("load_mwh")
     df["source"] = "smard"
-    store.save_monthly(cfg, NAME, df)
-    log.info("SMARD: stored %d hours up to %s", len(df), df.index.max() if len(df) else None)
+    store.save_monthly(cfg, cfg.load_store, df)
+    log.info("SMARD %s: stored %d hours up to %s", cfg.area, len(df), df.index.max() if len(df) else None)
     return df

@@ -12,9 +12,10 @@ import re
 import pandas as pd
 
 from .. import validate
+from .. import areas
 from ..config import Settings
 from ..sources import eurostat, opsd
-from . import plots, savings
+from . import official, plots, savings
 
 log = logging.getLogger(__name__)
 
@@ -87,6 +88,26 @@ def write_report(cfg: Settings, res: dict, checks: dict) -> str:
     out.append("![Savings by winter](figures/11_savings_by_winter.png)\n")
     out.append("![Winter 2022/23 day by day](figures/12_winter_2022_23.png)\n")
 
+    reg = res.get("regions") or {}
+    if reg:
+        out.append("## The four grid regions\n")
+        out.append("The same analysis, run separately for each transmission grid region with its own weather "
+                   "stations and its own state holidays. Each is measured (SMARD), not estimated.\n")
+        rows = []
+        for code, r in reg.items():
+            if r.get("error"):
+                rows.append({"Region": code, "Covers": r.get("area_name", ""), "2022/23": "failed: " + r["error"][:60]})
+                continue
+            row = {"Region": code, "Covers": r.get("area_name", "")}
+            for w in r.get("winters", []):
+                row[w["winter"]] = f"{w['saving_pct']:.1f}% ({w['low_pct']:.1f} to {w['high_pct']:.1f})"
+            rows.append(row)
+        out.append(_table(pd.DataFrame(rows).fillna("–")) + "\n")
+        out.append("States and cities are not measured separately. On the website they are shown as estimates: "
+                   "a state's demand is its grid region's demand times the state's share of the region's people, so "
+                   "its *percentage* saving is its region's. Grid regions don't follow state borders exactly; each "
+                   "state is counted in the region that covers most of it. Towns and villages have no public data.\n")
+
     out.append("## Step 4: does the method work? Tests on normal winters\n")
     out.append("Each normal winter was forecast using only older data, as if it were unknown, from the same "
                "distances ahead as the crisis winters. In a normal winter the 'saving' should be about 0.\n")
@@ -144,6 +165,27 @@ def write_report(cfg: Settings, res: dict, checks: dict) -> str:
     out.append("![Monthly saving and industry](figures/13_monthly_and_industry.png)\n")
     out.append(LIMITS + "\n")
 
+    oc_ = res.get("official_check") or {}
+    if oc_.get("rows"):
+        out.append("## Check against the official figures\n")
+        out.append("Before any weather adjustment, our yearly totals should match what the Bundesnetzagentur "
+                   "published from the same SMARD data.\n")
+        t = pd.DataFrame([{
+            "Year": r["year"],
+            "Official grid load": f"{r['official_twh']:.1f} TWh" if r["official_twh"] else "–",
+            "Official change": f"{r['official_change_pct']:+.1f}%" if r["official_change_pct"] is not None else "–",
+            "Our total": f"{r['ours_twh']:.1f} TWh" if r["ours_twh"] is not None else "–",
+            "Our change": f"{r['ours_change_pct']:+.1f}%" if r["ours_change_pct"] is not None else "–",
+            "Difference": f"{r['diff_pct']:+.2f}%" if r["diff_pct"] is not None else "–"} for r in oc_["rows"]])
+        out.append(_table(t) + "\n")
+        verdict_ = ("Our totals match the official ones closely, so the download is complete and correct."
+                    if oc_.get("matches") else
+                    "Our totals differ from the official ones by more than 1.5% in at least one year: check the data.")
+        out.append(f"{verdict_} {oc_.get('note', '')} Sources: "
+                   + ", ".join(f"[{x['name']}]({x['url']})" for x in oc_.get("sources", [])) + ".\n")
+        out.append("For context: these raw yearly drops (about 4-5% a year) mix weather, the economy and real "
+                   "saving together. The weather-adjusted winter figures above separate them.\n")
+
     out.append("## Data checks\n")
     lc = checks.get("load", {})
     out.append(f"- Demand data: {lc.get('hours', '?')} hours from {lc.get('first', '?')} to {lc.get('last', '?')}; "
@@ -168,18 +210,49 @@ def write_report(cfg: Settings, res: dict, checks: dict) -> str:
     return text
 
 
+def readme_block(res: dict) -> str:
+    lines = [f"## {headline_text(res)}", "", res["verdict"], ""]
+    w = [r for r in res.get("winters", []) if r.get("complete")]
+    if w:
+        lines += ["| Winter (Oct-Mar) | Less than expected | 90% range | Saved |", "|---|---|---|---|"]
+        lines += [f"| {r['winter']} | {r['saving_pct']:.1f}% | {r['low_pct']:.1f}% to {r['high_pct']:.1f}% | "
+                  f"{r['saving_twh']:.1f} TWh |" for r in w]
+        lines.append("")
+    oc = res.get("official_check") or {}
+    if oc.get("max_abs_diff_pct") is not None:
+        lines.append(f"Raw yearly totals match the Bundesnetzagentur's published figures to within "
+                     f"{oc['max_abs_diff_pct']:.2f}%.")
+        lines.append("")
+    lines.append(f"*Updated automatically on {res['generated_utc'][:10]}. Full report: "
+                 f"[reports/REPORT.md](reports/REPORT.md)*")
+    return "<!-- HEADLINE:START -->\n" + "\n".join(lines) + "\n<!-- HEADLINE:END -->"
+
+
 def update_readme_headline(cfg: Settings, res: dict) -> bool:
     f = cfg.home / "README.md"
     if not f.exists():
         return False
     txt = f.read_text(encoding="utf-8")
-    block = (f"<!-- HEADLINE:START -->\n## {headline_text(res)}\n\n{res['verdict']}\n\n"
-             f"*Updated automatically on {res['generated_utc'][:10]}. Full report: "
-             f"[reports/REPORT.md](reports/REPORT.md)*\n<!-- HEADLINE:END -->")
-    new = re.sub(r"<!-- HEADLINE:START -->.*?<!-- HEADLINE:END -->", block, txt, flags=re.S)
+    new = re.sub(r"<!-- HEADLINE:START -->.*?<!-- HEADLINE:END -->", lambda _m: readme_block(res), txt, flags=re.S)
     if new != txt:
         f.write_text(new, encoding="utf-8")
     return True
+
+
+def run_regions(cfg: Settings) -> dict:
+    """The savings analysis for each grid region (lighter: main estimate, tested range, cheap views)."""
+    out = {}
+    names = {r["code"]: r for r in areas.regions(cfg)}
+    for code in areas.region_codes(cfg):
+        try:
+            c = areas.scoped(cfg, code)
+            r = savings.run(c, savings.prepare(c), light=True)
+            out[code] = {"area_name": names[code].get("area_name", ""), "headline": r["headline"],
+                         "winters": r["winters"], "verdict": r["verdict"]}
+        except Exception as e:  # noqa: BLE001 - report it, keep the rest
+            log.warning("Regional analysis for %s failed: %s", code, e)
+            out[code] = {"area_name": names[code].get("area_name", ""), "error": f"{type(e).__name__}: {e}"}
+    return out
 
 
 def full(cfg: Settings) -> dict:
@@ -197,6 +270,8 @@ def full(cfg: Settings) -> dict:
     plots.explore(cfg, inp.load, inp.X)
     res = savings.run(cfg, inp, industry=industry)
     res["checks"] = checks
+    res["official_check"] = official.check(cfg, inp.load)
+    res["regions"] = run_regions(cfg)
     (cfg.path("results") / "savings.json").write_text(json.dumps(res, indent=2, default=savings._json_default))
     plots.results(cfg, res, inp.load)
     write_report(cfg, res, checks)

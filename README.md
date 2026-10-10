@@ -1,9 +1,23 @@
 # Did Germany really save electricity in the 2022 energy crisis?
 
+[![daily forecast](https://github.com/SAMYSOSERIOUS/DEEL/actions/workflows/daily.yml/badge.svg)](https://github.com/SAMYSOSERIOUS/DEEL/actions/workflows/daily.yml)
+[![tests](https://github.com/SAMYSOSERIOUS/DEEL/actions/workflows/tests.yml/badge.svg)](https://github.com/SAMYSOSERIOUS/DEEL/actions/workflows/tests.yml)
+
+**Live site: [samysoserious.github.io/DEEL](https://samysoserious.github.io/DEEL/)**: a 3D map of the German grid
+lit by tomorrow's forecast, the savings result, and how good the daily forecasts are. Updated every morning.
+
 <!-- HEADLINE:START -->
 ## Germany used 8.8% less grid electricity in winter 2022/23 than the weather predicted (90% range 6.2% to 11.2%).
 
 In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electricity than the weather and calendar predicted (90% range 6.2% to 11.2%), about 23.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 4.2% below the pre-crisis pattern (range 1.5% to 6.8%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 9.2%.
+
+| Winter (Oct-Mar) | Less than expected | 90% range | Saved |
+|---|---|---|---|
+| 2021/22 | 0.0% | -2.8% to 2.7% | -0.0 TWh |
+| 2022/23 | 8.8% | 6.2% to 11.2% | 23.1 TWh |
+| 2023/24 | 7.0% | 4.3% to 9.5% | 18.4 TWh |
+| 2024/25 | 6.5% | 3.8% to 9.0% | 17.1 TWh |
+| 2025/26 | 4.2% | 1.5% to 6.8% | 11.2 TWh |
 
 *Updated automatically on 2026-10-10. Full report: [reports/REPORT.md](reports/REPORT.md)*
 <!-- HEADLINE:END -->
@@ -27,9 +41,12 @@ yesterday's forecast, and publishes everything on a small web page.
 | **Robustness views** | The answer under different choices: other training cut-off dates, only December to February, only dark hours (no rooftop solar), leaving out the lockdowns, correcting for the model's known drift, and a simple no-weather comparison. |
 | **Who saved?** | When in the day and week the saving happened, compared with what energy-hungry industries produced. |
 | **Daily forecast** | Tomorrow, hour by hour, with a 90% range, compared with "same week last year". |
-| **Web page** | Tomorrow's forecast, the last 30 days of forecast vs. reality, the running error compared with the baseline, the savings result, and the date of the last retrain. |
+| **Web page** | A 3D map of Germany's grid where cities light up with tomorrow's forecast hour by hour, the savings result, a check against the Bundesnetzagentur's official figures, the last 30 days of forecast vs. reality, the running error compared with the baseline, and a full report page. |
+| **Germany → regions → states → cities** | Pick any area on the site or click a city on the 3D map. Germany and its **4 grid regions** (50Hertz, TenneT, Amprion, TransnetBW) are **measured** every hour and get their own full analysis, forecast and scores. The 16 **states** and 19 **cities** are shown as clearly badged **estimates** from their region. Towns and villages are listed as "no public data", because none exists. |
+| **Honest range** | The daily forecast's 90% range widens itself every morning, based on the last weeks, so that about 9 hours in 10 really fall inside it. |
+| **Official check** | Our raw yearly totals compared with the Bundesnetzagentur's published grid load, to prove the download is complete. |
 | **Monthly retrain** | The daily model retrains on all data each month, and only replaces the old one if it beats the baseline on the last 4 weeks. |
-| **Tests** | 71 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
+| **Tests** | 95 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
 
 Full results with all charts: **[reports/REPORT.md](reports/REPORT.md)** (written automatically).
 Method in detail: **[docs/METHOD.md](docs/METHOD.md)**.
@@ -120,7 +137,8 @@ Prefer your own computer or server? See `scripts/cron_example.txt`.
 ```
 config/settings.yaml          every choice in one place (dates, stations, model size...)
 src/desave/
-  sources/                    one downloader per source: smard, dwd, weather_forecast,
+  areas.py                    Germany -> 4 grid regions (measured) -> states and cities (estimated)
+  sources/                    one downloader per source: smard (Germany and each region), dwd, weather_forecast,
                               energy_charts (backup, no key), entsoe (optional backup),
                               opsd (cross-check), eurostat (industry)
   timeutils.py                UTC storage, German calendar days, clock-change-safe shifting
@@ -137,7 +155,7 @@ src/desave/
   pipeline/retrain.py         the monthly job
   web/                        the static web page
   demo/                       stand-in data and a local fake server
-tests/                        71 tests
+tests/                        95 tests
 .github/workflows/            tests, daily, monthly, first run
 ```
 

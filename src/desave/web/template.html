@@ -3,172 +3,351 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>German Power Forecast</title>
-<meta name="description" content="Tomorrow's German electricity demand, how good the forecasts are, and how much Germany saved in the 2022 energy crisis.">
+<title>Netzlast Watch</title>
+<meta name="description" content="Did Germany really save electricity in the 2022 energy crisis? Weather-adjusted savings, tomorrow's demand forecast and how good it is. Updated every morning.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Look: a German grid control room (Netzleitstelle) at night. Flag gold = energy and forecast,
+   flag red = savings, blue = what really happened, grey = the simple baseline.
+   Dark is the default; "light" is a printed grid plan. */
 :root {
-  color-scheme: light;
-  --surface-0: #f4f3ef; --surface-1: #fcfcfb; --border: #e3e2dc;
-  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
-  --grid: #e6e5e0; --band: rgba(235,104,52,0.16); --shade: rgba(82,81,78,0.10);
-  --actual: #2a78d6; --model: #eb6834; --base: #1baf7a; --check: #9a998f;
-  --warn-bg: #fff4d6; --warn-ink: #6b4b00; --good: #008300;
+  color-scheme: dark;
+  --ground: #0A0D12; --panel: #11161D; --panel-2: #0D1219; --line: #1E2833; --line-2: #33465A;
+  --ink: #ECEFF3; --ink-2: #A3AEBA; --muted: #7A8693;
+  --gold: #F2B705; --gold-soft: rgba(242,183,5,0.18); --gold-hi: #FFE38A;
+  --red: #E2392D; --blue: #4A9EFF; --grey: #8C97A3; --check: #56616D;
+  --shade: rgba(236,239,243,0.06); --warn-bg: #3A2F10; --warn-ink: #F3D68A;
+  --map-land: #141B24; --map-edge: #3B5068; --on-gold: #0A0D12;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: Barlow, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-    --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
-    --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
-    --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ground: #F3F1EA; --panel: #FBFAF6; --panel-2: #ECE9DF; --line: #D9D5C9; --line-2: #B8B2A3;
+    --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A;
+    --gold: #A87A00; --gold-soft: rgba(168,122,0,0.16); --gold-hi: #D9A100;
+    --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
+    --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
+    --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
   }
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
-  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-  --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
-  --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
-  --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #F3F1EA; --panel: #FBFAF6; --panel-2: #ECE9DF; --line: #D9D5C9; --line-2: #B8B2A3;
+  --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A;
+  --gold: #A87A00; --gold-soft: rgba(168,122,0,0.16); --gold-hi: #D9A100;
+  --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
+  --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
+  --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--surface-0); color: var(--text-primary);
-  font: 15px/1.55 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
-.tile .v, table, .meta { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
-main { max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }
-header h1 { text-wrap: balance; font-size: 28px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
-header p { margin: 0; color: var(--text-secondary); }
-.meta { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
-.banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px;
-  margin: 16px 0 0; font-size: 14px; }
-section.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px;
-  padding: 20px; margin-top: 18px; }
-section.card h2 { font-size: 18px; margin: 0 0 4px; text-wrap: balance; }
-.theme:focus-visible, summary:focus-visible { outline: 2px solid var(--actual); outline-offset: 2px; }
-.sub { color: var(--text-secondary); margin: 0 0 14px; font-size: 14px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
-.tile { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-.tile .k { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-.tile .v { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.tile .n { font-size: 13px; color: var(--text-secondary); }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin: 2px 0 6px; }
-.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-.legend i.band { height: 10px; }
-.chart { width: 100%; height: 320px; position: relative; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); }
+a { color: var(--gold); }
+a:hover { color: var(--gold-hi); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+.flag { display: flex; height: 4px; }
+.flag span { flex: 1; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 24px; }
+@media (max-width: 560px) { .wrap { padding-inline: 16px; } }
+
+/* header */
+header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand b { font: 700 22px/1 var(--display); letter-spacing: 0.06em; }
+nav.sections { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 14px; }
+nav.sections a { color: var(--ink-2); text-decoration: none; padding: 10px 12px; border-radius: 6px; }
+nav.sections a:hover { color: var(--ink); background: var(--shade); }
+nav.sections a.cta { color: var(--on-gold); background: var(--gold); font-weight: 600; }
+.theme-btn { background: none; border: 1px solid var(--line-2); color: var(--ink-2); border-radius: 6px;
+  padding: 9px 12px; font: inherit; font-size: 13px; cursor: pointer; min-height: 40px; }
+.meta { font: 12px/1.5 var(--mono); color: var(--muted); padding-bottom: 8px; }
+.banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; margin: 8px 0; font-size: 14px; }
+
+/* hero */
+.hero { display: flex; flex-wrap: wrap; gap: 32px; align-items: center; padding-block: 20px 40px; }
+.hero-text { flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.big { margin: 0; font: 700 clamp(96px, 16vw, 176px)/0.86 var(--display); letter-spacing: -0.02em; color: var(--gold); }
+.big small { font-size: 0.56em; }
+.lede { margin: 0; font-size: clamp(20px, 2.4vw, 26px); line-height: 1.3; font-weight: 500; max-width: 30ch; text-wrap: balance; }
+.range { margin: 0; font: 14px/1.5 var(--mono); color: var(--ink-2); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 6px; }
+.fact { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel); }
+.fact .k { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.fact .v { font-size: 16px; margin-top: 4px; }
+.fact b.r { color: var(--red); }
+
+.stage { flex: 1 1 460px; min-width: 0; margin: 0; position: relative; height: 560px; border-radius: 18px;
+  background: radial-gradient(120% 80% at 50% 30%, var(--panel) 0%, var(--panel-2) 70%); border: 1px solid var(--line); overflow: hidden; }
+@media (max-width: 560px) { .stage { height: 440px; } }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+.stage canvas:active { cursor: grabbing; }
+.stage .hud { position: absolute; left: 16px; top: 14px; font: 12px/1.5 var(--mono); color: var(--ink-2); letter-spacing: 0.06em; pointer-events: none; }
+.stage .hud b { color: var(--ink); font-weight: 500; font-size: 15px; }
+.stage .city { position: absolute; font: 600 11px/1 var(--body); color: var(--ink-2); letter-spacing: 0.04em; pointer-events: none;
+  transform: translate(-50%, -160%); white-space: nowrap; text-shadow: 0 1px 3px var(--ground); }
+.stage .controls { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; align-items: center; gap: 12px; }
+.play { width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line-2); background: var(--panel);
+  color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none; }
+.scrub { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.scrub input { width: 100%; accent-color: var(--gold); height: 28px; margin: 0; }
+.scrub .ticks { display: flex; justify-content: space-between; font: 11px/1 var(--mono); color: var(--muted); }
+.stage .note { position: absolute; left: 16px; top: 62px; font: 11px/1.4 var(--mono); color: var(--muted); pointer-events: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.map2d { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 1100px; }
+.map2d > div { transform: rotateX(50deg) rotateZ(-16deg) translateY(-24px); }
+.map2d .flow { stroke-dasharray: 2 26; animation: flow 2.4s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -28; } }
+@media (prefers-reduced-motion: reduce) { .map2d .flow { animation: none; } }
+
+/* area picker */
+.areabar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; margin: 6px 0 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font: 600 15px/1.2 var(--body); min-width: 0; }
+.crumbs button { background: none; border: 0; color: var(--ink-2); font: inherit; cursor: pointer; padding: 8px 6px; border-radius: 6px; }
+.crumbs button:hover { color: var(--ink); background: var(--shade); }
+.crumbs button[aria-current="true"] { color: var(--ink); cursor: default; }
+.crumbs .sep { color: var(--muted); }
+.pick select { font: 500 14px var(--body); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line-2);
+  border-radius: 8px; padding: 9px 10px; min-height: 40px; max-width: 100%; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1.2 var(--body); letter-spacing: 0.04em;
+  padding: 7px 10px; border-radius: 999px; border: 1px solid currentColor; }
+.badge.measured { color: var(--blue); }
+.badge.estimate { color: var(--gold); }
+.badge.rough { color: var(--red); }
+.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.area-note { margin: 4px 2px 0; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+.stage .chips { position: absolute; right: 12px; top: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 70%; }
+.stage .chips button { font: 600 12px/1 var(--body); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2);
+  border-radius: 999px; padding: 8px 10px; cursor: pointer; min-height: 32px; }
+.stage .chips button[aria-pressed="true"] { color: var(--on-gold); background: var(--gold); border-color: var(--gold); }
+.hidden-sec { display: none; }
+
+/* kpis */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding-bottom: 40px; }
+.kpi { border-top: 2px solid var(--gold); padding: 14px 4px; }
+.kpi.b { border-top-color: var(--blue); }
+.kpi .k { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.kpi .v { font: 500 30px/1.2 var(--mono); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kpi .n { font-size: 14px; color: var(--ink-2); }
+
+/* sections */
+section.block { border-top: 1px solid var(--line); padding-block: 44px; }
+.split { display: flex; flex-wrap: wrap; gap: 32px; }
+.split > .side { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.split > .main { flex: 3 1 560px; min-width: 0; }
+h2 { margin: 0; font: 600 clamp(30px, 4vw, 40px)/1.1 var(--display); text-wrap: balance; }
+.sub { margin: 0; color: var(--ink-2); max-width: 68ch; }
+.legend { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.legend.row { flex-direction: row; flex-wrap: wrap; gap: 16px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 8px; }
+.legend i.band { height: 10px; background: var(--gold-soft); }
+.legend i.dash { height: 0; border-top: 2px dashed var(--grey); }
+.chart { width: 100%; height: 300px; position: relative; }
+.chart.short { height: 220px; }
 .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.chart text { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 11px; fill: var(--text-muted); }
-.chart .tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 6px 9px; font-size: 12px; color: var(--text-primary); box-shadow: 0 4px 14px rgba(0,0,0,.12);
-  white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.chart text { font: 11px var(--mono); fill: var(--muted); }
+.chart .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px;
+  padding: 7px 10px; font-size: 12px; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25); }
 .chart .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-details { margin-top: 10px; font-size: 14px; }
-summary { cursor: pointer; color: var(--text-secondary); }
-table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
-th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.chart-missing { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line-2); border-radius: 10px;
+  color: var(--muted); font-size: 14px; padding: 16px; text-align: center; }
+details { margin-top: 12px; font-size: 14px; }
+summary { cursor: pointer; color: var(--ink-2); padding: 6px 0; }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; }
-th { color: var(--text-muted); font-weight: 500; }
-.headline { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 4px 0 10px; }
-.verdict { color: var(--text-secondary); margin: 0 0 12px; }
-.empty { color: var(--text-muted); font-style: italic; }
-.chart-missing { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); border-radius: 10px; color: var(--text-muted); font-size: 14px; padding: 16px; text-align: center; }
-footer { margin-top: 28px; font-size: 13px; color: var(--text-muted); }
-footer a, .card a { color: var(--actual); }
-.theme { float: right; background: none; border: 1px solid var(--border); color: var(--text-secondary);
-  border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
-@media (max-width: 560px) { header h1 { font-size: 22px; } .tile .v { font-size: 22px; } .chart { height: 280px; } }
+th { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+td { font-family: var(--mono); }
+tr:last-child td { border-bottom: 0; }
+td.neg { color: var(--red); }
+.ok-pill { display: inline-block; font: 600 11px/1 var(--body); letter-spacing: 0.06em; padding: 5px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 18px; background: var(--panel); display: flex; flex-direction: column; gap: 8px; }
+.card h3 { margin: 0; font: 600 22px/1.2 var(--display); }
+.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.empty { color: var(--muted); font-style: italic; }
+footer { border-top: 1px solid var(--line); padding-block: 28px 44px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <button class="theme" id="theme" type="button" aria-label="Switch light or dark">Light / dark</button>
-    <h1>German electricity demand: forecast and crisis savings</h1>
-    <p>Tomorrow's demand hour by hour, how good our forecasts have been, and how much less power Germany used after the 2022 energy crisis.</p>
-    <div class="meta" id="meta"></div>
-    <div id="banners"></div>
+<div class="flag" aria-hidden="true"><span style="background:#000"></span><span style="background:#DD0000"></span><span style="background:#FFCE00"></span></div>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" aria-label="Netzlast Watch, back to top">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M6 25 L15 4 L24 25 M9.5 17 H20.5 M11.5 12 H18.5" fill="none" style="stroke: var(--gold)" stroke-width="2" stroke-linejoin="round"/><path d="M16.5 13 L13 19 H16 L13.5 24" fill="none" style="stroke: var(--ink)" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <b>NETZLAST WATCH</b>
+    </a>
+    <nav class="sections" aria-label="Sections">
+      <a href="#savings">Savings</a>
+      <a href="#check">Official check</a>
+      <a href="#tomorrow">Tomorrow</a>
+      <a href="#accuracy">Accuracy</a>
+      <a class="cta" href="report.html">Full report</a>
+      <button class="theme-btn" id="theme" type="button">Light / dark</button>
+    </nav>
   </header>
+  <div class="meta" id="meta"></div>
+  <div id="banners"></div>
+  <div class="areabar" role="group" aria-label="Choose an area">
+    <nav class="crumbs" id="crumbs" aria-label="Area levels"></nav>
+    <label class="pick"><span class="sr-only">Area</span><select id="area"></select></label>
+    <span class="badge measured" id="badge">Measured</span>
+  </div>
+  <p class="area-note" id="area-note"></p>
 
-  <section class="card" id="tomorrow">
-    <h2>Tomorrow</h2>
-    <p class="sub" id="tomorrow-sub"></p>
-    <div class="tiles" id="tomorrow-tiles"></div>
-    <div class="legend">
-      <span><i style="background:var(--model)"></i>Forecast</span>
-      <span><i class="band" style="background:var(--band)"></i>90% range</span>
-      <span><i style="background:var(--base)"></i>Same week last year</span>
+  <section class="hero" id="top">
+    <div class="hero-text">
+      <div class="eyebrow" style="color: var(--gold)" id="hero-eyebrow">Energiekrise · Winter 2022/23</div>
+      <h1 class="big" id="big">–</h1>
+      <p class="lede" id="lede">less grid electricity than the weather and calendar predicted.</p>
+      <p class="range" id="range"></p>
+      <div class="facts" id="facts"></div>
     </div>
-    <div class="chart" id="chart-tomorrow" role="img" aria-label="Hourly forecast for tomorrow"></div>
-    <details><summary>Show as a table</summary><div id="table-tomorrow"></div></details>
+    <figure class="stage" id="stage" aria-label="3D map of the German power grid. Cities light up hour by hour with tomorrow's demand forecast.">
+      <div class="hud" id="hud"></div>
+      <div class="note" id="stage-note">drag to turn · click a city</div>
+      <div class="chips" id="chips" role="group" aria-label="Zoom to a grid region"></div>
+      <div class="controls">
+        <button class="play" id="play" type="button" aria-label="Pause the animation"></button>
+        <div class="scrub">
+          <label for="hour" class="sr-only">Hour of tomorrow</label>
+          <input id="hour" type="range" min="0" max="23" step="1" value="19">
+          <div class="ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+        </div>
+      </div>
+    </figure>
   </section>
 
-  <section class="card" id="history">
-    <h2>Last 30 days: forecast vs. what really happened</h2>
-    <p class="sub">Each forecast is saved the morning it was made and never changed afterwards.</p>
-    <div class="legend">
-      <span><i style="background:var(--actual)"></i>Real demand</span>
-      <span><i style="background:var(--model)"></i>Our forecast (day before)</span>
-      <span><i style="background:var(--base)"></i>Same week last year</span>
-    </div>
-    <div class="chart" id="chart-history" role="img" aria-label="Forecast versus actual, last 30 days"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <section class="block" id="savings">
+    <div class="eyebrow" style="color: var(--red)">Einsparung je Winter</div>
+    <h2 style="margin-top: 8px">Saving per winter, after removing weather and holidays</h2>
+    <p class="sub" style="margin-top: 10px">Grey bars are normal winters, forecast as if unknown: they should sit near zero. Red bars are the crisis winter and every winter since. The thin lines show the 90% range.</p>
+    <p class="sub" id="verdict" style="margin-top: 10px; color: var(--ink)"></p>
+    <div class="chart" id="chart-savings" role="img" aria-label="Saving per winter with ranges" style="margin-top: 16px"></div>
+    <details><summary>Show as a table</summary><div class="tablebox" id="table-savings"></div></details>
   </section>
 
-  <section class="card" id="accuracy">
-    <h2>How good are the forecasts?</h2>
-    <p class="sub">Average hourly error over the last 30 scored days. Lower is better. The model must beat the simple "same week last year" guess to be worth using.</p>
-    <div class="tiles" id="score-tiles"></div>
-    <div class="legend">
-      <span><i style="background:var(--model)"></i>Our model (running average)</span>
-      <span><i style="background:var(--base)"></i>Same week last year (running average)</span>
+  <section class="block" id="regions">
+    <div class="eyebrow" style="color: var(--blue)">Regelzonen im Vergleich</div>
+    <h2 style="margin-top: 8px">The four grid regions compared</h2>
+    <p class="sub" style="margin-top: 10px">Germany's transmission grid is run by four companies, each in its own area. SMARD measures each area every hour, so these are measured results, each with its own weather and holidays. Click a bar to open that region.</p>
+    <div class="legend row" style="margin-top: 12px">
+      <span><i style="background: var(--red)"></i>Winter 2022/23</span>
+      <span><i style="background: var(--gold)"></i><span id="regions-latest-label">Latest winter</span></span>
     </div>
-    <div class="chart" id="chart-scores" style="height:240px" role="img" aria-label="Running average error"></div>
-    <details><summary>Daily scores</summary><div id="table-scores"></div></details>
+    <div class="chart" id="chart-regions" role="img" aria-label="Saving per grid region" style="margin-top: 8px"></div>
+    <details><summary>Show as a table</summary><div class="tablebox" id="table-regions"></div></details>
   </section>
 
-  <section class="card" id="savings">
-    <h2>Did Germany really save electricity in the 2022 crisis?</h2>
-    <p class="headline" id="headline"></p>
-    <p class="verdict" id="verdict"></p>
-    <div class="legend">
-      <span><i style="background:var(--check)"></i>Normal winters used as a test (should be near 0)</span>
-      <span><i style="background:var(--model)"></i>Crisis winter and after</span>
+  <section class="block" id="check">
+    <div class="eyebrow" style="color: var(--gold)">Abgleich mit der Bundesnetzagentur</div>
+    <h2 style="margin-top: 8px">Do our raw numbers match the official ones?</h2>
+    <p class="sub" style="margin-top: 10px">Before any weather adjustment, our yearly totals should match what the Bundesnetzagentur published from the same SMARD data. If they did not, something in our download would be wrong.</p>
+    <div class="tablebox" id="table-official"></div>
+    <p class="sub" id="official-note" style="margin-top: 10px; font-size: 14px"></p>
+  </section>
+
+  <section class="block" id="tomorrow">
+    <div class="split">
+      <div class="side">
+        <div class="eyebrow" style="color: var(--gold)">Prognose · Morgen</div>
+        <h2>Tomorrow, hour by hour</h2>
+        <p class="sub" id="tomorrow-sub"></p>
+        <div class="legend">
+          <span><i style="background: var(--gold)"></i>Forecast</span>
+          <span><i class="band"></i>90% range</span>
+          <span><i class="dash"></i>Same week last year</span>
+        </div>
+      </div>
+      <div class="main">
+        <div class="chart" id="chart-tomorrow" role="img" aria-label="Tomorrow's hourly forecast with range"></div>
+        <details><summary>Show as a table</summary><div class="tablebox" id="table-tomorrow"></div></details>
+      </div>
     </div>
-    <div class="chart" id="chart-savings" role="img" aria-label="Saving by winter with ranges"></div>
-    <details><summary>Show as a table</summary><div id="table-savings"></div></details>
-    <p class="sub" style="margin-top:12px">Saving = how much less electricity flowed through the grid than a model of normal behaviour predicted from the real weather and calendar. Full method, tests and limits: <a href="REPORT.md">report</a>.</p>
+  </section>
+
+  <section class="block" id="history">
+    <div class="eyebrow" style="color: var(--blue)">Rückblick · 30 Tage</div>
+    <h2 style="margin-top: 8px">Last 30 days: forecast vs. what really happened</h2>
+    <p class="sub" style="margin-top: 10px">Each forecast is saved the morning it was made and never changed afterwards.</p>
+    <div class="legend row" style="margin-top: 12px">
+      <span><i style="background: var(--blue)"></i>Real demand</span>
+      <span><i style="background: var(--gold)"></i>Our forecast (day before)</span>
+      <span><i class="dash"></i>Same week last year</span>
+    </div>
+    <div class="chart" id="chart-history" role="img" aria-label="Forecast versus actual, last 30 days" style="margin-top: 8px"></div>
+  </section>
+
+  <section class="block" id="accuracy">
+    <div class="split">
+      <div class="side">
+        <div class="eyebrow" style="color: var(--blue)">Treffsicherheit</div>
+        <h2>How good are the forecasts?</h2>
+        <p class="sub">Running average hourly error. The model has to beat the simple “same week last year” guess to earn its place.</p>
+        <div class="legend">
+          <span><i style="background: var(--gold)"></i>Our model</span>
+          <span><i style="background: var(--grey)"></i>Same week last year</span>
+        </div>
+        <p class="sub" id="range-note" style="font-size: 14px"></p>
+      </div>
+      <div class="main">
+        <div class="chart short" id="chart-scores" role="img" aria-label="Running forecast error, model versus baseline"></div>
+        <details><summary>Daily scores</summary><div class="tablebox" id="table-scores"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="method">
+    <div class="eyebrow" style="color: var(--muted)">Methode</div>
+    <h2 style="margin-top: 8px">How it works, and what it can't tell</h2>
+    <div class="cards">
+      <div class="card"><h3>Learn “normal”</h3><p>A model learns from 2015 to August 2022 how demand follows the hour, weekday, holidays in each state, school holidays, temperature and sunshine.</p></div>
+      <div class="card"><h3>Test it first</h3><p>It forecasts four normal winters it never saw. Those errors set the width of every range on this page.</p></div>
+      <div class="card"><h3>Forecast “no crisis”</h3><p>Fed the real weather of each winter since 2022, it says what demand would have been. The gap is the saving.</p></div>
+      <div class="card"><h3>Honest limits</h3><p>Grid data can't say who saved, or separate thrift from closed factories, or price effects from appeals. The report goes through each one.</p></div>
+    </div>
+    <p style="margin-top: 18px"><a href="report.html">Read the full report with all tests and charts →</a></p>
   </section>
 
   <footer>
-    Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst (DWD) · weather forecasts via Bright Sky (DWD MOSMIX) or Open-Meteo (DWD ICON) · Eurostat · python-holidays.
-    Times are German local time.
+    <span>Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst · Energy-Charts (Fraunhofer ISE) · Eurostat · map: Natural Earth</span>
+    <span style="font-family: var(--mono)">Times: German time (MEZ/MESZ)</span>
   </footer>
-</main>
+</div>
+
+<script src="vendor/three.min.js"></script>
 <script>
 const D = /*__DATA__*/null;
 const $ = (id) => document.getElementById(id);
-const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const fmt = (x, d = 1) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toLocaleString("en-GB", {minimumFractionDigits: d, maximumFractionDigits: d});
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-
-function tile(k, v, n) { return `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${v}</div><div class="n">${n || ""}</div></div>`; }
-function table(cols, rows) {
+const cssv = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const mq = (q) => { try { return matchMedia(q).matches; } catch (e) { return false; } };
+const reduceMotion = mq("(prefers-reduced-motion: reduce)");
+const isLight = () => (document.documentElement.getAttribute("data-theme") || (mq("(prefers-color-scheme: light)") ? "light" : "dark")) === "light";
+function table(cols, rows, cls) {
   return `<table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
-    rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+    rows.map(r => `<tr>${r.map((c, i) => `<td${cls && cls[i] ? ` class="${cls[i]}"` : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
 }
-// ---------------------------------------------------------------- charts
-// Drawn with plain SVG by this page itself: no outside library that could fail to load.
+function section(name, fn) { try { fn(); } catch (e) { console.error(name, e); } }
+const signed = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + fmt(Math.abs(x), d);
+
+// ---------------------------------------------------------------- 2D charts (plain SVG, drawn by the page itself)
 const NS = "http://www.w3.org/2000/svg";
-function el(tag, attrs, parent) {
-  const e = document.createElementNS(NS, tag);
-  for (const k in attrs) e.setAttribute(k, attrs[k]);
-  if (parent) parent.appendChild(e);
-  return e;
-}
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 const ok = (v) => v !== null && v !== undefined && Number.isFinite(v);
 function niceTicks(lo, hi, n = 5) {
-  if (!(hi > lo)) { hi = lo + 1; }
+  if (!(hi > lo)) hi = lo + 1;
   const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(st => st >= raw);
   const out = [];
@@ -176,276 +355,639 @@ function niceTicks(lo, hi, n = 5) {
   return out;
 }
 function setupChart(id) {
-  const box = $(id);
-  if (!box) return null;
-  box.classList.remove("chart-missing");
-  box.innerHTML = "";
-  const W = box.clientWidth > 0 ? Math.max(box.clientWidth, 280) : 800, H = box.clientHeight || 320;
-  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", role: "img"}, box);
-  const tip = document.createElement("div");
-  tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
+  const box = $(id); if (!box) return null;
+  box.classList.remove("chart-missing"); box.innerHTML = "";
+  const W = box.clientWidth > 0 ? Math.max(box.clientWidth, 280) : 800, H = box.clientHeight || 300;
+  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none"}, box);
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
   return {box, svg, tip, W, H};
 }
 function chartFailed(id, tableId, e) {
   const box = $(id);
   if (box) { box.classList.add("chart-missing"); box.textContent = "This chart could not be drawn. The numbers are in the table below."; }
-  const t = tableId && $(tableId);
-  if (t && t.closest("details")) t.closest("details").open = true;
+  const t = tableId && $(tableId); if (t && t.closest("details")) t.closest("details").open = true;
   console.error(e);
 }
-
-// Line chart: evenly spaced points (one per hour or day), optional range band and shaded area.
 function lineChart(id, o) {
   try {
     const c = setupChart(id); if (!c) return;
-    const {svg, tip, W, H} = c;
-    const m = {l: 46, r: 12, t: 10, b: 30};
-    const n = o.labels.length;
+    const {svg, tip, W, H} = c, m = {l: 46, r: 12, t: 10, b: 30}, n = o.labels.length;
     const all = [];
     o.series.forEach(s => s.y.forEach(v => ok(v) && all.push(v)));
     if (o.band) [o.band.low, o.band.high].forEach(a => a.forEach(v => ok(v) && all.push(v)));
     if (!all.length) throw new Error("no data");
     let lo = Math.min(...all), hi = Math.max(...all);
-    const pad = (hi - lo || 1) * 0.08;
-    lo = o.fromZero ? 0 : lo - pad; hi = hi + pad;
-    const ticks = niceTicks(lo, hi);
-    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const pad = (hi - lo || 1) * 0.08; lo = o.fromZero ? 0 : lo - pad; hi += pad;
+    const ticks = niceTicks(lo, hi); lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
     const X = i => m.l + (n <= 1 ? 0 : i * (W - m.l - m.r) / (n - 1));
     const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
-    // grid + y labels
     ticks.forEach(v => {
-      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: "stroke: var(--grid)", "stroke-width": 1}, svg);
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: "stroke: var(--line)", "stroke-width": 1}, svg);
       el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : (o.decimals ?? 1));
     });
     el("text", {x: 4, y: m.t + 8}, svg).textContent = o.unit || "";
-    // shaded area (e.g. backfilled days)
     if (o.shadeTo > 0) {
       el("rect", {x: X(0), y: m.t, width: X(o.shadeTo) - X(0), height: H - m.t - m.b, style: "fill: var(--shade)"}, svg);
       el("text", {x: X(0) + 6, y: m.t + 14}, svg).textContent = o.shadeLabel || "";
     }
-    // x labels
     const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - m.l - m.r) / 90))));
-    for (let i = 0; i < n; i += every) {
-      el("text", {x: X(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = o.xLabel(o.labels[i]);
-    }
-    // band
+    for (let i = 0; i < n; i += every) el("text", {x: X(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = o.xLabel(o.labels[i]);
     if (o.band) {
       let pts = [];
       const flush = () => {
         if (pts.length > 1) {
-          const d = pts.map(([i, h], k) => `${k ? "L" : "M"}${X(i)},${Y(h)}`).join("") +
-            pts.slice().reverse().map(([i, , l]) => `L${X(i)},${Y(l)}`).join("") + "Z";
-          el("path", {d, style: "fill: var(--band); stroke: none"}, svg);
+          const d = pts.map(([i, h], k) => `${k ? "L" : "M"}${X(i)},${Y(h)}`).join("") + pts.slice().reverse().map(([i, , l]) => `L${X(i)},${Y(l)}`).join("") + "Z";
+          el("path", {d, style: "fill: var(--gold-soft); stroke: none"}, svg);
         }
         pts = [];
       };
-      for (let i = 0; i < n; i++) {
-        const h = o.band.high[i], l = o.band.low[i];
-        if (ok(h) && ok(l)) pts.push([i, h, l]); else flush();
-      }
+      for (let i = 0; i < n; i++) { const h = o.band.high[i], l = o.band.low[i]; if (ok(h) && ok(l)) pts.push([i, h, l]); else flush(); }
       flush();
     }
-    // lines (breaks where values are missing)
     o.series.forEach(s => {
       let d = "", pen = false;
       s.y.forEach((v, i) => { if (ok(v)) { d += `${pen ? "L" : "M"}${X(i)},${Y(v)}`; pen = true; } else pen = false; });
-      el("path", {d, fill: "none", style: `stroke: var(${s.color})`, "stroke-width": s.width || 2,
-        "stroke-dasharray": s.dash ? "4 4" : "none", "stroke-linejoin": "round", "stroke-linecap": "round"}, svg);
+      el("path", {d, fill: "none", style: `stroke: var(${s.color})`, "stroke-width": s.width || 2, "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round", "stroke-linecap": "round"}, svg);
       if (s.markers) s.y.forEach((v, i) => ok(v) && el("circle", {cx: X(i), cy: Y(v), r: 3, style: `fill: var(${s.color})`}, svg));
     });
-    // hover: vertical line + values
-    const guide = el("line", {y1: m.t, y2: H - m.b, style: "stroke: var(--text-muted)", "stroke-width": 1, visibility: "hidden"}, svg);
+    const guide = el("line", {y1: m.t, y2: H - m.b, style: "stroke: var(--muted)", "stroke-width": 1, visibility: "hidden"}, svg);
     const hit = el("rect", {x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent"}, svg);
     const move = (ev) => {
       const r = svg.getBoundingClientRect();
-      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
-      const sx = px * W / r.width;
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left, sx = px * W / r.width;
       const i = Math.max(0, Math.min(n - 1, Math.round((sx - m.l) / ((W - m.l - m.r) / Math.max(1, n - 1)))));
       guide.setAttribute("x1", X(i)); guide.setAttribute("x2", X(i)); guide.setAttribute("visibility", "visible");
-      let html = `<div style="color:var(--text-secondary);margin-bottom:3px">${esc(o.tipLabel(o.labels[i]))}</div>`;
-      o.series.slice().reverse().forEach(s => {
-        html += `<div><i style="background:var(${s.color})"></i>${esc(s.name)}: <b>${ok(s.y[i]) ? fmt(s.y[i], o.tipDecimals ?? 1) : "–"}</b> ${esc(o.tipUnit || "")}</div>`;
-      });
-      if (o.band && ok(o.band.low[i])) html += `<div style="color:var(--text-secondary)">90% range ${fmt(o.band.low[i])}–${fmt(o.band.high[i])} ${esc(o.tipUnit || "")}</div>`;
+      let html = `<div style="color:var(--ink-2);margin-bottom:3px">${esc(o.tipLabel(o.labels[i]))}</div>`;
+      o.series.slice().reverse().forEach(s => { html += `<div><i style="background:var(${s.color})"></i>${esc(s.name)}: <b>${ok(s.y[i]) ? fmt(s.y[i], o.tipDecimals ?? 1) : "–"}</b> ${esc(o.tipUnit || "")}</div>`; });
+      if (o.band && ok(o.band.low[i])) html += `<div style="color:var(--ink-2)">90% range ${fmt(o.band.low[i])}–${fmt(o.band.high[i])} ${esc(o.tipUnit || "")}</div>`;
       tip.innerHTML = html; tip.hidden = false;
-      const left = X(i) * r.width / W;
-      tip.style.left = Math.min(Math.max(0, left + 12), r.width - tip.offsetWidth - 4) + "px";
-      tip.style.top = "8px";
+      tip.style.left = Math.min(Math.max(0, X(i) * r.width / W + 12), r.width - tip.offsetWidth - 4) + "px"; tip.style.top = "8px";
     };
     const leave = () => { tip.hidden = true; guide.setAttribute("visibility", "hidden"); };
     hit.addEventListener("mousemove", move); hit.addEventListener("touchmove", move, {passive: true});
     hit.addEventListener("mouseleave", leave); hit.addEventListener("touchend", leave);
   } catch (e) { chartFailed(id, o.tableId, e); }
 }
-
-// Bar chart with a range line on each bar.
 function barChart(id, o) {
   try {
     const c = setupChart(id); if (!c) return;
-    const {svg, tip, W, H} = c;
-    const m = {l: 46, r: 12, t: 22, b: 40};
-    const n = o.values.length;
+    const {svg, tip, W, H} = c, m = {l: 46, r: 12, t: 24, b: 44}, n = o.values.length;
     if (!n) throw new Error("no data");
     let lo = Math.min(0, ...o.low.filter(ok)), hi = Math.max(0, ...o.high.filter(ok));
     const pad = (hi - lo || 1) * 0.1; lo -= lo < 0 ? pad : 0; hi += pad;
-    const ticks = niceTicks(lo, hi);
-    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const ticks = niceTicks(lo, hi); lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
     const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
-    const slot = (W - m.l - m.r) / n, bw = Math.min(56, slot * 0.55);
-    const cx = i => m.l + slot * (i + 0.5);
+    const slot = (W - m.l - m.r) / n, bw = Math.min(52, slot * 0.55), cx = i => m.l + slot * (i + 0.5);
     ticks.forEach(v => {
-      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: `stroke: var(${v === 0 ? "--text-muted" : "--grid"})`, "stroke-width": 1}, svg);
-      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : 1) + "%";
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: `stroke: var(${v === 0 ? "--muted" : "--line"})`, "stroke-width": 1}, svg);
+      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = signed(v, Number.isInteger(v) ? 0 : 1) + "%";
     });
     for (let i = 0; i < n; i++) {
-      const v = o.values[i];
-      const top = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
-      const bar = el("rect", {x: cx(i) - bw / 2, y: top, width: bw, height: Math.max(h, 1), rx: 3, style: `fill: var(${o.colors[i]})`}, svg);
+      const v = o.values[i], top = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
+      const bar = el("rect", {x: cx(i) - bw / 2, y: top, width: bw, height: Math.max(h, 1.5), rx: 3, style: `fill: var(${o.colors[i]})`}, svg);
       if (ok(o.low[i]) && ok(o.high[i])) {
-        const s = "stroke: var(--text-primary)";
+        const s = "stroke: var(--ink)";
         el("line", {x1: cx(i), x2: cx(i), y1: Y(o.low[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
         el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.low[i]), y2: Y(o.low[i]), style: s, "stroke-width": 1.3}, svg);
         el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.high[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
       }
-      const lbl = el("text", {x: cx(i), y: Y(Math.max(o.high[i] ?? v, v)) - 6, "text-anchor": "middle", style: "fill: var(--text-primary)"}, svg);
-      lbl.textContent = fmt(v) + "%";
+      const below = v < 0, ly = below ? Y(Math.min(o.low[i] ?? v, v)) + 15 : Y(Math.max(o.high[i] ?? v, v)) - 7;
+      el("text", {x: cx(i), y: ly, "text-anchor": "middle", style: "fill: var(--ink)"}, svg).textContent = signed(v) + "%";
       const [a, b] = o.labels[i].split(" ");
-      const xl = el("text", {x: cx(i), y: H - 22, "text-anchor": "middle"}, svg);
-      xl.textContent = a;
-      if (b) el("text", {x: cx(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = b;
+      el("text", {x: cx(i), y: H - 24, "text-anchor": "middle", style: "fill: var(--ink-2)"}, svg).textContent = a;
+      if (b) el("text", {x: cx(i), y: H - 9, "text-anchor": "middle"}, svg).textContent = b;
       const hit = el("rect", {x: cx(i) - slot / 2, y: m.t, width: slot, height: H - m.t - m.b, fill: "transparent"}, svg);
       const show = () => {
-        tip.innerHTML = `<b>${esc(o.labels[i])}</b><br>${fmt(v)}% less than expected<br><span style="color:var(--text-secondary)">90% range ${fmt(o.low[i])}% to ${fmt(o.high[i])}%</span>`;
-        tip.hidden = false;
-        const r = svg.getBoundingClientRect();
-        tip.style.left = Math.min(Math.max(0, cx(i) * r.width / W - 60), r.width - tip.offsetWidth - 4) + "px";
-        tip.style.top = "4px";
-        bar.style.opacity = "0.8";
+        tip.innerHTML = `<b>${esc(o.labels[i].replace(" ", " · "))}</b><br>${signed(v)}% vs. expected<br><span style="color:var(--ink-2)">90% range ${signed(o.low[i])}% to ${signed(o.high[i])}%</span>`;
+        tip.hidden = false; const r = svg.getBoundingClientRect();
+        tip.style.left = Math.min(Math.max(0, cx(i) * r.width / W - 60), r.width - tip.offsetWidth - 4) + "px"; tip.style.top = "4px"; bar.style.opacity = "0.8";
       };
       const hide = () => { tip.hidden = true; bar.style.opacity = ""; };
-      hit.addEventListener("mouseenter", show); hit.addEventListener("mouseleave", hide);
-      hit.addEventListener("touchstart", show, {passive: true});
+      hit.addEventListener("mouseenter", show); hit.addEventListener("mouseleave", hide); hit.addEventListener("touchstart", show, {passive: true});
+      if (o.onPick) { hit.style.cursor = "pointer"; hit.addEventListener("click", () => o.onPick(i)); }
     }
   } catch (e) { chartFailed(id, o.tableId, e); }
 }
-
 const hm = (s) => s.slice(11, 16);
 const dayMon = (s) => new Date(s.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", {day: "numeric", month: "short"});
 const dayMonHm = (s) => dayMon(s) + " " + hm(s);
 
-function section(name, fn) {
-  try { fn(); } catch (e) { console.error(name, e); }
+
+// ---------------------------------------------------------------- areas: Germany → grid regions → states → cities
+// Germany and the 4 grid regions are measured (SMARD, every hour). States and cities are estimates made from
+// their grid region by share of people, and are labelled as such. Towns and villages have no public data.
+const Area = (() => {
+  let cur = {level: "country", code: "DE"};
+  const H = () => (D && D.hierarchy) || {regions: [], states: [], cities: []};
+  const region = (c) => H().regions.find(r => r.code === c);
+  const state = (c) => H().states.find(r => r.code === c);
+  const city = (c) => H().cities.find(r => r.code === c);
+  function find(code) {
+    if (code === "DE") return {level: "country", code};
+    if (region(code)) return {level: "region", code};
+    if (state(code)) return {level: "state", code};
+    if (city(code)) return {level: "city", code};
+    return null;
+  }
+  const measuredBadge = ["measured", "Measured · SMARD, every hour"];
+  function view() {
+    const c = cur, A = (D && D.areas) || {};
+    if (c.level === "region") {
+      const r = region(c.code);
+      return {name: `${r.name} grid region`, short: r.name, level: "region", base: A[r.code] || {}, factor: 1, badge: measuredBadge,
+              note: `${r.area_name}. Measured separately, with its own weather stations and holidays. Grid regions don't follow state borders exactly.`,
+              region: r.code, states: r.states};
+    }
+    if (c.level === "state") {
+      const st = state(c.code), r = region(st.region);
+      return {name: st.name, short: st.name, level: "state", base: A[st.region] || {}, factor: st.share_of_region,
+              badge: ["estimate", `Estimate · from ${r.name}`],
+              note: `States are not measured separately. ${st.name}'s amounts are the ${r.name} region's measurements times the state's share of the region's people (${fmt(100 * st.share_of_region, 1)}%), so its percentages are the region's.`,
+              region: st.region, states: [st.code], estimate: true};
+    }
+    if (c.level === "city") {
+      const ci = city(c.code), st = state(ci.state), r = region(ci.region);
+      return {name: ci.name, short: ci.name, level: "city", base: A[ci.region] || {}, factor: st.share_of_region * ci.share_of_state,
+              badge: ["rough", "Rough estimate"],
+              note: `Cities are not measured. ${ci.name}'s amounts are the ${st.name} estimate times the city's share of the state's people (${fmt(100 * ci.share_of_state, 1)}%). Real city demand also depends on local industry, so treat this as a rough guide; percentages are the ${r.name} region's.`,
+              region: ci.region, states: [st.code], city: ci.code, estimate: true};
+    }
+    return {name: "Germany", short: "Germany", level: "country", base: D || {}, factor: 1, badge: measuredBadge, note: "", region: null};
+  }
+  function members(v) {
+    const cs = H().cities;
+    if (v.level === "country") return new Set(((D && D.points) || []).map(p => p.name));
+    if (v.level === "city") return new Set([v.city]);
+    const st = new Set(v.states || []);
+    return new Set(cs.filter(c => st.has(c.state)).map(c => c.code));
+  }
+  function buildPicker() {
+    const h = H(), opt = (v, t, dis) => `<option value="${esc(v)}"${dis ? " disabled" : ""}>${esc(t)}</option>`;
+    const by = (a, b) => a.name.localeCompare(b.name, "de");
+    let html = `<optgroup label="Country (measured)">${opt("DE", "Germany")}</optgroup>`;
+    if (h.regions.length) html += `<optgroup label="Grid regions (measured)">${h.regions.map(r => opt(r.code, `${r.name} · ${r.area_name}`)).join("")}</optgroup>`;
+    if (h.states.length) html += `<optgroup label="States (estimated)">${h.states.slice().sort(by).map(x => opt(x.code, x.name)).join("")}</optgroup>`;
+    if (h.cities.length) html += `<optgroup label="Cities (rough estimate)">${h.cities.slice().sort(by).map(x => opt(x.code, x.name)).join("")}</optgroup>`;
+    html += `<optgroup label="Towns and villages">${opt("", "No public data exists", true)}</optgroup>`;
+    $("area").innerHTML = html;
+    $("area").addEventListener("change", e => set(e.target.value));
+    $("chips").innerHTML = [["DE", "Germany"], ...h.regions.map(r => [r.code, r.name])]
+      .map(([c, t]) => `<button type="button" data-area="${esc(c)}" aria-pressed="false">${esc(t)}</button>`).join("");
+    $("chips").querySelectorAll("button").forEach(b => b.addEventListener("click", () => set(b.dataset.area)));
+  }
+  function showBar() {
+    const v = view(), parts = [["DE", "Germany"]];
+    if (v.region) { const r = region(v.region); parts.push([r.code, r.name]); }
+    if (v.level === "state" || v.level === "city") { const st = state(v.states[0]); parts.push([st.code, st.name]); }
+    if (v.level === "city") parts.push([v.city, v.name]);
+    $("crumbs").innerHTML = parts.map(([c, t], i) => (i ? `<span class="sep" aria-hidden="true">›</span>` : "") +
+      `<button type="button" data-area="${esc(c)}"${i === parts.length - 1 ? ' aria-current="true"' : ""}>${esc(t)}</button>`).join("");
+    $("crumbs").querySelectorAll("button").forEach(b => b.addEventListener("click", () => set(b.dataset.area)));
+    $("area").value = cur.code;
+    $("badge").className = "badge " + v.badge[0]; $("badge").textContent = v.badge[1];
+    $("area-note").textContent = v.note; $("area-note").hidden = !v.note;
+    const chip = v.level === "country" ? "DE" : v.region;
+    $("chips").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.area === chip)));
+  }
+  function set(code, quiet) {
+    const a = find(code); if (!a) return;
+    cur = a;
+    try { history.replaceState(null, "", code === "DE" ? location.pathname + location.search : "#area-" + encodeURIComponent(code)); } catch (e) {}
+    showBar();
+    if (!quiet) { render(); Grid3D.focus(view(), members(view())); Hero.refresh(); }
+  }
+  function init() {
+    buildPicker();
+    const m = (location.hash || "").match(/^#area-(.+)$/), want = m ? decodeURIComponent(m[1]) : "DE";
+    set(find(want) ? want : "DE", true);
+  }
+  return {init, set, view, members, region};
+})();
+const mul = (arr, k) => (arr ? arr.map(v => (ok(v) ? v * k : v)) : arr);
+
+// ---------------------------------------------------------------- hero controls (shared by the 3D map and the flat map)
+const Hero = (() => {
+  let hour = 19, playing = !reduceMotion, lastShown = -1, startedAt = 0, base = 19;
+  const f = () => {
+    const v = Area.view(), t = v.base && v.base.tomorrow;
+    return t && t.forecast_gw && t.forecast_gw.length >= 23 ? mul(t.forecast_gw.slice(0, 24), v.factor) : Array(24).fill(50);
+  };
+  const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  function hourFloat() { return playing ? (base + (now() - startedAt) / 1000) % 24 : hour; }   // one hour per second
+  function tick(hf) {
+    const h = Math.floor(hf) % 24;
+    if (h === lastShown) return;
+    lastShown = h; $("hour").value = h;
+    const v = Area.view(), t = v.base && v.base.tomorrow;
+    const date = t ? new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"}) : "";
+    const val = f()[h] ?? f()[0];
+    $("hud").innerHTML = `MORGEN · ${esc(date)} · ${String(h).padStart(2, "0")}:00<br><b>${fmt(val, val < 10 ? 2 : 1)} GW</b> ${esc(v.short)}${v.estimate ? " (est.)" : ""}`;
+  }
+  function setPlaying(p) {
+    if (playing && !p) hour = Math.floor(hourFloat()) % 24;
+    playing = p; base = hour; startedAt = now();
+    $("play").setAttribute("aria-label", p ? "Pause the animation" : "Play the animation");
+    $("play").innerHTML = p ? `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2v10M10 2v10" style="stroke: var(--ink)" stroke-width="2.4" stroke-linecap="round"/></svg>`
+                            : `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2l8 5-8 5z" style="fill: var(--ink)"/></svg>`;
+  }
+  function init() {
+    const ff = f(), peak = ff.indexOf(Math.max(...ff));
+    hour = base = peak >= 0 ? peak : 19;
+    $("hour").addEventListener("input", e => { playing = true; setPlaying(false); hour = +e.target.value; lastShown = -1; tick(hour); });
+    $("play").addEventListener("click", () => setPlaying(!playing));
+    setPlaying(playing);
+    tick(hour);
+    setInterval(() => { if (!Grid3D.active) tick(hourFloat()); }, 250);   // the flat map has no animation loop of its own
+  }
+  return {init, tick, hourFloat, forecast: f, refresh: () => { lastShown = -1; tick(hourFloat()); }};
+})();
+
+// ---------------------------------------------------------------- the 3D grid
+// Germany is lifted out of its real outline. Cities glow and grow with tomorrow's forecast, hour by hour;
+// light pulses run along the main power corridors (north to south, the way wind power travels);
+// wind turbines turn in the North Sea and the Baltic. Drag to turn.
+const Grid3D = (() => {
+  const CORRIDORS = [
+    ["Kiel", "Hamburg"], ["Hamburg", "Hannover"], ["Bremen", "Hannover"], ["Hannover", "Frankfurt"], ["Frankfurt", "Stuttgart"],
+    ["Stuttgart", "Muenchen"], ["Stuttgart", "Freiburg"], ["Rostock", "Berlin"], ["Berlin", "Leipzig"], ["Magdeburg", "Leipzig"],
+    ["Leipzig", "Nuernberg"], ["Erfurt", "Nuernberg"], ["Nuernberg", "Muenchen"], ["Hannover", "Dortmund"], ["Dortmund", "Koeln"],
+    ["Koeln", "Mainz"], ["Mainz", "Frankfurt"], ["Mainz", "Saarbruecken"], ["Hannover", "Magdeburg"], ["Magdeburg", "Berlin"],
+    ["Hamburg", "Rostock"], ["Leipzig", "Erfurt"], ["Berlin", "Potsdam"],
+  ];
+  const LABELS = ["Berlin", "Hamburg", "Muenchen", "Koeln", "Frankfurt"];
+  const NAMES = {Muenchen: "München", Koeln: "Köln", Nuernberg: "Nürnberg", Saarbruecken: "Saarbrücken"};
+  const WIND = [[54.05, 6.55], [54.35, 7.05], [54.65, 6.25], [54.75, 13.85], [54.55, 14.25]];
+  const K = Math.cos(51.2 * Math.PI / 180), S = 10;
+  const P = (lat, lon) => [(lon - 10.4) * K * S, (lat - 51.2) * -S];   // x east, z south
+  let st = null;
+
+  function glowTexture(THREE) {
+    const c = document.createElement("canvas"); c.width = c.height = 64;
+    const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.25, "rgba(255,255,255,0.55)"); r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function init(stage, data) {
+    const THREE = window.THREE;
+    if (!THREE) throw new Error("3D library not loaded");
+    const probe = document.createElement("canvas");
+    if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) throw new Error("WebGL not available");
+    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, powerPreference: "low-power"});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.domElement.setAttribute("aria-hidden", "true");
+    stage.insertBefore(renderer.domElement, stage.firstChild);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 500);
+    const root = new THREE.Group(); scene.add(root);
+    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0a0d12, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(-20, 40, 25); scene.add(sun);
+
+    // land: the real outline, extruded (main land and islands)
+    const shapes = data.geo.map(ring => { const s = new THREE.Shape(); ring.forEach(([lon, lat], i) => { const [x, z] = P(lat, lon); if (i) s.lineTo(x, -z); else s.moveTo(x, -z); }); return s; });
+    const landGeo = new THREE.ExtrudeGeometry(shapes, {depth: 1.1, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.18, bevelSegments: 2});
+    landGeo.rotateX(-Math.PI / 2);
+    const landMat = new THREE.MeshStandardMaterial({color: 0x141b24, roughness: 0.85, metalness: 0.1});
+    root.add(new THREE.Mesh(landGeo, landMat));
+    const edgeMat = new THREE.LineBasicMaterial({color: 0x3b5068, transparent: true, opacity: 0.9});
+    root.add(new THREE.LineSegments(new THREE.EdgesGeometry(landGeo, 30), edgeMat));
+    const gridHelper = new THREE.GridHelper(160, 32, 0x1e2833, 0x1e2833);
+    gridHelper.position.y = -0.4; gridHelper.material.transparent = true; gridHelper.material.opacity = 0.5; root.add(gridHelper);
+
+    // cities: a pillar and a glow each, sized by population
+    const glow = glowTexture(THREE), top = 1.45, byName = {};
+    const pillarGeo = new THREE.CylinderGeometry(0.28, 0.28, 1, 18); pillarGeo.translate(0, 0.5, 0);
+    const pillarMat = new THREE.MeshStandardMaterial({color: 0xf2b705, emissive: 0xf2b705, emissiveIntensity: 0.7, roughness: 0.4, transparent: true, opacity: 0.92});
+    const cities = data.points.map(p => {
+      const [x, z] = P(p.lat, p.lon);
+      const mat = pillarMat.clone();   // one light per city, so cities outside the chosen area can be dimmed
+      const pillar = new THREE.Mesh(pillarGeo, mat); pillar.position.set(x, top, z); root.add(pillar);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glow, color: 0xf2b705, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
+      halo.position.set(x, top + 0.1, z); root.add(halo);
+      return (byName[p.name] = {name: p.name, x, z, w: p.weight, pillar, halo, mat, dim: false});
+    });
+
+    // power corridors with travelling pulses
+    const lineMat = new THREE.LineBasicMaterial({color: 0xf2b705, transparent: true, opacity: 0.45});
+    const pulseGeo = new THREE.SphereGeometry(0.22, 10, 10), pulseMat = new THREE.MeshBasicMaterial({color: 0xffe38a});
+    const corridors = [];
+    CORRIDORS.forEach(([a, b], idx) => {
+      const A = byName[a], B = byName[b]; if (!A || !B) return;
+      const mid = new THREE.Vector3((A.x + B.x) / 2, top + 1.6 + Math.hypot(A.x - B.x, A.z - B.z) * 0.08, (A.z + B.z) / 2);
+      const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(A.x, top + 0.2, A.z), mid, new THREE.Vector3(B.x, top + 0.2, B.z));
+      root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)), lineMat));
+      const pulses = [0, 0.33, 0.66].map(off => { const m = new THREE.Mesh(pulseGeo, pulseMat); root.add(m); return {m, off}; });
+      corridors.push({curve, pulses, speed: 0.08 + (idx % 5) * 0.012});
+    });
+
+    // offshore wind farms, with cables to the coast
+    const towerMat = new THREE.MeshStandardMaterial({color: 0xdfe6ee, roughness: 0.5});
+    const turbines = WIND.map(([lat, lon]) => {
+      const [x, z] = P(lat, lon), g = new THREE.Group(); g.position.set(x, 0, z);
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 3.4, 8), towerMat); tower.position.y = 1.7; g.add(tower);
+      const rotor = new THREE.Group(); rotor.position.set(0, 3.45, 0.12);
+      for (let k = 0; k < 3; k++) {
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.5, 0.03), towerMat); blade.position.y = 0.75;
+        const arm = new THREE.Group(); arm.rotation.z = k * 2 * Math.PI / 3; arm.add(blade); rotor.add(arm);
+      }
+      g.add(rotor); root.add(g); return rotor;
+    });
+    const cableMat = new THREE.LineDashedMaterial({color: 0x4a9eff, dashSize: 0.5, gapSize: 0.4, transparent: true, opacity: 0.7});
+    [[WIND[1], "Bremen"], [WIND[3], "Rostock"]].forEach(([[lat, lon], to]) => {
+      const [x, z] = P(lat, lon), B = byName[to]; if (!B) return;
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 0.3, z), new THREE.Vector3(B.x, top, B.z)]), cableMat);
+      l.computeLineDistances(); root.add(l);
+    });
+
+    const nice = {}; ((data.hierarchy && data.hierarchy.cities) || []).forEach(c => { nice[c.code] = c.name; });
+    const labels = cities.map(c => { const d = document.createElement("div"); d.className = "city"; d.textContent = nice[c.name] || NAMES[c.name] || c.name; d.hidden = true; stage.appendChild(d); return {d, c}; });
+
+    st = {THREE, renderer, scene, camera, cities, corridors, turbines, labels, stage, landMat, edgeMat, gridHelper, lineMat, pillarMat, pulseMat, cableMat,
+      yaw: -0.28, targetYaw: -0.28, pitch: 1.0, dist: 172, visible: true, t0: performance.now(), last: performance.now(), drag: null,
+      look: new THREE.Vector3(0, 0, 6), lookTarget: new THREE.Vector3(0, 0, 6), zoom: 1, zoomTarget: 1, labelSet: new Set(LABELS)};
+    applyTheme(); resize(); bind();
+    requestAnimationFrame(loop);
+  }
+
+  function applyTheme() {
+    if (!st) return;
+    const light = isLight(), hex = (v, d) => { const s = cssv(v); return /^#[0-9a-f]{6}$/i.test(s) ? parseInt(s.slice(1), 16) : d; };
+    st.landMat.color.setHex(light ? 0xe4e0d4 : 0x141b24);
+    st.edgeMat.color.setHex(light ? 0x8c8574 : 0x3b5068);
+    st.gridHelper.material.color.setHex(light ? 0xd9d5c9 : 0x1e2833);
+    const gold = hex("--gold", 0xf2b705);
+    st.lineMat.color.setHex(gold);
+    st.pulseMat.color.setHex(light ? 0xa87a00 : 0xffe38a);
+    st.cableMat.color.setHex(hex("--blue", 0x4a9eff));
+    st.cities.forEach(c => {
+      c.mat.color.setHex(gold); c.mat.emissive.setHex(gold);
+      c.mat.emissiveIntensity = (light ? 0.25 : 0.7) * (c.dim ? 0.2 : 1);
+      c.mat.opacity = c.dim ? 0.18 : 0.92;
+      c.halo.material.color.setHex(gold); c.halo.material.opacity = (light ? 0.45 : 1) * (c.dim ? 0.12 : 1);
+    });
+  }
+
+  function resize() {
+    if (!st) return;
+    const w = st.stage.clientWidth || 600, h = st.stage.clientHeight || 520;
+    st.renderer.setSize(w, h, false);
+    st.camera.aspect = w / h; st.dist = w / h < 0.95 ? 240 : 182;
+    st.camera.updateProjectionMatrix();
+  }
+
+  function focus(v, mem) {
+    if (!st) return;
+    const sel = st.cities.filter(c => mem.has(c.name));
+    if (v.level === "country" || !sel.length) { st.lookTarget.set(0, 0, 6); st.zoomTarget = 1; }
+    else {
+      const cx = sel.reduce((a, c) => a + c.x, 0) / sel.length, cz = sel.reduce((a, c) => a + c.z, 0) / sel.length;
+      const ext = Math.max(7, ...sel.map(c => Math.hypot(c.x - cx, c.z - cz)));
+      st.lookTarget.set(cx, 0, cz + 2); st.zoomTarget = Math.min(1, 0.32 + ext / 38);
+    }
+    st.labelSet = v.level === "country" ? new Set(LABELS) : new Set(sel.map(c => c.name));
+    st.cities.forEach(c => { c.dim = !mem.has(c.name); });
+    applyTheme();
+  }
+
+  function pick(e) {
+    const cv = st.renderer.domElement, r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    let best = null, bd = 28;
+    const v = new st.THREE.Vector3();
+    st.cities.forEach(c => {
+      v.set(c.x, (c.pillar.position.y + c.halo.position.y) / 2, c.z).project(st.camera);
+      const dd = Math.hypot((v.x + 1) / 2 * r.width - mx, (1 - v.y) / 2 * r.height - my);
+      if (dd < bd) { bd = dd; best = c; }
+    });
+    if (best) Area.set(best.name);
+  }
+
+  function bind() {
+    const cv = st.renderer.domElement;
+    cv.addEventListener("pointerdown", e => { st.drag = {x: e.clientX, y: e.clientY, yaw: st.targetYaw}; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+    cv.addEventListener("pointermove", e => { if (st.drag) st.targetYaw = Math.max(-1.1, Math.min(1.1, st.drag.yaw + (e.clientX - st.drag.x) * 0.006)); });
+    cv.addEventListener("pointerup", e => { if (st.drag && Math.hypot(e.clientX - st.drag.x, e.clientY - st.drag.y) < 6) pick(e); });
+    const end = () => { st.drag = null; };
+    cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => { st.visible = es[0].isIntersecting; }).observe(st.stage);
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - st.last) / 1000); st.last = now;
+    const t = (now - st.t0) / 1000, f = Hero.forecast(), hf = Hero.hourFloat();
+    const fmax = Math.max(...f), fmin = Math.min(...f);
+    const i0 = Math.floor(hf) % 24, i1 = (i0 + 1) % 24, a = hf - Math.floor(hf);
+    const gw = f[i0] * (1 - a) + f[i1] * a, level = (gw - fmin) / Math.max(1e-6, fmax - fmin);
+    st.cities.forEach(c => {
+      const h = 0.5 + c.w * 42 * (0.5 + 0.5 * level);
+      c.pillar.scale.set(1, h, 1);
+      c.halo.position.y = 1.45 + h + 0.15;
+      const s = 2.2 + c.w * 22 * (0.6 + 0.6 * level); c.halo.scale.set(s, s, s);
+    });
+    const speed = reduceMotion ? 0 : 0.6 + 1.4 * level;
+    st.corridors.forEach(k => k.pulses.forEach(p => { const u = ((t * k.speed * speed) + p.off) % 1; p.m.position.copy(k.curve.getPoint(u)); }));
+    if (!reduceMotion) st.turbines.forEach(r => { r.rotation.z -= dt * 1.8; });
+    if (!st.drag && !reduceMotion) st.targetYaw += (Math.sin(t * 0.12) * 0.35 - 0.28 - st.targetYaw) * Math.min(1, dt * 0.5);
+    st.yaw += (st.targetYaw - st.yaw) * Math.min(1, dt * 3);
+    const ease = Math.min(1, dt * 2.5);
+    st.look.lerp(st.lookTarget, ease); st.zoom += (st.zoomTarget - st.zoom) * ease;
+    const cam = st.camera, d = st.dist * st.zoom;
+    cam.position.set(st.look.x + Math.sin(st.yaw) * Math.cos(st.pitch) * d * 0.55, Math.sin(st.pitch) * d * 0.62,
+                     st.look.z + Math.cos(st.yaw) * Math.cos(st.pitch) * d * 0.55 + 1);
+    cam.lookAt(st.look);
+    st.renderer.render(st.scene, cam);
+    const w = st.stage.clientWidth, hgt = st.stage.clientHeight, v = new st.THREE.Vector3();
+    st.labels.forEach(({d: el2, c}) => {
+      v.set(c.x, c.halo.position.y, c.z).project(cam);
+      el2.style.left = ((v.x + 1) / 2 * w) + "px"; el2.style.top = ((1 - v.y) / 2 * hgt) + "px";
+      el2.hidden = v.z > 1 || !st.labelSet.has(c.name);
+    });
+    Hero.tick(hf);
+  }
+  function loop(now) {
+    if (!st) return;
+    requestAnimationFrame(loop);
+    if (!st.visible || document.hidden) { st.last = now; return; }
+    try { frame(now); } catch (e) { console.error("3D frame", e); st = null; }
+  }
+  return {init, resize, applyTheme, focus, frame: (n) => st && frame(n), get active() { return !!st; }};
+})();
+
+// when 3D is not possible (very old device, WebGL switched off): the same map, flat and tilted
+function map2D(stage, data) {
+  const K = Math.cos(51.2 * Math.PI / 180), W = 440, H = 560;
+  const ring = data.geo[0], xs = ring.map(p => (p[0] - 5.8) * K), ys = ring.map(p => 55.1 - p[1]);
+  const s = Math.min((W - 20) / (Math.max(...xs) - Math.min(...xs)), (H - 20) / (Math.max(...ys) - Math.min(...ys)));
+  const ox = (W - (Math.max(...xs) - Math.min(...xs)) * s) / 2 - Math.min(...xs) * s, oy = (H - (Math.max(...ys) - Math.min(...ys)) * s) / 2 - Math.min(...ys) * s;
+  const P = (lon, lat) => [((lon - 5.8) * K * s + ox).toFixed(1), ((55.1 - lat) * s + oy).toFixed(1)];
+  const d = data.geo.map(r => "M" + r.map(([lon, lat]) => P(lon, lat).join(",")).join("L") + "Z").join("");
+  const by = {}; data.points.forEach(p => { by[p.name] = P(p.lon, p.lat); });
+  const lines = [["Kiel", "Hamburg", "Hannover", "Frankfurt", "Stuttgart", "Muenchen"], ["Rostock", "Berlin", "Leipzig", "Nuernberg", "Muenchen"],
+    ["Hannover", "Dortmund", "Koeln", "Mainz", "Frankfurt"], ["Hannover", "Magdeburg", "Berlin"]]
+    .map(path => path.filter(n => by[n]).map((n, i) => (i ? "L" : "M") + by[n].join(",")).join(""));
+  const wrap = document.createElement("div"); wrap.className = "map2d"; wrap.setAttribute("aria-hidden", "true");
+  wrap.innerHTML = `<div><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width: 100%">
+    <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color: var(--gold); stop-opacity: 0.9"/><stop offset="100%" style="stop-color: var(--gold); stop-opacity: 0"/></radialGradient></defs>
+    <path d="${d}" style="fill: var(--map-land); stroke: var(--map-edge)" stroke-width="1.5"/>
+    ${lines.map(l => `<path d="${l}" fill="none" style="stroke: var(--gold)" stroke-width="2" opacity="0.8"/><path class="flow" d="${l}" fill="none" style="stroke: var(--gold-hi)" stroke-width="4" stroke-linecap="round"/>`).join("")}
+    ${data.points.map(p => { const [x, y] = by[p.name]; const r = 6 + p.weight * 90; return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#g2)"/><circle cx="${x}" cy="${y}" r="3.5" style="fill: var(--ink)"/>`; }).join("")}
+  </svg></div>`;
+  stage.insertBefore(wrap, stage.firstChild);
 }
 
+// ---------------------------------------------------------------- page content (follows the chosen area)
 function render() {
   if (!D) return;
+  const V = Area.view(), B = V.base || {}, k = V.factor, est = V.estimate ? " (estimated)" : "";
   const meta = [];
-  if (D.data_until) meta.push(`Demand data up to ${esc(D.data_until.replace("T", " "))}`);
-  if (D.retrain && D.retrain.date) meta.push(`last model retrain: ${esc(D.retrain.date)}`);
+  if (D.data_until) meta.push(`demand data up to ${esc(D.data_until.replace("T", " "))}`);
+  if (D.retrain && D.retrain.date) meta.push(`model retrained ${esc(D.retrain.date)}`);
   meta.push(`page built ${esc(D.generated_utc.slice(0, 16).replace("T", " "))} UTC`);
   $("meta").textContent = meta.join(" · ");
   let b = "";
-  if (D.demo) b += `<div class="banner"><b>Demo data.</b> These numbers come from realistic stand-in data, not from SMARD and DWD. Run the project on your own computer to see the real figures.</div>`;
+  if (D.demo) b += `<div class="banner"><b>Demo data.</b> These numbers come from realistic stand-in data, not from SMARD and DWD.</div>`;
   if (D.status && D.status.error) b += `<div class="banner"><b>Today's update failed:</b> ${esc(D.status.error)}. The page shows the last good results.</div>`;
+  const regErr = V.region && D.status && D.status.areas && D.status.areas[V.region] && D.status.areas[V.region].error;
+  if (regErr) b += `<div class="banner"><b>Today's update for ${esc(V.region)} failed:</b> ${esc(regErr)}.</div>`;
   $("banners").innerHTML = b;
 
-  section("tomorrow", () => {
-  const t = D.tomorrow;
-  if (t) {
-    const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
-    $("tomorrow-sub").textContent = `${day}. Made ${t.issued_utc.slice(0, 16)} UTC using the ${t.weather_source} weather forecast.`;
-    $("tomorrow-tiles").innerHTML =
-      tile("Total for the day", `${fmt(t.total_gwh, 0)} GWh`, `90% range ${fmt(t.total_low_gwh, 0)}–${fmt(t.total_high_gwh, 0)} GWh`) +
-      tile("Highest hour", `${fmt(t.peak_gw, 1)} GW`, `at ${esc(t.peak_hour)}`);
-    const x = t.hours;
-    lineChart("chart-tomorrow", {
-      labels: t.hours, unit: "GW", xLabel: hm, tipLabel: hm, tipUnit: "GW", tableId: "table-tomorrow",
-      band: {low: t.low_gw, high: t.high_gw},
-      series: [{name: "Same week last year", y: t.baseline_gw, color: "--base", width: 2, dash: true},
-               {name: "Forecast", y: t.forecast_gw, color: "--model", width: 2.5, markers: true}],
-    });
-    $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
-      t.hour_labels.map((h, i) => [h, fmt(t.forecast_gw[i]), fmt(t.low_gw[i]), fmt(t.high_gw[i]), fmt(t.baseline_gw[i])]));
-  } else {
-    $("tomorrow").insertAdjacentHTML("beforeend", `<p class="empty">No forecast yet. Run the daily job.</p>`);
-  }
-
+  section("hero", () => {
+    const v = B.savings;
+    $("hero-eyebrow").textContent = `Energiekrise · Winter 2022/23 · ${V.short}`;
+    if (!v || !v.headline) { $("big").textContent = "…"; $("lede").textContent = "No savings result for this area yet."; $("range").textContent = ""; $("facts").innerHTML = ""; $("verdict").textContent = ""; return; }
+    const h = v.headline;
+    $("big").innerHTML = `−${fmt(h.saving_pct)}<small>%</small>`;
+    $("big").setAttribute("aria-label", `${fmt(h.saving_pct)} percent less`);
+    $("lede").textContent = "less grid electricity than the weather and calendar predicted.";
+    const twh = h.saving_twh * k;
+    $("range").textContent = `90% range ${fmt(h.low_pct)}% to ${fmt(h.high_pct)}% · about ${fmt(twh, twh < 1 ? 2 : 1)} TWh${est} · October to March`;
+    const facts = [];
+    const latest = (v.winters || []).filter(w => w.complete).slice(-1)[0];
+    if (latest && latest.winter !== "2022/23") {
+      const maybe = latest.low_pct <= 0;
+      facts.push(`<div class="fact"><div class="k">Has it come back?</div><div class="v">${maybe ? "Maybe. The gap was" : "Not fully. Still"} <b class="r">${signed(-latest.saving_pct)}%</b> in winter ${esc(latest.winter)}.</div></div>`);
+    }
+    if (v.dark) facts.push(`<div class="fact"><div class="k">Night hours only</div><div class="v"><b class="r">${signed(-v.dark.saving_pct)}%</b>, so rooftop solar doesn't explain it.</div></div>`);
+    $("facts").innerHTML = facts.join("");
+    $("verdict").textContent = V.level === "country" ? (v.verdict || "") : (V.estimate ? "" : (v.verdict || ""));
   });
 
-  section("history", () => {
-  const h = D.last30;
-  if (h) {
-    const shadeTo = h.backfilled_until ? h.time.filter(x => x <= h.backfilled_until).length - 1 : 0;
-    lineChart("chart-history", {
-      labels: h.time, unit: "GW", xLabel: dayMon, tipLabel: dayMonHm, tipUnit: "GW",
-      shadeTo, shadeLabel: "backfilled (measured weather)",
-      series: [{name: "Same week last year", y: h.baseline_gw, color: "--base", width: 1.2, dash: true},
-               {name: "Forecast", y: h.forecast_gw, color: "--model", width: 1.6},
-               {name: "Real", y: h.actual_gw, color: "--actual", width: 2}],
-    });
-  } else {
-    $("chart-history").outerHTML = `<p class="empty">Not enough forecasts yet.</p>`;
-  }
-
-  });
-
-  section("scores", () => {
-  const s = D.scores;
-  if (s) {
-    const better = s.model_mape < s.baseline_mape;
-    $("score-tiles").innerHTML =
-      tile("Our model", `${fmt(s.model_mape, 2)}%`, "average hourly error") +
-      tile("Same week last year", `${fmt(s.baseline_mape, 2)}%`, better ? `our model is ${fmt(100 * (1 - s.model_mape / s.baseline_mape), 0)}% better` : "baseline is currently better") +
-      tile("Inside the 90% range", `${fmt(s.inside_range_pct, 0)}%`, "of hours (should be about 90%)") +
-      (s.backfilled_days ? tile("Backfilled days", s.backfilled_days, "made later with measured weather") : "");
-    lineChart("chart-scores", {
-      labels: s.dates, unit: "%", fromZero: true, decimals: 1, xLabel: dayMon, tipLabel: dayMon, tipUnit: "%", tipDecimals: 2,
-      tableId: "table-scores",
-      series: [{name: "Same week last year", y: s.running_baseline, color: "--base", width: 2},
-               {name: "Model", y: s.running_model, color: "--model", width: 2.5, markers: true}],
-    });
-    $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
-      s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", (r.model_daily_error_pct > 0 ? "+" : "") + fmt(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
-  } else {
-    $("score-tiles").innerHTML = `<p class="empty">No scored days yet.</p>`;
-  }
-
+  section("kpis", () => {
+    const t = B.tomorrow, s = B.scores, kk = [], c = B.range_calibration;
+    if (t) {
+      const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"});
+      const tot = t.total_gwh * k, d0 = tot < 100 ? 1 : 0, pk = t.peak_gw * k;
+      kk.push(`<div class="kpi"><div class="k">Tomorrow, ${esc(day)}</div><div class="v">${fmt(tot, d0)} GWh</div><div class="n">range ${fmt(t.total_low_gwh * k, d0)}–${fmt(t.total_high_gwh * k, d0)}${est}</div></div>`);
+      kk.push(`<div class="kpi"><div class="k">Peak hour</div><div class="v">${fmt(pk, pk < 10 ? 2 : 1)} GW</div><div class="n">at ${esc(t.peak_hour)}</div></div>`);
+    }
+    if (s) {
+      const whose = V.estimate ? ` (${esc(V.region)} region)` : "";
+      kk.push(`<div class="kpi b"><div class="k">Forecast error, ${s.days} days</div><div class="v">${fmt(s.model_mape, 1)}%</div><div class="n">vs ${fmt(s.baseline_mape, 1)}% for “same week last year”${whose}</div></div>`);
+      kk.push(`<div class="kpi b"><div class="k">Hours inside 90% range</div><div class="v">${fmt(s.inside_range_pct, 0)}%</div><div class="n">${c && c.scale > 1.001 ? `range now widened ×${fmt(c.scale, 2)} to match reality` : "should be about 90%"}${whose}</div></div>`);
+    }
+    $("kpis").innerHTML = kk.length ? kk.join("") : `<p class="empty">No daily forecast for this area yet.</p>`;
   });
 
   section("savings", () => {
-  const v = D.savings;
-  if (v && v.headline) {
-    const hd = v.headline;
-    $("headline").textContent = `Germany used ${fmt(hd.saving_pct)}% less grid electricity in winter 2022/23 than the weather predicted (90% range ${fmt(hd.low_pct)}% to ${fmt(hd.high_pct)}%).`;
-    $("verdict").textContent = v.verdict;
-    const rows = v.checks.map(r => Object.assign({}, r, {kind: "check"})).concat(v.winters.map(r => Object.assign({}, r, {kind: "crisis"})));
-    const labels = rows.map(r => r.winter + (r.kind === "check" ? " (test)" : (r.complete === false ? " (so far)" : "")));
-    barChart("chart-savings", {
-      labels, values: rows.map(r => r.saving_pct), low: rows.map(r => r.low_pct), high: rows.map(r => r.high_pct),
-      colors: rows.map(r => r.kind === "check" ? "--check" : "--model"), tableId: "table-savings",
-    });
-    $("table-savings").innerHTML = table(["Winter", "Saving", "90% range", "Saving (TWh)"],
-      rows.map(r => [labels[rows.indexOf(r)], fmt(r.saving_pct) + "%", `${fmt(r.low_pct)}% to ${fmt(r.high_pct)}%`, r.saving_twh !== undefined ? fmt(r.saving_twh) : "–"]));
-  } else {
-    $("headline").textContent = "The savings analysis has not been run yet.";
-  }
+    const v = B.savings;
+    if (!v || !v.winters) { $("chart-savings").innerHTML = `<p class="empty">No savings result for this area yet.</p>`; $("table-savings").innerHTML = ""; return; }
+    const rows = (v.checks || []).map(r => Object.assign({}, r, {kind: "check"})).concat(v.winters.map(r => Object.assign({}, r, {kind: "crisis"})));
+    const labels = rows.map(r => r.winter + (r.kind === "check" ? " test" : (r.complete === false ? " so-far" : "")));
+    barChart("chart-savings", {labels, values: rows.map(r => -r.saving_pct), low: rows.map(r => -r.high_pct), high: rows.map(r => -r.low_pct),
+      colors: rows.map(r => r.kind === "check" ? "--check" : "--red"), tableId: "table-savings"});
+    $("table-savings").innerHTML = table(["Winter", "Change vs expected", "90% range", "Saved (TWh)" + est],
+      rows.map(r => [esc(r.winter) + (r.kind === "check" ? " (test)" : ""), signed(-r.saving_pct) + "%", `${signed(-r.high_pct)}% to ${signed(-r.low_pct)}%`,
+        r.saving_twh !== undefined ? fmt(r.saving_twh * k, k < 0.2 ? 2 : 1) : "–"]));
+  });
+
+  section("regions", () => {
+    const H = D.hierarchy || {regions: []}, A = D.areas || {};
+    const regs = H.regions.filter(r => A[r.code] && A[r.code].savings && A[r.code].savings.winters);
+    $("regions").classList.toggle("hidden-sec", !regs.length);
+    if (!regs.length) return;
+    const latestW = regs.map(r => A[r.code].savings.winters.filter(w => w.complete).slice(-1)[0]).filter(Boolean).map(w => w.winter).sort().slice(-1)[0];
+    $("regions-latest-label").textContent = latestW ? `Winter ${latestW}` : "Latest winter";
+    const bars = [];
+    regs.forEach(r => ["2022/23", latestW].forEach((w, j) => {
+      const row = A[r.code].savings.winters.find(x => x.winter === w); if (!row || (j && w === "2022/23")) return;
+      bars.push({code: r.code, label: `${r.name} ${w}`, v: -row.saving_pct, lo: -row.high_pct, hi: -row.low_pct, color: j ? "--gold" : "--red", row});
+    }));
+    barChart("chart-regions", {labels: bars.map(x => x.label), values: bars.map(x => x.v), low: bars.map(x => x.lo), high: bars.map(x => x.hi),
+      colors: bars.map(x => x.color), tableId: "table-regions", onPick: (i) => Area.set(bars[i].code)});
+    $("table-regions").innerHTML = table(["Region", "Covers", "Winter", "Change vs expected", "90% range", "Saved (TWh)"],
+      bars.map(x => { const r = Area.region(x.code); return [esc(r.name), esc(r.area_name), esc(x.row.winter), signed(x.v) + "%", `${signed(x.lo)}% to ${signed(x.hi)}%`, fmt(x.row.saving_twh, 1)]; }));
+  });
+
+  section("official", () => {
+    $("check").classList.toggle("hidden-sec", V.level !== "country");
+    const o = D.official;
+    if (!o || !o.rows || !o.rows.length) { $("table-official").innerHTML = `<p class="empty" style="padding: 14px">Appears after the next monthly analysis.</p>`; return; }
+    $("table-official").innerHTML = table(["Year", "Official grid load", "Official change", "Our total", "Our change", "Difference"],
+      o.rows.map(r => [r.year, r.official_twh != null ? fmt(r.official_twh) + " TWh" : "–", r.official_change_pct != null ? signed(r.official_change_pct) + "%" : "–",
+        r.ours_twh != null ? fmt(r.ours_twh) + " TWh" : "–", r.ours_change_pct != null ? signed(r.ours_change_pct) + "%" : "–",
+        r.diff_pct != null ? `<span class="ok-pill" style="color: ${Math.abs(r.diff_pct) < 1 ? "var(--blue)" : "var(--red)"}">${signed(r.diff_pct, 2)}%</span>` : "–"]),
+      [null, null, "neg", null, "neg", null]);
+    $("official-note").innerHTML = esc(o.note || "") + (o.sources && o.sources.length ? " Sources: " + o.sources.map(x => `<a href="${esc(x.url)}" rel="noopener">${esc(x.name)}</a>`).join(", ") + "." : "");
+  });
+
+  section("tomorrow", () => {
+    const t = B.tomorrow;
+    if (!t) { $("tomorrow-sub").textContent = "No forecast for this area yet."; $("chart-tomorrow").innerHTML = ""; $("table-tomorrow").innerHTML = ""; return; }
+    $("tomorrow-sub").textContent = `${V.name}${est}. Made ${t.issued_utc.slice(0, 16)} UTC with the ${t.weather_source} weather forecast, saved, and never changed afterwards.`;
+    const fc = mul(t.forecast_gw, k), lo = mul(t.low_gw, k), hi = mul(t.high_gw, k), bl = mul(t.baseline_gw, k), d = k < 0.2 ? 2 : 1;
+    lineChart("chart-tomorrow", {labels: t.hours, unit: "GW", xLabel: hm, tipLabel: hm, tipUnit: "GW", tipDecimals: d, decimals: d, tableId: "table-tomorrow",
+      band: {low: lo, high: hi},
+      series: [{name: "Same week last year", y: bl, color: "--grey", width: 1.6, dash: true},
+               {name: "Forecast", y: fc, color: "--gold", width: 2.6, markers: true}]});
+    $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
+      t.hour_labels.map((h, i) => [h, fmt(fc[i], d), fmt(lo[i], d), fmt(hi[i], d), fmt(bl[i], d)]));
+  });
+
+  section("history", () => {
+    const h = B.last30;
+    if (!h) { $("chart-history").innerHTML = `<p class="empty">Not enough forecasts for this area yet.</p>`; return; }
+    const shadeTo = h.backfilled_until ? h.time.filter(x => x <= h.backfilled_until).length - 1 : 0, d = k < 0.2 ? 2 : 1;
+    lineChart("chart-history", {labels: h.time, unit: "GW", xLabel: dayMon, tipLabel: dayMonHm, tipUnit: "GW", tipDecimals: d, decimals: d, shadeTo, shadeLabel: "backfilled (measured weather)",
+      series: [{name: "Same week last year", y: mul(h.baseline_gw, k), color: "--grey", width: 1.2, dash: true},
+               {name: "Forecast", y: mul(h.forecast_gw, k), color: "--gold", width: 1.6},
+               {name: "Real" + est, y: mul(h.actual_gw, k), color: "--blue", width: 2}]});
+  });
+
+  section("accuracy", () => {
+    const s = B.scores;
+    if (!s) { $("chart-scores").innerHTML = `<p class="empty">No scored days for this area yet.</p>`; $("table-scores").innerHTML = ""; $("range-note").textContent = ""; return; }
+    lineChart("chart-scores", {labels: s.dates, unit: "%", fromZero: true, decimals: 1, xLabel: dayMon, tipLabel: dayMon, tipUnit: "%", tipDecimals: 2, tableId: "table-scores",
+      series: [{name: "Same week last year", y: s.running_baseline, color: "--grey", width: 2},
+               {name: "Model", y: s.running_model, color: "--gold", width: 2.6, markers: true}]});
+    $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
+      s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", signed(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
+    const c = B.range_calibration;
+    $("range-note").textContent = (V.estimate ? `These are the ${V.region} region's scores; estimated areas have no forecast of their own. ` : "") +
+      (c && c.days_used ? `Range check: before widening, ${fmt(c.coverage_before, 0)}% of hours fell inside the 90% range over the last ${c.days_used} days. The range is now ${c.scale > 1.001 ? "widened ×" + fmt(c.scale, 2) : "kept as it is"}, which would have covered ${fmt(c.coverage_after, 0)}%.` : "");
   });
 }
 
+// ---------------------------------------------------------------- start
 (function theme() {
   const root = document.documentElement;
   try { const t = localStorage.getItem("theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
   $("theme").addEventListener("click", () => {
-    const dark = root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = dark ? "light" : "dark";
+    const next = isLight() ? "dark" : "light";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
-    render();
+    render(); Grid3D.applyTheme();
   });
 })();
+section("areas", () => Area.init());
 render();
+section("stage", () => {
+  Hero.init();
+  if (!D || !D.geo || !D.points) { $("stage-note").textContent = ""; return; }
+  try { Grid3D.init($("stage"), D); Grid3D.focus(Area.view(), Area.members(Area.view())); }
+  catch (e) { console.warn("3D map not shown:", e.message); map2D($("stage"), D); $("stage-note").textContent = ""; }
+});
 let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { render(); Grid3D.resize(); }, 150); });
 </script>
 </body>
 </html>

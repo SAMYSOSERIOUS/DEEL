@@ -40,8 +40,20 @@ class Settings:
     def get(self, key: str, default: Any = None) -> Any:
         return self.raw.get(key, default)
 
+    @property
+    def area(self) -> str:
+        """Which area these settings describe: "DE" (Germany) or a grid region code like "TenneT"."""
+        return self.raw.get("area", "DE")
+
+    @property
+    def load_store(self) -> str:
+        """Where this area's demand is stored. Germany keeps the original name, so old data stays valid."""
+        return "load" if self.area == "DE" else f"load_{self.area}"
+
     def path(self, name: str) -> Path:
         p = self.home / self.raw["paths"][name]
+        if self.area != "DE" and name in ("results", "models"):
+            p = p / "areas" / self.area
         p.mkdir(parents=True, exist_ok=True)
         return p
 

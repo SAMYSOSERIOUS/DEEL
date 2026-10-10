@@ -180,7 +180,9 @@ def industry_link(monthly: pd.DataFrame, industry: pd.DataFrame, cutoff: str, co
 
 # ---------------------------------------------------------------------- run
 def run(cfg: Settings, inputs: Inputs | None = None, seeds: list[int] | None = None,
-        industry: pd.DataFrame | None = None) -> dict:
+        industry: pd.DataFrame | None = None, light: bool = False) -> dict:
+    """``light`` (used for the grid regions): the tested main estimate and the cheap views only,
+    skipping the extra cut-off dates and the no-lockdown model, which each need more training."""
     inp = inputs or prepare(cfg)
     load, X, Xn = inp.load, inp.X, inp.Xn
     A = cfg["analysis"]
@@ -192,7 +194,7 @@ def run(cfg: Settings, inputs: Inputs | None = None, seeds: list[int] | None = N
 
     log.info("Step 5: forecasting the crisis winters as if nothing happened")
     preds, models = {}, {}
-    for c in sorted(set(A["cutoff_variants"]) | {A["main_cutoff"]}):
+    for c in ([A["main_cutoff"]] if light else sorted(set(A["cutoff_variants"]) | {A["main_cutoff"]})):
         cut = CF.local_cutoff(cfg, c)
         models[c] = CF.fit(cfg, X, load, cut, seeds=seeds)
         preds[c] = models[c].predict(Xn)
@@ -209,8 +211,9 @@ def run(cfg: Settings, inputs: Inputs | None = None, seeds: list[int] | None = N
     variants["Dec-Feb only"] = winter_rows(cfg, load, pred, em, main_cut, months=A["core_winter_months"])
     dark = pd.Series(X["sun_elev"] < A["dark_hours_sun_elevation_deg"], index=X.index)
     variants["dark hours only (no solar)"] = winter_rows(cfg, load, pred, em, main_cut, mask=dark)
-    m_drop = CF.fit(cfg, X, load, main_cut, covid="drop", seeds=seeds)
-    variants["lockdown months left out"] = winter_rows(cfg, load, m_drop.predict(Xn), em, main_cut)
+    if not light:
+        m_drop = CF.fit(cfg, X, load, main_cut, covid="drop", seeds=seeds)
+        variants["lockdown months left out"] = winter_rows(cfg, load, m_drop.predict(Xn), em, main_cut)
     # On normal winters the model was off by (intercept + slope × years ahead) on average.
     # This view corrects the forecast for that known bias (mostly demand slowly falling before 2022).
     years_ahead = pd.Series(np.clip((X.index - main_cut) / pd.Timedelta(days=365.25), 0, None), index=X.index)
@@ -233,6 +236,7 @@ def run(cfg: Settings, inputs: Inputs | None = None, seeds: list[int] | None = N
     latest = complete.iloc[-1].to_dict() if len(complete) else None
     results = {
         "generated_utc": pd.Timestamp.now(tz="UTC").isoformat(timespec="seconds"),
+        "area": cfg.area,
         "data": {"first_hour_utc": str(load.index.min()), "last_hour_utc": str(load.index.max()),
                  "hours": int(load.notna().sum())},
         "settings": {"main_cutoff": A["main_cutoff"], "winter_months": A["winter_months"],

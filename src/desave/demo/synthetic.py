@@ -15,7 +15,7 @@ from __future__ import annotations
 import io
 import json
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
@@ -33,6 +33,13 @@ class Truth:
     peak: float = 0.06          # 6% less demand at the peak (winter 2022/23)
     lasting: float = 0.035      # settles at 3.5% less from 2024 on
     trend_per_year: float = -0.003
+    # each grid region saves a different amount, so tests can check every region is found correctly
+    regions: dict = field(default_factory=lambda: {
+        "50Hertz": (0.045, 0.025), "TenneT": (0.06, 0.035), "Amprion": (0.08, 0.05), "TransnetBW": (0.05, 0.03)})
+
+    def for_region(self, code: str) -> "Truth":
+        peak, lasting = self.regions.get(code, (self.peak, self.lasting))
+        return Truth(self.start, peak, lasting, self.trend_per_year, dict(self.regions))
 
 
 def crisis_factor(idx: pd.DatetimeIndex, truth: Truth) -> np.ndarray:
@@ -73,7 +80,7 @@ def make_weather(cfg: Settings, idx: pd.DatetimeIndex, seed: int = 7) -> dict[st
 
 
 def make_load(cfg: Settings, idx: pd.DatetimeIndex, weather: dict[str, pd.DataFrame], truth: Truth,
-              seed: int = 11) -> pd.DataFrame:
+              seed: int = 11, scale: float = 1.0) -> pd.DataFrame:
     """Returns the fake demand AND the same demand without the crisis (the truth to compare with)."""
     rng = np.random.default_rng(seed)
     w = pd.Series({p["name"]: p["pop_k"] for p in cfg["weather_points"]}, dtype="float64")
@@ -88,7 +95,7 @@ def make_load(cfg: Settings, idx: pd.DatetimeIndex, weather: dict[str, pd.DataFr
     prof_we = prof_wd * np.array([1.0] * 6 + [0.88] * 12 + [0.97] * 6)
     weekend_level = np.where(dow == 5, 0.88, np.where(dow == 6, 0.80, 1.0))
     prof = np.where(dow >= 5, prof_we[hour], prof_wd[hour]) * weekend_level
-    base = 57_500 * prof
+    base = 57_500 * scale * prof
     hdd = np.clip(15 - X["temp_daily"].to_numpy(), 0, None)
     cdd = np.clip(X["temp_24h"].to_numpy() - 21, 0, None)
     weather_mult = 1 + 0.0085 * hdd + 0.006 * cdd
@@ -103,7 +110,7 @@ def make_load(cfg: Settings, idx: pd.DatetimeIndex, weather: dict[str, pd.DataFr
     core = base * weather_mult * lighting * cal * covid * trend
     # rooftop solar used at home never reaches the grid: grows from ~1 GW to ~9 GW peak
     pv_gw = 1.0 + 0.7 * years
-    pv = 1000 * pv_gw * (sun.to_numpy() / 60.0) * 0.6
+    pv = 1000 * scale * pv_gw * (sun.to_numpy() / 60.0) * 0.6
     noise = np.zeros(len(idx))
     eps = rng.normal(0, 0.006, len(idx))
     for i in range(1, len(idx)):
@@ -235,19 +242,33 @@ def write_eurostat(folder: Path, truth: Truth, until: pd.Timestamp) -> None:
 
 
 def generate(cfg: Settings, folder: Path, truth: Truth | None = None, now: pd.Timestamp | None = None) -> dict:
-    """Write a complete fake internet into ``folder``. Returns paths and truth."""
+    """Write a complete fake internet into ``folder``. Returns paths and truth.
+
+    Each grid region is made on its own (its weather stations, its states' holidays, its own
+    planted saving); Germany is the sum of the four, as in reality.
+    """
+    from .. import areas
     truth = truth or Truth()
     now = (now or pd.Timestamp.now(tz="UTC")).floor("h")
     start = pd.Timestamp(cfg["project"]["start"]).tz_localize(cfg.tz).tz_convert("UTC") - pd.Timedelta(days=7)
     idx = pd.date_range(start, now + pd.Timedelta(days=4), freq="h")
     weather = make_weather(cfg, idx)
-    both = make_load(cfg, idx, weather, truth)
+    pop = areas.population(cfg)
+    parts = {}
+    for i, code in enumerate(areas.region_codes(cfg)):
+        rc = areas.scoped(cfg, code)
+        parts[code] = make_load(rc, idx, {p["name"]: weather[p["name"]] for p in rc["weather_points"]},
+                                truth.for_region(code), seed=20 + i, scale=pop["regions"][code] / pop["country"])
+    both = sum(parts.values()) if parts else make_load(cfg, idx, weather, truth)
     load = both["load_mwh"]
     obs_until = now.normalize() - pd.Timedelta(hours=1)          # weather measured until last night
     publish_until = now.normalize() - pd.Timedelta(hours=2)       # demand published until late yesterday
-    real_load = load[load.index >= pd.Timestamp(cfg["project"]["start"]).tz_localize(cfg.tz).tz_convert("UTC")]
+    first = pd.Timestamp(cfg["project"]["start"]).tz_localize(cfg.tz).tz_convert("UTC")
+    real_load = load[load.index >= first]
     real_load = real_load.drop(real_load.index[50_000])          # one missing hour, as can happen
     write_smard(folder, real_load, cfg.tz, publish_until=publish_until)
+    for code, part in parts.items():
+        write_smard(folder, part["load_mwh"][part.index >= first], cfg.tz, region=code, publish_until=publish_until)
     hist_end = f"{now.year}-01-01"
     recent_start = (now - pd.Timedelta(days=500)).strftime("%Y-%m-%d")
     write_dwd(folder, cfg, weather, hist_end, recent_start, obs_until)
@@ -258,15 +279,17 @@ def generate(cfg: Settings, folder: Path, truth: Truth | None = None, now: pd.Ti
     pd.DataFrame({p: weather[p]["temp"] for p in weather}).to_parquet(truth_dir / "temp.parquet")
     pd.DataFrame({p: weather[p]["sun"] for p in weather}).to_parquet(truth_dir / "sun.parquet")
     both.to_parquet(truth_dir / "load.parquet")
+    for code, part in parts.items():
+        part.to_parquet(truth_dir / f"load_{code}.parquet")
     pd.Series(crisis_factor(idx, truth), index=idx).to_frame("factor").to_parquet(truth_dir / "crisis_factor.parquet")
     (truth_dir / "truth.json").write_text(json.dumps(truth.__dict__))
     return {"folder": str(folder), "now": str(now)}
 
 
-def true_winter_saving(folder: Path, cfg: Settings, winter: str) -> float:
+def true_winter_saving(folder: Path, cfg: Settings, winter: str, area: str = "DE") -> float:
     """The planted saving for a winter, as the analysis would measure it (% of 'no crisis' demand)."""
     from ..timeutils import winter_bounds
-    both = pd.read_parquet(folder / "_truth" / "load.parquet")
+    both = pd.read_parquet(folder / "_truth" / ("load.parquet" if area == "DE" else f"load_{area}.parquet"))
     ws, we = winter_bounds(winter, cfg["analysis"]["winter_months"], cfg.tz)
     m = (both.index >= ws) & (both.index < we)
     return float(100 * (1 - both.loc[m, "load_mwh"].sum() / both.loc[m, "no_crisis_mwh"].sum()))

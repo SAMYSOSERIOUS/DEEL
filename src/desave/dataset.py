@@ -14,12 +14,13 @@ log = logging.getLogger(__name__)
 
 def load_series(cfg: Settings, check: bool = True, start=None, end=None) -> pd.Series:
     """Hourly grid load in MWh (UTC), checked and with short gaps filled."""
-    df = store.load(cfg, "load", start, end)
+    df = store.load(cfg, cfg.load_store, start, end)
     if df.empty:
-        raise FileNotFoundError("No demand data yet. Run: desave download")
+        raise FileNotFoundError(f"No demand data for {cfg.area} yet. Run: desave download")
     s = df["load_mwh"].astype("float64").dropna()
     if check:
-        rep = validate.check_load(s, cfg.tz)
+        bounds = validate.PLAUSIBLE_MWH if cfg.area == "DE" else validate.PLAUSIBLE_REGION_MWH
+        rep = validate.check_load(s, cfg.tz, plausible=bounds)
         for w in rep.warnings:
             log.warning(w)
         rep.raise_if_failed()
