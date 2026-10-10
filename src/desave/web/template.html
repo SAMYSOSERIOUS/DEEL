@@ -7,7 +7,8 @@
 <meta name="description" content="Tomorrow's German electricity demand, how good the forecasts are, and how much Germany saved in the 2022 energy crisis.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+<script>window.Plotly || document.write('<script src="https://unpkg.com/plotly.js-dist-min@2.35.2/plotly.min.js"><\/script>');</script>
 <style>
 :root {
   color-scheme: light;
@@ -68,6 +69,7 @@ th { color: var(--text-muted); font-weight: 500; }
 .headline { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 4px 0 10px; }
 .verdict { color: var(--text-secondary); margin: 0 0 12px; }
 .empty { color: var(--text-muted); font-style: italic; }
+.chart-missing { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); border-radius: 10px; color: var(--text-muted); font-size: 14px; padding: 16px; text-align: center; }
 footer { margin-top: 28px; font-size: 13px; color: var(--text-muted); }
 footer a, .card a { color: var(--actual); }
 .theme { float: right; background: none; border: 1px solid var(--border); color: var(--text-secondary);
@@ -163,6 +165,24 @@ function layout(extra = {}) {
 }
 const CFG = {displayModeBar: false, responsive: true};
 
+function plot(id, traces, lay, tableId) {
+  const el = $(id);
+  if (!el) return;
+  try {
+    if (!window.Plotly) throw new Error("chart library not loaded");
+    Plotly.newPlot(id, traces, lay, CFG);
+  } catch (e) {
+    el.classList.add("chart-missing");
+    el.textContent = "This chart could not load (" + e.message + "). The numbers are in the table below.";
+    const t = tableId && $(tableId);
+    if (t && t.closest("details")) t.closest("details").open = true;
+    console.error(e);
+  }
+}
+function section(name, fn) {
+  try { fn(); } catch (e) { console.error(name, e); }
+}
+
 function render() {
   if (!D) return;
   const meta = [];
@@ -175,7 +195,7 @@ function render() {
   if (D.status && D.status.error) b += `<div class="banner"><b>Today's update failed:</b> ${esc(D.status.error)}. The page shows the last good results.</div>`;
   $("banners").innerHTML = b;
 
-  // Tomorrow
+  section("tomorrow", () => {
   const t = D.tomorrow;
   if (t) {
     const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
@@ -184,33 +204,37 @@ function render() {
       tile("Total for the day", `${fmt(t.total_gwh, 0)} GWh`, `90% range ${fmt(t.total_low_gwh, 0)}–${fmt(t.total_high_gwh, 0)} GWh`) +
       tile("Highest hour", `${fmt(t.peak_gw, 1)} GW`, `at ${esc(t.peak_hour)}`);
     const x = t.hours;
-    Plotly.newPlot("chart-tomorrow", [
+    plot("chart-tomorrow", [
       {x, y: t.high_gw, type: "scatter", mode: "lines", line: {width: 0}, hoverinfo: "skip"},
       {x, y: t.low_gw, type: "scatter", mode: "lines", line: {width: 0}, fill: "tonexty", fillcolor: css("--band"), name: "range", hovertemplate: "%{y:.1f}"},
       {x, y: t.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
       {x, y: t.forecast_gw, type: "scatter", mode: "lines+markers", marker: {size: 5}, line: {color: css("--model"), width: 2.5}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
-    ], layout({xaxis: {tickformat: "%H:%M", gridcolor: css("--grid")}}), CFG);
+    ], layout({xaxis: {tickformat: "%H:%M", gridcolor: css("--grid")}}), "table-tomorrow");
     $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
       t.hour_labels.map((h, i) => [h, fmt(t.forecast_gw[i]), fmt(t.low_gw[i]), fmt(t.high_gw[i]), fmt(t.baseline_gw[i])]));
   } else {
     $("tomorrow").insertAdjacentHTML("beforeend", `<p class="empty">No forecast yet. Run the daily job.</p>`);
   }
 
-  // Last 30 days
+  });
+
+  section("history", () => {
   const h = D.last30;
   if (h) {
     const shapes = h.backfilled_until ? [{type: "rect", xref: "x", yref: "paper", x0: h.time[0], x1: h.backfilled_until, y0: 0, y1: 1, fillcolor: css("--shade"), line: {width: 0}}] : [];
     const ann = h.backfilled_until ? [{x: h.time[0], y: 1, xref: "x", yref: "paper", text: "backfilled (measured weather)", showarrow: false, xanchor: "left", yanchor: "top", font: {size: 11, color: css("--text-muted")}}] : [];
-    Plotly.newPlot("chart-history", [
+    plot("chart-history", [
       {x: h.time, y: h.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 1.2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
       {x: h.time, y: h.forecast_gw, type: "scatter", mode: "lines", line: {color: css("--model"), width: 1.6}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
       {x: h.time, y: h.actual_gw, type: "scatter", mode: "lines", line: {color: css("--actual"), width: 2}, name: "Real", hovertemplate: "%{y:.1f} GW"},
-    ], layout({shapes, annotations: ann}), CFG);
+    ], layout({shapes, annotations: ann}));
   } else {
     $("chart-history").outerHTML = `<p class="empty">Not enough forecasts yet.</p>`;
   }
 
-  // Scores
+  });
+
+  section("scores", () => {
   const s = D.scores;
   if (s) {
     const better = s.model_mape < s.baseline_mape;
@@ -219,17 +243,19 @@ function render() {
       tile("Same week last year", `${fmt(s.baseline_mape, 2)}%`, better ? `our model is ${fmt(100 * (1 - s.model_mape / s.baseline_mape), 0)}% better` : "baseline is currently better") +
       tile("Inside the 90% range", `${fmt(s.inside_range_pct, 0)}%`, "of hours (should be about 90%)") +
       (s.backfilled_days ? tile("Backfilled days", s.backfilled_days, "made later with measured weather") : "");
-    Plotly.newPlot("chart-scores", [
+    plot("chart-scores", [
       {x: s.dates, y: s.running_baseline, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2}, name: "Same week last year", hovertemplate: "%{y:.2f}%"},
       {x: s.dates, y: s.running_model, type: "scatter", mode: "lines", line: {color: css("--model"), width: 2.5}, name: "Model", hovertemplate: "%{y:.2f}%"},
-    ], layout({yaxis: {title: {text: "error (%)"}, gridcolor: css("--grid"), rangemode: "tozero"}}), CFG);
+    ], layout({yaxis: {title: {text: "error (%)"}, gridcolor: css("--grid"), rangemode: "tozero"}}), "table-scores");
     $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
       s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", (r.model_daily_error_pct > 0 ? "+" : "") + fmt(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
   } else {
     $("score-tiles").innerHTML = `<p class="empty">No scored days yet.</p>`;
   }
 
-  // Savings
+  });
+
+  section("savings", () => {
   const v = D.savings;
   if (v && v.headline) {
     const hd = v.headline;
@@ -237,18 +263,19 @@ function render() {
     $("verdict").textContent = v.verdict;
     const rows = v.checks.map(r => Object.assign({kind: "check"}, r)).concat(v.winters.map(r => Object.assign({kind: "crisis"}, r)));
     const labels = rows.map(r => r.winter + (r.kind === "check" ? " (test)" : (r.complete === false ? " (so far)" : "")));
-    Plotly.newPlot("chart-savings", [{
+    plot("chart-savings", [{
       x: labels, y: rows.map(r => r.saving_pct), type: "bar",
       marker: {color: rows.map(r => r.kind === "check" ? css("--check") : css("--model"))},
       error_y: {type: "data", symmetric: false, array: rows.map(r => r.high_pct - r.saving_pct), arrayminus: rows.map(r => r.saving_pct - r.low_pct), color: css("--text-primary"), thickness: 1.2, width: 5},
       text: rows.map(r => fmt(r.saving_pct) + "%"), textposition: "outside", cliponaxis: false,
       hovertemplate: "%{x}: %{y:.1f}%<extra></extra>",
-    }], layout({hovermode: "closest", bargap: 0.45, yaxis: {title: {text: "less than expected (%)"}, gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--text-muted")}}), CFG);
+    }], layout({hovermode: "closest", bargap: 0.45, yaxis: {title: {text: "less than expected (%)"}, gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--text-muted")}}), "table-savings");
     $("table-savings").innerHTML = table(["Winter", "Saving", "90% range", "Saving (TWh)"],
       rows.map(r => [labels[rows.indexOf(r)], fmt(r.saving_pct) + "%", `${fmt(r.low_pct)}% to ${fmt(r.high_pct)}%`, r.saving_twh !== undefined ? fmt(r.saving_twh) : "–"]));
   } else {
     $("headline").textContent = "The savings analysis has not been run yet.";
   }
+  });
 }
 
 (function theme() {
