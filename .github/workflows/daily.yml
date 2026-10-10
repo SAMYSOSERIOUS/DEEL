@@ -1,0 +1,56 @@
+name: daily forecast
+
+# Every morning: download yesterday's demand and the weather forecast,
+# forecast tomorrow hour by hour, score earlier forecasts, publish the page.
+# GitHub's clock is UTC: 03:17 UTC = 05:17 German summer time / 04:17 winter time.
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: data          # never let the daily and monthly jobs write at the same time
+  cancel-in-progress: false
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}   # optional backup source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e .
+      - name: Run the daily job
+        run: desave daily
+      - name: Save new data, forecasts and scores
+        if: always()
+        run: |
+          git config user.name "desave-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data results site models reports || true
+          git diff --cached --quiet || git commit -m "Daily update $(date -u +%Y-%m-%d)"
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        if: always()
+        with:
+          path: site
+  deploy:
+    needs: daily
+    if: always()
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

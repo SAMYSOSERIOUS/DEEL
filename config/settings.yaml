@@ -1,0 +1,111 @@
+# ---------------------------------------------------------------------------
+# All the choices of the project live here, so nothing is hidden in the code.
+# ---------------------------------------------------------------------------
+
+project:
+  start: "2015-01-01"          # first day of data we download
+  timezone: "Europe/Berlin"    # used ONLY for calendar features and charts; data is stored in UTC
+
+paths:
+  data: data
+  models: models
+  results: results
+  reports: reports
+  site: site
+
+sources:
+  smard:
+    base_url: "https://www.smard.de/app/chart_data"
+    region: "DE"
+    load_filter: 410            # "Stromverbrauch: Gesamt (Netzlast)" = grid load, MWh per hour
+    resolution: "hour"
+    refetch_days: 21            # re-download the last 3 weeks every day, because SMARD corrects recent values
+  entsoe:                       # backup source for load if SMARD fails
+    base_url: "https://web-api.tp.entsoe.eu/api"
+    area: "10Y1001A1001A83F"    # Germany
+    token_env: "ENTSOE_API_KEY" # put your free key in this environment variable
+  dwd:
+    base_url: "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly"
+  brightsky:                    # DWD's own forecasts (MOSMIX) served as simple JSON
+    base_url: "https://api.brightsky.dev"
+  openmeteo:                    # backup weather forecast (DWD ICON model)
+    base_url: "https://api.open-meteo.com/v1/dwd-icon"
+  eurostat:
+    base_url: "https://ec.europa.eu/eurostat/api/dissemination/statistics/1.0/data"
+  opsd:
+    url: "https://data.open-power-system-data.org/time_series/2020-10-06/time_series_60min_singleindex.csv"
+    column: "DE_load_actual_entsoe_transparency"
+
+# Weather points: where people live, so the temperature reflects where electricity is used.
+# Weight = share of German population (Destatis, end of 2023, rounded; table 12411-0010).
+# Big states are split over two points. The closest DWD station with full data is chosen automatically.
+weather_points:
+  - {name: "Berlin",      state: "BE", lat: 52.52, lon: 13.40, pop_k: 3755}
+  - {name: "Hamburg",     state: "HH", lat: 53.55, lon: 10.00, pop_k: 1892}
+  - {name: "Muenchen",    state: "BY", lat: 48.14, lon: 11.58, pop_k: 8021}
+  - {name: "Nuernberg",   state: "BY", lat: 49.45, lon: 11.08, pop_k: 5348}
+  - {name: "Koeln",       state: "NW", lat: 50.94, lon: 6.96,  pop_k: 9070}
+  - {name: "Dortmund",    state: "NW", lat: 51.51, lon: 7.47,  pop_k: 9070}
+  - {name: "Stuttgart",   state: "BW", lat: 48.78, lon: 9.18,  pop_k: 7332}
+  - {name: "Freiburg",    state: "BW", lat: 47.99, lon: 7.85,  pop_k: 3948}
+  - {name: "Hannover",    state: "NI", lat: 52.37, lon: 9.73,  pop_k: 8140}
+  - {name: "Frankfurt",   state: "HE", lat: 50.11, lon: 8.68,  pop_k: 6391}
+  - {name: "Leipzig",     state: "SN", lat: 51.34, lon: 12.37, pop_k: 4089}
+  - {name: "Mainz",       state: "RP", lat: 50.00, lon: 8.27,  pop_k: 4159}
+  - {name: "Kiel",        state: "SH", lat: 54.32, lon: 10.13, pop_k: 2953}
+  - {name: "Potsdam",     state: "BB", lat: 52.39, lon: 13.06, pop_k: 2573}
+  - {name: "Magdeburg",   state: "ST", lat: 52.13, lon: 11.62, pop_k: 2186}
+  - {name: "Erfurt",      state: "TH", lat: 50.98, lon: 11.03, pop_k: 2127}
+  - {name: "Rostock",     state: "MV", lat: 54.09, lon: 12.10, pop_k: 1628}
+  - {name: "Saarbruecken",state: "SL", lat: 49.24, lon: 6.99,  pop_k: 993}
+  - {name: "Bremen",      state: "HB", lat: 53.08, lon: 8.80,  pop_k: 685}
+
+holidays:
+  # Holidays that apply only in part of a state (share of that state's people who get the day off).
+  partial:
+    BY: {"Mariä Himmelfahrt": 0.8}   # Assumption Day: only Catholic-majority towns in Bavaria (about 1,700 of 2,056)
+    SN: {"Fronleichnam": 0.03}       # Corpus Christi: a few towns in Saxony
+    TH: {"Fronleichnam": 0.03}       # Corpus Christi: a few towns in Thuringia
+  use_school_holidays: true
+
+covid:
+  # How strong the lockdown was (1 = hard lockdown, 0.5 = partial). Set to 0 when forecasting "normal".
+  periods:
+    - {start: "2020-03-16", end: "2020-05-10", intensity: 1.0}
+    - {start: "2020-05-11", end: "2020-06-30", intensity: 0.5}
+    - {start: "2020-11-02", end: "2020-12-15", intensity: 0.5}
+    - {start: "2020-12-16", end: "2021-03-07", intensity: 1.0}
+    - {start: "2021-03-08", end: "2021-05-31", intensity: 0.5}
+
+analysis:
+  main_cutoff: "2022-09-01"                    # train only on data before this day
+  cutoff_variants: ["2021-09-01", "2022-03-01", "2022-09-01"]   # before price rise / after invasion / main
+  winter_months: [10, 11, 12, 1, 2, 3]         # "winter" = October to March (heating season)
+  core_winter_months: [12, 1, 2]               # second view: December to February only
+  crisis_winters: ["2021/22", "2022/23", "2023/24", "2024/25", "2025/26"]
+  normal_test_winters: ["2016/17", "2017/18", "2018/19", "2019/20"]   # pre-crisis, pre-Covid winters
+  reference_years: [2017, 2018, 2019]          # for the simple "pre-crisis average" baseline
+  interval_level: 0.90                         # 90% ranges
+  dark_hours_sun_elevation_deg: -3             # "dark hour" = sun below this angle (no solar panels working)
+  industry_series: ["C17", "C20", "C23", "C24"]  # paper, chemicals, glass/cement, metals (Eurostat)
+
+model:
+  lightgbm:
+    n_estimators: 1500
+    learning_rate: 0.03
+    num_leaves: 63
+    min_child_samples: 40
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 1.0
+    verbose: -1
+  quantiles: [0.05, 0.95]        # range shown on the web page
+  random_seeds: [1, 2, 3]        # average of 3 models = steadier answer
+
+production:
+  issue_hour_local: 5            # the daily job runs early morning (German time)
+  min_lag_days: 3                # the daily model only uses demand at least 3 days old (data arrives late)
+  gate_window_days: 28           # monthly retrain must beat the baseline on the last 4 weeks...
+  gate_tolerance: 0.0            # ...by at least this much (0 = just beat it)
+  site_days: 30

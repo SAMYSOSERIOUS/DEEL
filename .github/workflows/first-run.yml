@@ -1,0 +1,55 @@
+name: first run (set everything up)
+
+# Run this once by hand (Actions tab -> "first run" -> Run workflow).
+# Downloads everything since 2015, runs the full analysis, trains the daily
+# model, makes 30 days of backfilled forecasts and publishes the page.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: data
+  cancel-in-progress: false
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Check that every source can be downloaded
+        run: desave check-sources
+      - name: Everything
+        run: desave all
+      - name: Tests on the real data
+        run: pytest -m realdata -q
+      - name: Save
+        run: |
+          git config user.name "desave-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data results site models reports README.md
+          git commit -m "First full run"
+          git push
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+  deploy:
+    needs: setup
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

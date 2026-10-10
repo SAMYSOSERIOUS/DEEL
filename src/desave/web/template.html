@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>German Power Forecast</title>
+<meta name="description" content="Tomorrow's German electricity demand, how good the forecasts are, and how much Germany saved in the 2022 energy crisis.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.35.2/plotly.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --surface-0: #f4f3ef; --surface-1: #fcfcfb; --border: #e3e2dc;
+  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
+  --grid: #e6e5e0; --band: rgba(235,104,52,0.16); --shade: rgba(82,81,78,0.10);
+  --actual: #2a78d6; --model: #eb6834; --base: #1baf7a; --check: #9a998f;
+  --warn-bg: #fff4d6; --warn-ink: #6b4b00; --good: #008300;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+    --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
+    --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
+    --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
+  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
+  --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
+  --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
+  --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--surface-0); color: var(--text-primary);
+  font: 15px/1.55 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
+.tile .v, table, .meta { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
+main { max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }
+header h1 { text-wrap: balance; font-size: 28px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
+header p { margin: 0; color: var(--text-secondary); }
+.meta { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
+.banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px;
+  margin: 16px 0 0; font-size: 14px; }
+section.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px;
+  padding: 20px; margin-top: 18px; }
+section.card h2 { font-size: 18px; margin: 0 0 4px; text-wrap: balance; }
+.theme:focus-visible, summary:focus-visible { outline: 2px solid var(--actual); outline-offset: 2px; }
+.sub { color: var(--text-secondary); margin: 0 0 14px; font-size: 14px; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
+.tile { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.tile .k { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.tile .v { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.tile .n { font-size: 13px; color: var(--text-secondary); }
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin: 2px 0 6px; }
+.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+.legend i.band { height: 10px; }
+.chart { width: 100%; height: 320px; }
+details { margin-top: 10px; font-size: 14px; }
+summary { cursor: pointer; color: var(--text-secondary); }
+table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--text-muted); font-weight: 500; }
+.headline { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 4px 0 10px; }
+.verdict { color: var(--text-secondary); margin: 0 0 12px; }
+.empty { color: var(--text-muted); font-style: italic; }
+footer { margin-top: 28px; font-size: 13px; color: var(--text-muted); }
+footer a, .card a { color: var(--actual); }
+.theme { float: right; background: none; border: 1px solid var(--border); color: var(--text-secondary);
+  border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+@media (max-width: 560px) { header h1 { font-size: 22px; } .tile .v { font-size: 22px; } .chart { height: 280px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <button class="theme" id="theme" type="button" aria-label="Switch light or dark">Light / dark</button>
+    <h1>German electricity demand: forecast and crisis savings</h1>
+    <p>Tomorrow's demand hour by hour, how good our forecasts have been, and how much less power Germany used after the 2022 energy crisis.</p>
+    <div class="meta" id="meta"></div>
+    <div id="banners"></div>
+  </header>
+
+  <section class="card" id="tomorrow">
+    <h2>Tomorrow</h2>
+    <p class="sub" id="tomorrow-sub"></p>
+    <div class="tiles" id="tomorrow-tiles"></div>
+    <div class="legend">
+      <span><i style="background:var(--model)"></i>Forecast</span>
+      <span><i class="band" style="background:var(--band)"></i>90% range</span>
+      <span><i style="background:var(--base)"></i>Same week last year</span>
+    </div>
+    <div class="chart" id="chart-tomorrow" role="img" aria-label="Hourly forecast for tomorrow"></div>
+    <details><summary>Show as a table</summary><div id="table-tomorrow"></div></details>
+  </section>
+
+  <section class="card" id="history">
+    <h2>Last 30 days: forecast vs. what really happened</h2>
+    <p class="sub">Each forecast is saved the morning it was made and never changed afterwards.</p>
+    <div class="legend">
+      <span><i style="background:var(--actual)"></i>Real demand</span>
+      <span><i style="background:var(--model)"></i>Our forecast (day before)</span>
+      <span><i style="background:var(--base)"></i>Same week last year</span>
+    </div>
+    <div class="chart" id="chart-history" role="img" aria-label="Forecast versus actual, last 30 days"></div>
+  </section>
+
+  <section class="card" id="accuracy">
+    <h2>How good are the forecasts?</h2>
+    <p class="sub">Average hourly error over the last 30 scored days. Lower is better. The model must beat the simple "same week last year" guess to be worth using.</p>
+    <div class="tiles" id="score-tiles"></div>
+    <div class="legend">
+      <span><i style="background:var(--model)"></i>Our model (running average)</span>
+      <span><i style="background:var(--base)"></i>Same week last year (running average)</span>
+    </div>
+    <div class="chart" id="chart-scores" style="height:240px" role="img" aria-label="Running average error"></div>
+    <details><summary>Daily scores</summary><div id="table-scores"></div></details>
+  </section>
+
+  <section class="card" id="savings">
+    <h2>Did Germany really save electricity in the 2022 crisis?</h2>
+    <p class="headline" id="headline"></p>
+    <p class="verdict" id="verdict"></p>
+    <div class="legend">
+      <span><i style="background:var(--check)"></i>Normal winters used as a test (should be near 0)</span>
+      <span><i style="background:var(--model)"></i>Crisis winter and after</span>
+    </div>
+    <div class="chart" id="chart-savings" role="img" aria-label="Saving by winter with ranges"></div>
+    <details><summary>Show as a table</summary><div id="table-savings"></div></details>
+    <p class="sub" style="margin-top:12px">Saving = how much less electricity flowed through the grid than a model of normal behaviour predicted from the real weather and calendar. Full method, tests and limits: <a href="REPORT.md">report</a>.</p>
+  </section>
+
+  <footer>
+    Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst (DWD) · weather forecasts via Bright Sky (DWD MOSMIX) or Open-Meteo (DWD ICON) · Eurostat · python-holidays.
+    Times are German local time.
+  </footer>
+</main>
+<script>
+const D = /*__DATA__*/null;
+const $ = (id) => document.getElementById(id);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const fmt = (x, d = 1) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toLocaleString("en-GB", {minimumFractionDigits: d, maximumFractionDigits: d});
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
+
+function tile(k, v, n) { return `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${v}</div><div class="n">${n || ""}</div></div>`; }
+function table(cols, rows) {
+  return `<table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
+    rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+}
+function layout(extra = {}) {
+  return Object.assign({
+    margin: {l: 48, r: 12, t: 8, b: 36}, paper_bgcolor: "rgba(0,0,0,0)", plot_bgcolor: "rgba(0,0,0,0)",
+    font: {family: "IBM Plex Sans, system-ui, sans-serif", size: 12, color: css("--text-secondary")},
+    xaxis: {gridcolor: css("--grid"), zeroline: false, linecolor: css("--border")},
+    yaxis: {gridcolor: css("--grid"), zeroline: false, title: {text: "GW"}},
+    showlegend: false, hovermode: "x unified",
+    hoverlabel: {bgcolor: css("--surface-1"), bordercolor: css("--border"), font: {color: css("--text-primary")}}
+  }, extra);
+}
+const CFG = {displayModeBar: false, responsive: true};
+
+function render() {
+  if (!D) return;
+  const meta = [];
+  if (D.data_until) meta.push(`Demand data up to ${esc(D.data_until.replace("T", " "))}`);
+  if (D.retrain && D.retrain.date) meta.push(`last model retrain: ${esc(D.retrain.date)}`);
+  meta.push(`page built ${esc(D.generated_utc.slice(0, 16).replace("T", " "))} UTC`);
+  $("meta").textContent = meta.join(" · ");
+  let b = "";
+  if (D.demo) b += `<div class="banner"><b>Demo data.</b> These numbers come from realistic stand-in data, not from SMARD and DWD. Run the project on your own computer to see the real figures.</div>`;
+  if (D.status && D.status.error) b += `<div class="banner"><b>Today's update failed:</b> ${esc(D.status.error)}. The page shows the last good results.</div>`;
+  $("banners").innerHTML = b;
+
+  // Tomorrow
+  const t = D.tomorrow;
+  if (t) {
+    const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
+    $("tomorrow-sub").textContent = `${day}. Made ${t.issued_utc.slice(0, 16)} UTC using the ${t.weather_source} weather forecast.`;
+    $("tomorrow-tiles").innerHTML =
+      tile("Total for the day", `${fmt(t.total_gwh, 0)} GWh`, `90% range ${fmt(t.total_low_gwh, 0)}–${fmt(t.total_high_gwh, 0)} GWh`) +
+      tile("Highest hour", `${fmt(t.peak_gw, 1)} GW`, `at ${esc(t.peak_hour)}`);
+    const x = t.hours;
+    Plotly.newPlot("chart-tomorrow", [
+      {x, y: t.high_gw, type: "scatter", mode: "lines", line: {width: 0}, hoverinfo: "skip"},
+      {x, y: t.low_gw, type: "scatter", mode: "lines", line: {width: 0}, fill: "tonexty", fillcolor: css("--band"), name: "range", hovertemplate: "%{y:.1f}"},
+      {x, y: t.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
+      {x, y: t.forecast_gw, type: "scatter", mode: "lines+markers", marker: {size: 5}, line: {color: css("--model"), width: 2.5}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
+    ], layout({xaxis: {tickformat: "%H:%M", gridcolor: css("--grid")}}), CFG);
+    $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
+      t.hour_labels.map((h, i) => [h, fmt(t.forecast_gw[i]), fmt(t.low_gw[i]), fmt(t.high_gw[i]), fmt(t.baseline_gw[i])]));
+  } else {
+    $("tomorrow").insertAdjacentHTML("beforeend", `<p class="empty">No forecast yet. Run the daily job.</p>`);
+  }
+
+  // Last 30 days
+  const h = D.last30;
+  if (h) {
+    const shapes = h.backfilled_until ? [{type: "rect", xref: "x", yref: "paper", x0: h.time[0], x1: h.backfilled_until, y0: 0, y1: 1, fillcolor: css("--shade"), line: {width: 0}}] : [];
+    const ann = h.backfilled_until ? [{x: h.time[0], y: 1, xref: "x", yref: "paper", text: "backfilled (measured weather)", showarrow: false, xanchor: "left", yanchor: "top", font: {size: 11, color: css("--text-muted")}}] : [];
+    Plotly.newPlot("chart-history", [
+      {x: h.time, y: h.baseline_gw, type: "scatter", mode: "lines", line: {color: css("--base"), width: 1.2, dash: "dot"}, name: "Same week last year", hovertemplate: "%{y:.1f} GW"},
+      {x: h.time, y: h.forecast_gw, type: "scatter", mode: "lines", line: {color: css("--model"), width: 1.6}, name: "Forecast", hovertemplate: "%{y:.1f} GW"},
+      {x: h.time, y: h.actual_gw, type: "scatter", mode: "lines", line: {color: css("--actual"), width: 2}, name: "Real", hovertemplate: "%{y:.1f} GW"},
+    ], layout({shapes, annotations: ann}), CFG);
+  } else {
+    $("chart-history").outerHTML = `<p class="empty">Not enough forecasts yet.</p>`;
+  }
+
+  // Scores
+  const s = D.scores;
+  if (s) {
+    const better = s.model_mape < s.baseline_mape;
+    $("score-tiles").innerHTML =
+      tile("Our model", `${fmt(s.model_mape, 2)}%`, "average hourly error") +
+      tile("Same week last year", `${fmt(s.baseline_mape, 2)}%`, better ? `our model is ${fmt(100 * (1 - s.model_mape / s.baseline_mape), 0)}% better` : "baseline is currently better") +
+      tile("Inside the 90% range", `${fmt(s.inside_range_pct, 0)}%`, "of hours (should be about 90%)") +
+      (s.backfilled_days ? tile("Backfilled days", s.backfilled_days, "made later with measured weather") : "");
+    Plotly.newPlot("chart-scores", [
+      {x: s.dates, y: s.running_baseline, type: "scatter", mode: "lines", line: {color: css("--base"), width: 2}, name: "Same week last year", hovertemplate: "%{y:.2f}%"},
+      {x: s.dates, y: s.running_model, type: "scatter", mode: "lines", line: {color: css("--model"), width: 2.5}, name: "Model", hovertemplate: "%{y:.2f}%"},
+    ], layout({yaxis: {title: {text: "error (%)"}, gridcolor: css("--grid"), rangemode: "tozero"}}), CFG);
+    $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
+      s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", (r.model_daily_error_pct > 0 ? "+" : "") + fmt(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
+  } else {
+    $("score-tiles").innerHTML = `<p class="empty">No scored days yet.</p>`;
+  }
+
+  // Savings
+  const v = D.savings;
+  if (v && v.headline) {
+    const hd = v.headline;
+    $("headline").textContent = `Germany used ${fmt(hd.saving_pct)}% less grid electricity in winter 2022/23 than the weather predicted (90% range ${fmt(hd.low_pct)}% to ${fmt(hd.high_pct)}%).`;
+    $("verdict").textContent = v.verdict;
+    const rows = v.checks.map(r => Object.assign({kind: "check"}, r)).concat(v.winters.map(r => Object.assign({kind: "crisis"}, r)));
+    const labels = rows.map(r => r.winter + (r.kind === "check" ? " (test)" : (r.complete === false ? " (so far)" : "")));
+    Plotly.newPlot("chart-savings", [{
+      x: labels, y: rows.map(r => r.saving_pct), type: "bar",
+      marker: {color: rows.map(r => r.kind === "check" ? css("--check") : css("--model"))},
+      error_y: {type: "data", symmetric: false, array: rows.map(r => r.high_pct - r.saving_pct), arrayminus: rows.map(r => r.saving_pct - r.low_pct), color: css("--text-primary"), thickness: 1.2, width: 5},
+      text: rows.map(r => fmt(r.saving_pct) + "%"), textposition: "outside", cliponaxis: false,
+      hovertemplate: "%{x}: %{y:.1f}%<extra></extra>",
+    }], layout({hovermode: "closest", bargap: 0.45, yaxis: {title: {text: "less than expected (%)"}, gridcolor: css("--grid"), zeroline: true, zerolinecolor: css("--text-muted")}}), CFG);
+    $("table-savings").innerHTML = table(["Winter", "Saving", "90% range", "Saving (TWh)"],
+      rows.map(r => [labels[rows.indexOf(r)], fmt(r.saving_pct) + "%", `${fmt(r.low_pct)}% to ${fmt(r.high_pct)}%`, r.saving_twh !== undefined ? fmt(r.saving_twh) : "–"]));
+  } else {
+    $("headline").textContent = "The savings analysis has not been run yet.";
+  }
+}
+
+(function theme() {
+  const root = document.documentElement;
+  try { const t = localStorage.getItem("theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
+  $("theme").addEventListener("click", () => {
+    const dark = root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+    const next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+    render();
+  });
+})();
+render();
+</script>
+</body>
+</html>

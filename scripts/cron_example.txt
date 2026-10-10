@@ -1,0 +1,12 @@
+# Running on your own computer or a small server instead of GitHub Actions.
+# Edit with:  crontab -e     (times are the computer's local time; set it to Europe/Berlin)
+# Replace /path/to/de-power-savings with the real folder.
+
+# Every morning at 05:15: download, forecast tomorrow, score, rebuild the page
+15 5 * * *  cd /path/to/de-power-savings && .venv/bin/desave daily >> logs/daily.log 2>&1
+
+# First day of each month at 04:45: retrain and refresh the savings analysis
+45 4 1 * *  cd /path/to/de-power-savings && .venv/bin/desave download && .venv/bin/desave retrain >> logs/monthly.log 2>&1
+
+# Windows: use Task Scheduler with the same two commands
+#   (Program: C:\path\to\de-power-savings\.venv\Scripts\desave.exe, Arguments: daily, Start in: the project folder)
