@@ -1,9 +1,11 @@
 # Did Germany really save electricity in the 2022 energy crisis?
 
 <!-- HEADLINE:START -->
-## Germany used X% less grid electricity in winter 2022/23 than the weather predicted
+## Germany used 8.8% less grid electricity in winter 2022/23 than the weather predicted (90% range 6.2% to 11.2%).
 
-*This line fills itself in with the real number the first time you run `desave all`.*
+In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electricity than the weather and calendar predicted (90% range 6.2% to 11.2%), about 23.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 4.2% below the pre-crisis pattern (range 1.5% to 6.8%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 9.2%.
+
+*Updated automatically on 2026-10-10. Full report: [reports/REPORT.md](reports/REPORT.md)*
 <!-- HEADLINE:END -->
 
 In winter 2022/23 Germany was asked to save energy, and electricity use did fall. But was that a real

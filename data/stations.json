@@ -1,0 +1,272 @@
+{
+  "temp": {
+    "Berlin": {
+      "station_id": 433,
+      "station_name": "Berlin-Tempelhof",
+      "lat": 52.4676,
+      "lon": 13.402,
+      "distance_km": 5.8
+    },
+    "Hamburg": {
+      "station_id": 1975,
+      "station_name": "Hamburg-Fuhlsbüttel",
+      "lat": 53.6332,
+      "lon": 9.9881,
+      "distance_km": 9.3
+    },
+    "Muenchen": {
+      "station_id": 3379,
+      "station_name": "München-Stadt",
+      "lat": 48.1632,
+      "lon": 11.5429,
+      "distance_km": 3.8
+    },
+    "Nuernberg": {
+      "station_id": 3668,
+      "station_name": "Nürnberg",
+      "lat": 49.503,
+      "lon": 11.0549,
+      "distance_km": 6.2
+    },
+    "Koeln": {
+      "station_id": 2667,
+      "station_name": "Köln/Bonn",
+      "lat": 50.8645,
+      "lon": 7.1575,
+      "distance_km": 16.2
+    },
+    "Dortmund": {
+      "station_id": 13696,
+      "station_name": "Waltrop-Abdinghof",
+      "lat": 51.5966,
+      "lon": 7.4048,
+      "distance_km": 10.6
+    },
+    "Stuttgart": {
+      "station_id": 4928,
+      "station_name": "Stuttgart (Schnarrenberg)",
+      "lat": 48.8281,
+      "lon": 9.2,
+      "distance_km": 5.5
+    },
+    "Freiburg": {
+      "station_id": 1443,
+      "station_name": "Freiburg",
+      "lat": 48.0232,
+      "lon": 7.8343,
+      "distance_km": 3.9
+    },
+    "Hannover": {
+      "station_id": 2014,
+      "station_name": "Hannover",
+      "lat": 52.4644,
+      "lon": 9.6779,
+      "distance_km": 11.1
+    },
+    "Frankfurt": {
+      "station_id": 1424,
+      "station_name": "Frankfurt/Main-Westend",
+      "lat": 50.1269,
+      "lon": 8.6694,
+      "distance_km": 2.0
+    },
+    "Leipzig": {
+      "station_id": 2928,
+      "station_name": "Leipzig-Holzhausen",
+      "lat": 51.3151,
+      "lon": 12.4462,
+      "distance_km": 6.0
+    },
+    "Mainz": {
+      "station_id": 3137,
+      "station_name": "Mainz-Lerchenberg (ZDF)",
+      "lat": 49.9658,
+      "lon": 8.2049,
+      "distance_km": 6.0
+    },
+    "Kiel": {
+      "station_id": 2564,
+      "station_name": "Kiel-Holtenau",
+      "lat": 54.3776,
+      "lon": 10.1424,
+      "distance_km": 6.5
+    },
+    "Potsdam": {
+      "station_id": 3987,
+      "station_name": "Potsdam",
+      "lat": 52.3812,
+      "lon": 13.0622,
+      "distance_km": 1.0
+    },
+    "Magdeburg": {
+      "station_id": 3126,
+      "station_name": "Magdeburg",
+      "lat": 52.1029,
+      "lon": 11.5827,
+      "distance_km": 3.9
+    },
+    "Erfurt": {
+      "station_id": 1270,
+      "station_name": "Erfurt-Weimar",
+      "lat": 50.9827,
+      "lon": 10.9613,
+      "distance_km": 4.8
+    },
+    "Rostock": {
+      "station_id": 4271,
+      "station_name": "Rostock-Warnemünde",
+      "lat": 54.1803,
+      "lon": 12.0808,
+      "distance_km": 10.1
+    },
+    "Saarbruecken": {
+      "station_id": 6217,
+      "station_name": "Saarbrücken-Burbach",
+      "lat": 49.2406,
+      "lon": 6.9351,
+      "distance_km": 4.0
+    },
+    "Bremen": {
+      "station_id": 691,
+      "station_name": "Bremen",
+      "lat": 53.0451,
+      "lon": 8.7981,
+      "distance_km": 3.9
+    }
+  },
+  "sun": {
+    "Berlin": {
+      "station_id": 403,
+      "station_name": "Berlin-Dahlem (FU)",
+      "lat": 52.4537,
+      "lon": 13.3017,
+      "distance_km": 9.9
+    },
+    "Hamburg": {
+      "station_id": 1975,
+      "station_name": "Hamburg-Fuhlsbüttel",
+      "lat": 53.6332,
+      "lon": 9.9881,
+      "distance_km": 9.3
+    },
+    "Muenchen": {
+      "station_id": 3379,
+      "station_name": "München-Stadt",
+      "lat": 48.1632,
+      "lon": 11.5429,
+      "distance_km": 3.8
+    },
+    "Nuernberg": {
+      "station_id": 3668,
+      "station_name": "Nürnberg",
+      "lat": 49.503,
+      "lon": 11.0549,
+      "distance_km": 6.2
+    },
+    "Koeln": {
+      "station_id": 2667,
+      "station_name": "Köln/Bonn",
+      "lat": 50.8645,
+      "lon": 7.1575,
+      "distance_km": 16.2
+    },
+    "Dortmund": {
+      "station_id": 5480,
+      "station_name": "Werl",
+      "lat": 51.5763,
+      "lon": 7.8879,
+      "distance_km": 29.8
+    },
+    "Stuttgart": {
+      "station_id": 4928,
+      "station_name": "Stuttgart (Schnarrenberg)",
+      "lat": 48.8281,
+      "lon": 9.2,
+      "distance_km": 5.5
+    },
+    "Freiburg": {
+      "station_id": 1443,
+      "station_name": "Freiburg",
+      "lat": 48.0232,
+      "lon": 7.8343,
+      "distance_km": 3.9
+    },
+    "Hannover": {
+      "station_id": 662,
+      "station_name": "Braunschweig",
+      "lat": 52.2915,
+      "lon": 10.4464,
+      "distance_km": 49.5
+    },
+    "Frankfurt": {
+      "station_id": 1420,
+      "station_name": "Frankfurt/Main",
+      "lat": 50.0259,
+      "lon": 8.5213,
+      "distance_km": 14.7
+    },
+    "Leipzig": {
+      "station_id": 2932,
+      "station_name": "Leipzig/Halle",
+      "lat": 51.4347,
+      "lon": 12.2396,
+      "distance_km": 13.9
+    },
+    "Mainz": {
+      "station_id": 1420,
+      "station_name": "Frankfurt/Main",
+      "lat": 50.0259,
+      "lon": 8.5213,
+      "distance_km": 18.2
+    },
+    "Kiel": {
+      "station_id": 6105,
+      "station_name": "Ostenfeld (Rendsburg)",
+      "lat": 54.3194,
+      "lon": 9.8051,
+      "distance_km": 21.1
+    },
+    "Potsdam": {
+      "station_id": 3987,
+      "station_name": "Potsdam",
+      "lat": 52.3812,
+      "lon": 13.0622,
+      "distance_km": 1.0
+    },
+    "Magdeburg": {
+      "station_id": 662,
+      "station_name": "Braunschweig",
+      "lat": 52.2915,
+      "lon": 10.4464,
+      "distance_km": 82.0
+    },
+    "Erfurt": {
+      "station_id": 2925,
+      "station_name": "Leinefelde",
+      "lat": 51.3932,
+      "lon": 10.3123,
+      "distance_km": 67.9
+    },
+    "Rostock": {
+      "station_id": 4271,
+      "station_name": "Rostock-Warnemünde",
+      "lat": 54.1803,
+      "lon": 12.0808,
+      "distance_km": 10.1
+    },
+    "Saarbruecken": {
+      "station_id": 4336,
+      "station_name": "Saarbrücken-Ensheim",
+      "lat": 49.2128,
+      "lon": 7.1077,
+      "distance_km": 9.1
+    },
+    "Bremen": {
+      "station_id": 691,
+      "station_name": "Bremen",
+      "lat": 53.0451,
+      "lon": 8.7981,
+      "distance_km": 3.9
+    }
+  }
+}

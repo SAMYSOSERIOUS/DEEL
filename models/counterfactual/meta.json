@@ -1,0 +1,55 @@
+{
+  "features": [
+    "hour",
+    "dow",
+    "is_weekend",
+    "doy",
+    "month",
+    "dst",
+    "holiday_share",
+    "holiday_share_prev",
+    "holiday_share_next",
+    "national_holiday",
+    "bridge_share",
+    "school_share",
+    "is_dec24",
+    "is_dec31",
+    "days_to_xmas",
+    "between_years",
+    "temp",
+    "temp_24h",
+    "temp_72h",
+    "temp_daily",
+    "hdd",
+    "cdd",
+    "sun",
+    "sun_daily",
+    "sun_elev",
+    "covid",
+    "level_year"
+  ],
+  "params": {
+    "n_estimators": 1500,
+    "learning_rate": 0.03,
+    "num_leaves": 63,
+    "min_child_samples": 40,
+    "subsample": 0.8,
+    "subsample_freq": 1,
+    "colsample_bytree": 0.8,
+    "reg_lambda": 1.0,
+    "verbose": -1
+  },
+  "seeds": [
+    1,
+    2,
+    3
+  ],
+  "quantiles": [],
+  "meta": {
+    "train_rows": 67199,
+    "train_start": "2014-12-31 23:00:00+00:00",
+    "train_end": "2022-08-31 21:00:00+00:00",
+    "cutoff": "2022-08-31 22:00:00+00:00",
+    "covid_handling": "flag"
+  }
+}
