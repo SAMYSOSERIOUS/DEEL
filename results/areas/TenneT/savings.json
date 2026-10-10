@@ -1,0 +1,1501 @@
+{
+  "generated_utc": "2026-10-10T16:30:46+00:00",
+  "area": "TenneT",
+  "data": {
+    "first_hour_utc": "2014-12-31 23:00:00+00:00",
+    "last_hour_utc": "2026-10-10 14:00:00+00:00",
+    "hours": 103216
+  },
+  "settings": {
+    "main_cutoff": "2022-09-01",
+    "winter_months": [
+      10,
+      11,
+      12,
+      1,
+      2,
+      3
+    ],
+    "interval_level": 0.9
+  },
+  "headline": {
+    "winter": "2022/23",
+    "complete": true,
+    "coverage": 1.0,
+    "hours": 4368,
+    "years_ahead": 0.08,
+    "actual_twh": 73.5871195,
+    "expected_twh": 78.71338787931472,
+    "saving_twh": 5.126268379314721,
+    "saving_pct": 6.512574947446604,
+    "low_pct": 5.34838735325086,
+    "high_pct": 7.64847216049287,
+    "typical_error_pct": 0.6614355717170265
+  },
+  "latest_complete_winter": {
+    "winter": "2025/26",
+    "complete": true,
+    "coverage": 1.0,
+    "hours": 4368,
+    "years_ahead": 3.08,
+    "actual_twh": 74.58545425999999,
+    "expected_twh": 78.68932446537177,
+    "saving_twh": 4.103870205371782,
+    "saving_pct": 5.215282038896829,
+    "low_pct": 0.9941946331497808,
+    "high_pct": 9.09115748662811,
+    "typical_error_pct": 2.2927477837479113
+  },
+  "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 6.5% less electricity than the weather and calendar predicted (90% range 5.3% to 7.6%), about 5.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 5.2% below the pre-crisis pattern (range 1.0% to 9.1%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 6.7%.",
+  "winters": [
+    {
+      "winter": "2021/22",
+      "complete": true,
+      "coverage": 1.0,
+      "hours": 4368,
+      "years_ahead": 0.0,
+      "actual_twh": 78.89025675,
+      "expected_twh": 78.89211281128917,
+      "saving_twh": 0.0018560612891614437,
+      "saving_pct": 0.0023526576016563716,
+      "low_pct": -1.036252459465059,
+      "high_pct": 1.0198222940062784,
+      "typical_error_pct": 0.5527971898574884
+    },
+    {
+      "winter": "2022/23",
+      "complete": true,
+      "coverage": 1.0,
+      "hours": 4368,
+      "years_ahead": 0.08,
+      "actual_twh": 73.5871195,
+      "expected_twh": 78.71338787931472,
+      "saving_twh": 5.126268379314721,
+      "saving_pct": 6.512574947446604,
+      "low_pct": 5.34838735325086,
+      "high_pct": 7.64847216049287,
+      "typical_error_pct": 0.6614355717170265
+    },
+    {
+      "winter": "2023/24",
+      "complete": true,
+      "coverage": 1.0,
+      "hours": 4392,
+      "years_ahead": 1.08,
+      "actual_twh": 74.18673375,
+      "expected_twh": 78.81356611695342,
+      "saving_twh": 4.626832366953417,
+      "saving_pct": 5.870604002472801,
+      "low_pct": 3.300776599914046,
+      "high_pct": 8.307378599035232,
+      "typical_error_pct": 1.4291360274498723
+    },
+    {
+      "winter": "2024/25",
+      "complete": true,
+      "coverage": 1.0,
+      "hours": 4368,
+      "years_ahead": 2.08,
+      "actual_twh": 74.18179286,
+      "expected_twh": 78.69889205695536,
+      "saving_twh": 4.517099196955353,
+      "saving_pct": 5.739724002323021,
+      "low_pct": 2.266755785901853,
+      "high_pct": 8.974337122893683,
+      "typical_error_pct": 1.910957778303431
+    },
+    {
+      "winter": "2025/26",
+      "complete": true,
+      "coverage": 1.0,
+      "hours": 4368,
+      "years_ahead": 3.08,
+      "actual_twh": 74.58545425999999,
+      "expected_twh": 78.68932446537177,
+      "saving_twh": 4.103870205371782,
+      "saving_pct": 5.215282038896829,
+      "low_pct": 0.9941946331497808,
+      "high_pct": 9.09115748662811,
+      "typical_error_pct": 2.2927477837479113
+    }
+  ],
+  "check_winters": [
+    {
+      "winter": "2016/17",
+      "kind": "check (normal winter)",
+      "saving_pct": -0.05077921612917091,
+      "low_pct": -1.2963856448203748,
+      "high_pct": 1.164565749061619,
+      "typical_error_pct": 0.6612710187711537
+    },
+    {
+      "winter": "2017/18",
+      "kind": "check (normal winter)",
+      "saving_pct": -0.20206574270766886,
+      "low_pct": -1.4495556496841866,
+      "high_pct": 1.015116942487082,
+      "typical_error_pct": 0.6612710187711537
+    },
+    {
+      "winter": "2018/19",
+      "kind": "check (normal winter)",
+      "saving_pct": 0.35150614506177513,
+      "low_pct": -0.8890919345091897,
+      "high_pct": 1.5619644367841135,
+      "typical_error_pct": 0.6612710187711537
+    },
+    {
+      "winter": "2019/20",
+      "kind": "check (normal winter)",
+      "saving_pct": 1.7930479304739566,
+      "low_pct": 0.5703966747978684,
+      "high_pct": 2.9859954085400764,
+      "typical_error_pct": 0.6612710187711537
+    }
+  ],
+  "backtests": [
+    {
+      "winter": "2016/17",
+      "gap_years": 0,
+      "horizon_years": 0.082,
+      "cutoff": "2016-08-31",
+      "hours": 4368,
+      "error_pct": 0.05077921612917091,
+      "hourly_mape": 2.6866069944376125,
+      "daily_mape": 2.3264325136604747,
+      "baseline_last_year_error_pct": 0.48374451285588815,
+      "baseline_last_year_hourly_mape": 4.195341945129759,
+      "baseline_avg_years_error_pct": 1.035906440387091
+    },
+    {
+      "winter": "2017/18",
+      "gap_years": 0,
+      "horizon_years": 0.082,
+      "cutoff": "2017-08-31",
+      "hours": 4368,
+      "error_pct": 0.20206574270766886,
+      "hourly_mape": 1.9946295659966595,
+      "daily_mape": 1.6367392427662824,
+      "baseline_last_year_error_pct": -0.31155995081180166,
+      "baseline_last_year_hourly_mape": 3.8266696428145655,
+      "baseline_avg_years_error_pct": 0.16732711993681093
+    },
+    {
+      "winter": "2017/18",
+      "gap_years": 1,
+      "horizon_years": 1.081,
+      "cutoff": "2016-08-31",
+      "hours": 4368,
+      "error_pct": 0.09849716814660514,
+      "hourly_mape": 2.5515557805122735,
+      "daily_mape": 2.179813637519825,
+      "baseline_last_year_error_pct": -0.31155995081180166,
+      "baseline_last_year_hourly_mape": 3.8266696428145655,
+      "baseline_avg_years_error_pct": 0.16732711993681093
+    },
+    {
+      "winter": "2018/19",
+      "gap_years": 0,
+      "horizon_years": 0.082,
+      "cutoff": "2018-08-31",
+      "hours": 4368,
+      "error_pct": -0.35150614506177513,
+      "hourly_mape": 2.2122435547273454,
+      "daily_mape": 1.7138441216831488,
+      "baseline_last_year_error_pct": -1.0336821020591858,
+      "baseline_last_year_hourly_mape": 3.971043494660395,
+      "baseline_avg_years_error_pct": -0.8323417315595272
+    },
+    {
+      "winter": "2018/19",
+      "gap_years": 1,
+      "horizon_years": 1.081,
+      "cutoff": "2017-08-31",
+      "hours": 4368,
+      "error_pct": -0.4950588577036341,
+      "hourly_mape": 2.4673498288582048,
+      "daily_mape": 1.9543569196544492,
+      "baseline_last_year_error_pct": -1.0336821020591858,
+      "baseline_last_year_hourly_mape": 3.971043494660395,
+      "baseline_avg_years_error_pct": -0.8323417315595272
+    },
+    {
+      "winter": "2018/19",
+      "gap_years": 2,
+      "horizon_years": 2.081,
+      "cutoff": "2016-08-31",
+      "hours": 4368,
+      "error_pct": -0.9863482763692422,
+      "hourly_mape": 2.962170608990947,
+      "daily_mape": 2.3738225978588616,
+      "baseline_last_year_error_pct": -1.0336821020591858,
+      "baseline_last_year_hourly_mape": 3.971043494660395,
+      "baseline_avg_years_error_pct": -0.8323417315595272
+    },
+    {
+      "winter": "2019/20",
+      "gap_years": 0,
+      "horizon_years": 0.082,
+      "cutoff": "2019-08-31",
+      "hours": 4392,
+      "error_pct": -1.7930479304739566,
+      "hourly_mape": 2.843839751401228,
+      "daily_mape": 2.420414497586112,
+      "baseline_last_year_error_pct": -1.9777314005801627,
+      "baseline_last_year_hourly_mape": 3.895881371385123,
+      "baseline_avg_years_error_pct": -2.6712264738119162
+    },
+    {
+      "winter": "2019/20",
+      "gap_years": 1,
+      "horizon_years": 1.081,
+      "cutoff": "2018-08-31",
+      "hours": 4392,
+      "error_pct": -2.066681255031211,
+      "hourly_mape": 3.4915956700162427,
+      "daily_mape": 3.039360168612399,
+      "baseline_last_year_error_pct": -1.9777314005801627,
+      "baseline_last_year_hourly_mape": 3.895881371385123,
+      "baseline_avg_years_error_pct": -2.6712264738119162
+    },
+    {
+      "winter": "2019/20",
+      "gap_years": 2,
+      "horizon_years": 2.081,
+      "cutoff": "2017-08-31",
+      "hours": 4392,
+      "error_pct": -2.1499465775487114,
+      "hourly_mape": 3.4977532977191723,
+      "daily_mape": 3.0081776791978196,
+      "baseline_last_year_error_pct": -1.9777314005801627,
+      "baseline_last_year_hourly_mape": 3.895881371385123,
+      "baseline_avg_years_error_pct": -2.6712264738119162
+    },
+    {
+      "winter": "2019/20",
+      "gap_years": 3,
+      "horizon_years": 3.08,
+      "cutoff": "2016-08-31",
+      "hours": 4392,
+      "error_pct": -2.6303565605129697,
+      "hourly_mape": 4.005154078793628,
+      "daily_mape": 3.429656292179785,
+      "baseline_last_year_error_pct": -1.9777314005801627,
+      "baseline_last_year_hourly_mape": 3.895881371385123,
+      "baseline_avg_years_error_pct": -2.6712264738119162
+    }
+  ],
+  "error_model": {
+    "a": 3.05584733114336e-05,
+    "b": 0.00016060320384427254,
+    "n": 10,
+    "drift_intercept": -0.0030830625033651912,
+    "drift_per_year": -0.00650933225964382,
+    "rms_by_gap": {
+      "0": 0.0091950891025588,
+      "1": 0.012282720076895438,
+      "2": 0.01672595768350798,
+      "3": 0.026303565605129697
+    },
+    "mean_by_gap": {
+      "0": -0.00472927279174723,
+      "1": -0.008210809815294132,
+      "2": -0.015681474269589768,
+      "3": -0.026303565605129697
+    }
+  },
+  "variants": {
+    "cutoff 2022-09-01": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.0,
+        "actual_twh": 78.89025675,
+        "expected_twh": 78.89211281128917,
+        "saving_twh": 0.0018560612891614437,
+        "saving_pct": 0.0023526576016563716,
+        "low_pct": -1.036252459465059,
+        "high_pct": 1.0198222940062784,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 73.5871195,
+        "expected_twh": 78.71338787931472,
+        "saving_twh": 5.126268379314721,
+        "saving_pct": 6.512574947446604,
+        "low_pct": 5.34838735325086,
+        "high_pct": 7.64847216049287,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4392,
+        "years_ahead": 1.08,
+        "actual_twh": 74.18673375,
+        "expected_twh": 78.81356611695342,
+        "saving_twh": 4.626832366953417,
+        "saving_pct": 5.870604002472801,
+        "low_pct": 3.300776599914046,
+        "high_pct": 8.307378599035232,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 2.08,
+        "actual_twh": 74.18179286,
+        "expected_twh": 78.69889205695536,
+        "saving_twh": 4.517099196955353,
+        "saving_pct": 5.739724002323021,
+        "low_pct": 2.266755785901853,
+        "high_pct": 8.974337122893683,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 3.08,
+        "actual_twh": 74.58545425999999,
+        "expected_twh": 78.68932446537177,
+        "saving_twh": 4.103870205371782,
+        "saving_pct": 5.215282038896829,
+        "low_pct": 0.9941946331497808,
+        "high_pct": 9.09115748662811,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ],
+    "Dec-Feb only": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2160,
+        "years_ahead": 0.0,
+        "actual_twh": 39.7681275,
+        "expected_twh": 39.750742714882406,
+        "saving_twh": -0.017384785117596387,
+        "saving_pct": -0.043734491308233814,
+        "low_pct": -1.0828182831234212,
+        "high_pct": 0.9742040788752404,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2160,
+        "years_ahead": 0.08,
+        "actual_twh": 37.16097975,
+        "expected_twh": 39.67682795948137,
+        "saving_twh": 2.515848209481373,
+        "saving_pct": 6.340850160830902,
+        "low_pct": 5.1745240986424745,
+        "high_pct": 7.478833875953972,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2184,
+        "years_ahead": 1.08,
+        "actual_twh": 37.7181975,
+        "expected_twh": 39.957080544417366,
+        "saving_twh": 2.238883044417366,
+        "saving_pct": 5.603219789615421,
+        "low_pct": 3.026092528495683,
+        "high_pct": 8.046916294583905,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2160,
+        "years_ahead": 2.08,
+        "actual_twh": 37.78084125,
+        "expected_twh": 39.72833413452235,
+        "saving_twh": 1.9474928845223487,
+        "saving_pct": 4.90202503313637,
+        "low_pct": 1.3981922572375072,
+        "high_pct": 8.16538443148036,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2160,
+        "years_ahead": 3.08,
+        "actual_twh": 38.289224159999996,
+        "expected_twh": 39.64099551012638,
+        "saving_twh": 1.3517713501263857,
+        "saving_pct": 3.4100338115400586,
+        "low_pct": -0.8914474669815986,
+        "high_pct": 7.3597283034377625,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ],
+    "dark hours only (no solar)": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 0.0,
+        "actual_twh": 42.08122475,
+        "expected_twh": 42.08740506211457,
+        "saving_twh": 0.006180312114566565,
+        "saving_pct": 0.014684469392789445,
+        "low_pct": -1.0237925658323155,
+        "high_pct": 1.0320286304048132,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 0.08,
+        "actual_twh": 39.16976175,
+        "expected_twh": 41.97773586103986,
+        "saving_twh": 2.807974111039862,
+        "saving_pct": 6.689198579778532,
+        "low_pct": 5.527210458308529,
+        "high_pct": 7.822949768462573,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2506,
+        "years_ahead": 1.08,
+        "actual_twh": 39.5161145,
+        "expected_twh": 41.96467157230301,
+        "saving_twh": 2.448557072303012,
+        "saving_pct": 5.8348057557993105,
+        "low_pct": 3.2640010250181595,
+        "high_pct": 8.272507079418368,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2498,
+        "years_ahead": 2.08,
+        "actual_twh": 39.64783007,
+        "expected_twh": 42.06482874113275,
+        "saving_twh": 2.4169986711327507,
+        "saving_pct": 5.745889721807684,
+        "low_pct": 2.2731486779422383,
+        "high_pct": 8.980291261020968,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 3.08,
+        "actual_twh": 40.095956539999996,
+        "expected_twh": 42.010758741892246,
+        "saving_twh": 1.9148022018922493,
+        "saving_pct": 4.557885311371079,
+        "low_pct": 0.3075217827760768,
+        "high_pct": 8.460642601349145,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ],
+    "corrected for known model bias (trend)": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.0,
+        "actual_twh": 78.89025675,
+        "expected_twh": 78.89211281128917,
+        "saving_twh": 0.0018560612891614437,
+        "saving_pct": 0.0023526576016563716,
+        "low_pct": -1.036252459465059,
+        "high_pct": 1.0198222940062784,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 73.5871195,
+        "expected_twh": 78.299633519524,
+        "saving_twh": 4.712514019523993,
+        "saving_pct": 6.0185645930883265,
+        "low_pct": 4.84822514771448,
+        "high_pct": 7.160464164039048,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4392,
+        "years_ahead": 1.08,
+        "actual_twh": 74.18673375,
+        "expected_twh": 77.88670443466034,
+        "saving_twh": 3.6999706846603453,
+        "saving_pct": 4.750452226110391,
+        "low_pct": 2.150043550832148,
+        "high_pct": 7.216224750089728,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 2.08,
+        "actual_twh": 74.18179286,
+        "expected_twh": 77.26057962847285,
+        "saving_twh": 3.0787867684728503,
+        "saving_pct": 3.9849387401414527,
+        "low_pct": 0.44731642232181956,
+        "high_pct": 7.279768652703867,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 3.08,
+        "actual_twh": 74.58545425999999,
+        "expected_twh": 76.73929261543226,
+        "saving_twh": 2.153838355432272,
+        "saving_pct": 2.8066956079800143,
+        "low_pct": -1.5216543825791629,
+        "high_pct": 6.781061415888978,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ],
+    "dark hours + bias corrected (most cautious)": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 0.0,
+        "actual_twh": 42.08122475,
+        "expected_twh": 42.08740506211457,
+        "saving_twh": 0.006180312114566565,
+        "saving_pct": 0.014684469392789445,
+        "low_pct": -1.0237925658323155,
+        "high_pct": 1.0320286304048132,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 0.08,
+        "actual_twh": 39.16976175,
+        "expected_twh": 41.75832757639225,
+        "saving_twh": 2.5885658263922484,
+        "saving_pct": 6.198921213156239,
+        "low_pct": 5.030827726952792,
+        "high_pct": 7.33862940294554,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2506,
+        "years_ahead": 1.08,
+        "actual_twh": 39.5161145,
+        "expected_twh": 41.472361593770145,
+        "saving_twh": 1.9562470937701464,
+        "saving_pct": 4.716989866484978,
+        "low_pct": 2.1156676350555625,
+        "high_pct": 7.18362864724853,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2498,
+        "years_ahead": 2.08,
+        "actual_twh": 39.64783007,
+        "expected_twh": 41.29719610870817,
+        "saving_twh": 1.6493660387081728,
+        "saving_pct": 3.993893518500591,
+        "low_pct": 0.45660113458255713,
+        "high_pct": 7.2884161410273425,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 2495,
+        "years_ahead": 3.08,
+        "actual_twh": 40.095956539999996,
+        "expected_twh": 40.97078847700552,
+        "saving_twh": 0.8748319370055199,
+        "saving_pct": 2.135257751987152,
+        "low_pct": -2.222993660854411,
+        "high_pct": 6.1370795628963855,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ],
+    "simple average of 2017-19 (no weather adjustment)": [
+      {
+        "winter": "2021/22",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.0,
+        "actual_twh": 78.89025675,
+        "expected_twh": 79.2002524375,
+        "saving_twh": 0.3099956875,
+        "saving_pct": 0.3914074487889163,
+        "low_pct": -0.6431568302412538,
+        "high_pct": 1.4049184776917523,
+        "typical_error_pct": 0.5527971898574884
+      },
+      {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 73.5871195,
+        "expected_twh": 79.22247802083335,
+        "saving_twh": 5.635358520833344,
+        "saving_pct": 7.113332808589245,
+        "low_pct": 5.956626379359431,
+        "high_pct": 8.241930652979201,
+        "typical_error_pct": 0.6614355717170265
+      },
+      {
+        "winter": "2023/24",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4392,
+        "years_ahead": 1.08,
+        "actual_twh": 74.18673375,
+        "expected_twh": 79.5520391875,
+        "saving_twh": 5.3653054375,
+        "saving_pct": 6.744397117029588,
+        "low_pct": 4.198425147368912,
+        "high_pct": 9.158551395660098,
+        "typical_error_pct": 1.4291360274498723
+      },
+      {
+        "winter": "2024/25",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 2.08,
+        "actual_twh": 74.18179286,
+        "expected_twh": 79.21167685416665,
+        "saving_twh": 5.029883994166657,
+        "saving_pct": 6.3499274272743484,
+        "low_pct": 2.8994418216664486,
+        "high_pct": 9.563600952838803,
+        "typical_error_pct": 1.910957778303431
+      },
+      {
+        "winter": "2025/26",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 3.08,
+        "actual_twh": 74.58545425999999,
+        "expected_twh": 79.2074034375,
+        "saving_twh": 4.621949177500009,
+        "saving_pct": 5.835248950114924,
+        "low_pct": 1.6417707895839295,
+        "high_pct": 9.685773111464979,
+        "typical_error_pct": 2.2927477837479113
+      }
+    ]
+  },
+  "decomposition": [
+    {
+      "winter": "2021/22",
+      "raw_change_vs_normal_winters_pct": -0.29898420661317315,
+      "explained_by_weather_and_calendar_pct": -0.36392791009928205,
+      "saving_pct": 0.0023526576016563716,
+      "unexplained_rest_pct": 0.06729636108776527
+    },
+    {
+      "winter": "2022/23",
+      "raw_change_vs_normal_winters_pct": -7.001056078330691,
+      "explained_by_weather_and_calendar_pct": -0.5896469277793526,
+      "saving_pct": 6.512574947446604,
+      "unexplained_rest_pct": 0.10116579689526439
+    },
+    {
+      "winter": "2023/24",
+      "raw_change_vs_normal_winters_pct": -6.755599191279704,
+      "explained_by_weather_and_calendar_pct": -1.0070450738448367,
+      "saving_pct": 5.870604002472801,
+      "unexplained_rest_pct": 0.12204988503793324
+    },
+    {
+      "winter": "2024/25",
+      "raw_change_vs_normal_winters_pct": -6.249511584754619,
+      "explained_by_weather_and_calendar_pct": -0.6079542940055971,
+      "saving_pct": 5.739724002323021,
+      "unexplained_rest_pct": 0.09816671157399881
+    },
+    {
+      "winter": "2025/26",
+      "raw_change_vs_normal_winters_pct": -5.739366818156677,
+      "explained_by_weather_and_calendar_pct": -0.6200375962620575,
+      "saving_pct": 5.215282038896829,
+      "unexplained_rest_pct": 0.09595281700220948
+    }
+  ],
+  "monthly": [
+    {
+      "month": "2019-01",
+      "actual": 14065121.0,
+      "expected": 14057391.537479961,
+      "hours": 744,
+      "saving_pct": -0.054985041139610225
+    },
+    {
+      "month": "2019-02",
+      "actual": 12491837.5,
+      "expected": 12487663.8147976,
+      "hours": 672,
+      "saving_pct": -0.03342246607771493
+    },
+    {
+      "month": "2019-03",
+      "actual": 13205231.5,
+      "expected": 13184565.998359974,
+      "hours": 743,
+      "saving_pct": -0.15674009779764742
+    },
+    {
+      "month": "2019-04",
+      "actual": 11872034.0,
+      "expected": 11883215.72196807,
+      "hours": 720,
+      "saving_pct": 0.09409676833013192
+    },
+    {
+      "month": "2019-05",
+      "actual": 12138777.0,
+      "expected": 12159408.853609418,
+      "hours": 744,
+      "saving_pct": 0.16967809749479645
+    },
+    {
+      "month": "2019-06",
+      "actual": 11556209.5,
+      "expected": 11558063.920761101,
+      "hours": 720,
+      "saving_pct": 0.0160443892144424
+    },
+    {
+      "month": "2019-07",
+      "actual": 12246459.75,
+      "expected": 12224520.279592086,
+      "hours": 744,
+      "saving_pct": -0.17947101322692838
+    },
+    {
+      "month": "2019-08",
+      "actual": 11836005.75,
+      "expected": 11864880.562034884,
+      "hours": 744,
+      "saving_pct": 0.24336369745918685
+    },
+    {
+      "month": "2019-09",
+      "actual": 11769230.5,
+      "expected": 11739386.919042172,
+      "hours": 720,
+      "saving_pct": -0.25421754273573516
+    },
+    {
+      "month": "2019-10",
+      "actual": 12634978.0,
+      "expected": 12645027.080730114,
+      "hours": 745,
+      "saving_pct": 0.07947061454244286
+    },
+    {
+      "month": "2019-11",
+      "actual": 12895871.25,
+      "expected": 12901647.6087469,
+      "hours": 720,
+      "saving_pct": 0.04477225639757387
+    },
+    {
+      "month": "2019-12",
+      "actual": 12888425.0,
+      "expected": 12886687.571268443,
+      "hours": 744,
+      "saving_pct": -0.01348235317997215
+    },
+    {
+      "month": "2020-01",
+      "actual": 13769626.25,
+      "expected": 13760465.509421194,
+      "hours": 744,
+      "saving_pct": -0.06657289735245708
+    },
+    {
+      "month": "2020-02",
+      "actual": 12864174.0,
+      "expected": 12861458.553548172,
+      "hours": 696,
+      "saving_pct": -0.021113052151289224
+    },
+    {
+      "month": "2020-03",
+      "actual": 12858225.5,
+      "expected": 13108252.459010541,
+      "hours": 743,
+      "saving_pct": 1.9074011565796023
+    },
+    {
+      "month": "2020-04",
+      "actual": 10942300.0,
+      "expected": 11522479.958432605,
+      "hours": 720,
+      "saving_pct": 5.035200412807028
+    },
+    {
+      "month": "2020-05",
+      "actual": 11120782.5,
+      "expected": 11578200.386468492,
+      "hours": 744,
+      "saving_pct": 3.9506820680274224
+    },
+    {
+      "month": "2020-06",
+      "actual": 10880524.75,
+      "expected": 11265663.358726783,
+      "hours": 720,
+      "saving_pct": 3.41869445644708
+    },
+    {
+      "month": "2020-07",
+      "actual": 11707217.5,
+      "expected": 11722615.10254375,
+      "hours": 744,
+      "saving_pct": 0.13134955305672547
+    },
+    {
+      "month": "2020-08",
+      "actual": 11591835.0,
+      "expected": 11601354.856658004,
+      "hours": 744,
+      "saving_pct": 0.0820581455840963
+    },
+    {
+      "month": "2020-09",
+      "actual": 11690436.0,
+      "expected": 11718317.63505864,
+      "hours": 720,
+      "saving_pct": 0.23793206437094927
+    },
+    {
+      "month": "2020-10",
+      "actual": 12942238.0,
+      "expected": 12943125.157391515,
+      "hours": 745,
+      "saving_pct": 0.00685427499715896
+    },
+    {
+      "month": "2020-11",
+      "actual": 12845804.5,
+      "expected": 12993176.249553213,
+      "hours": 720,
+      "saving_pct": 1.1342242014017234
+    },
+    {
+      "month": "2020-12",
+      "actual": 12791110.5,
+      "expected": 13108695.066593634,
+      "hours": 744,
+      "saving_pct": 2.4227016112608357
+    },
+    {
+      "month": "2021-01",
+      "actual": 13507178.75,
+      "expected": 13730475.148570525,
+      "hours": 744,
+      "saving_pct": 1.626283112232807
+    },
+    {
+      "month": "2021-02",
+      "actual": 12372690.75,
+      "expected": 12571754.237055643,
+      "hours": 672,
+      "saving_pct": 1.5834185373183374
+    },
+    {
+      "month": "2021-03",
+      "actual": 13286849.0,
+      "expected": 13360702.314278072,
+      "hours": 743,
+      "saving_pct": 0.5527652105469572
+    },
+    {
+      "month": "2021-04",
+      "actual": 12146391.5,
+      "expected": 12163683.375282748,
+      "hours": 720,
+      "saving_pct": 0.14215986021047788
+    },
+    {
+      "month": "2021-05",
+      "actual": 11930865.25,
+      "expected": 11939192.914475966,
+      "hours": 744,
+      "saving_pct": 0.0697506484367949
+    },
+    {
+      "month": "2021-06",
+      "actual": 11773016.75,
+      "expected": 11775248.995361619,
+      "hours": 720,
+      "saving_pct": 0.018957096894489656
+    },
+    {
+      "month": "2021-07",
+      "actual": 12109550.5,
+      "expected": 12087038.612234766,
+      "hours": 744,
+      "saving_pct": -0.1862481662170623
+    },
+    {
+      "month": "2021-08",
+      "actual": 11708596.75,
+      "expected": 11692421.918342058,
+      "hours": 744,
+      "saving_pct": -0.13833602457133942
+    },
+    {
+      "month": "2021-09",
+      "actual": 11724362.0,
+      "expected": 11714759.885576451,
+      "hours": 720,
+      "saving_pct": -0.0819659516484883
+    },
+    {
+      "month": "2021-10",
+      "actual": 12812530.25,
+      "expected": 12811137.815166807,
+      "hours": 745,
+      "saving_pct": -0.01086893961552704
+    },
+    {
+      "month": "2021-11",
+      "actual": 13263098.25,
+      "expected": 13262254.502346158,
+      "hours": 720,
+      "saving_pct": -0.006362022789518917
+    },
+    {
+      "month": "2021-12",
+      "actual": 13425274.0,
+      "expected": 13421766.404994994,
+      "hours": 744,
+      "saving_pct": -0.02613363173791239
+    },
+    {
+      "month": "2022-01",
+      "actual": 13736455.5,
+      "expected": 13737925.326609261,
+      "hours": 744,
+      "saving_pct": 0.010699043518702656
+    },
+    {
+      "month": "2022-02",
+      "actual": 12606398.0,
+      "expected": 12591050.983278148,
+      "hours": 672,
+      "saving_pct": -0.12188828988330958
+    },
+    {
+      "month": "2022-03",
+      "actual": 13046500.75,
+      "expected": 13067977.778893795,
+      "hours": 743,
+      "saving_pct": 0.16434852627682517
+    },
+    {
+      "month": "2022-04",
+      "actual": 11998795.5,
+      "expected": 11989392.958599975,
+      "hours": 720,
+      "saving_pct": -0.07842383206966286
+    },
+    {
+      "month": "2022-05",
+      "actual": 11990554.5,
+      "expected": 11986220.63748921,
+      "hours": 744,
+      "saving_pct": -0.03615703933592673
+    },
+    {
+      "month": "2022-06",
+      "actual": 11368257.5,
+      "expected": 11376758.883244753,
+      "hours": 720,
+      "saving_pct": 0.07472588047262585
+    },
+    {
+      "month": "2022-07",
+      "actual": 11714240.25,
+      "expected": 11720614.399711255,
+      "hours": 744,
+      "saving_pct": 0.054384091941561685
+    },
+    {
+      "month": "2022-08",
+      "actual": 11500196.25,
+      "expected": 11506043.032111235,
+      "hours": 744,
+      "saving_pct": 0.05081488131860601
+    },
+    {
+      "month": "2022-09",
+      "actual": 11330091.75,
+      "expected": 11754164.79631236,
+      "hours": 720,
+      "saving_pct": 3.6078535026614955
+    },
+    {
+      "month": "2022-10",
+      "actual": 11868943.0,
+      "expected": 12569850.28598593,
+      "hours": 745,
+      "saving_pct": 5.576098919550121
+    },
+    {
+      "month": "2022-11",
+      "actual": 12249126.25,
+      "expected": 13144350.909978552,
+      "hours": 720,
+      "saving_pct": 6.81071789782286
+    },
+    {
+      "month": "2022-12",
+      "actual": 12630345.5,
+      "expected": 13394726.86059639,
+      "hours": 744,
+      "saving_pct": 5.7065841547317415
+    },
+    {
+      "month": "2023-01",
+      "actual": 12857113.25,
+      "expected": 13743561.08920045,
+      "hours": 744,
+      "saving_pct": 6.44991377014369
+    },
+    {
+      "month": "2023-02",
+      "actual": 11673521.0,
+      "expected": 12538540.009684525,
+      "hours": 672,
+      "saving_pct": 6.898881440872717
+    },
+    {
+      "month": "2023-03",
+      "actual": 12308070.5,
+      "expected": 13322358.723868867,
+      "hours": 743,
+      "saving_pct": 7.613428259153753
+    },
+    {
+      "month": "2023-04",
+      "actual": 10397904.5,
+      "expected": 11947336.632820226,
+      "hours": 720,
+      "saving_pct": 12.968849714703945
+    },
+    {
+      "month": "2023-05",
+      "actual": 11044528.0,
+      "expected": 11815512.808292128,
+      "hours": 744,
+      "saving_pct": 6.525191253239981
+    },
+    {
+      "month": "2023-06",
+      "actual": 10836653.75,
+      "expected": 11507568.031856963,
+      "hours": 720,
+      "saving_pct": 5.830200438525656
+    },
+    {
+      "month": "2023-07",
+      "actual": 11168915.5,
+      "expected": 11734866.013485555,
+      "hours": 744,
+      "saving_pct": 4.822811890951051
+    },
+    {
+      "month": "2023-08",
+      "actual": 11179227.25,
+      "expected": 11587635.218856012,
+      "hours": 744,
+      "saving_pct": 3.5245152366500943
+    },
+    {
+      "month": "2023-09",
+      "actual": 10907002.0,
+      "expected": 11617012.466465417,
+      "hours": 720,
+      "saving_pct": 6.11181634275585
+    },
+    {
+      "month": "2023-10",
+      "actual": 11881917.5,
+      "expected": 12707398.584156446,
+      "hours": 745,
+      "saving_pct": 6.496066670842082
+    },
+    {
+      "month": "2023-11",
+      "actual": 12493947.0,
+      "expected": 13222417.450033981,
+      "hours": 720,
+      "saving_pct": 5.509359032013538
+    },
+    {
+      "month": "2023-12",
+      "actual": 12566694.0,
+      "expected": 13191926.804902323,
+      "hours": 744,
+      "saving_pct": 4.739510870163233
+    },
+    {
+      "month": "2024-01",
+      "actual": 13188853.75,
+      "expected": 13908733.594316544,
+      "hours": 744,
+      "saving_pct": 5.175739684961
+    },
+    {
+      "month": "2024-02",
+      "actual": 11962649.75,
+      "expected": 12856420.1451985,
+      "hours": 696,
+      "saving_pct": 6.951938293120397
+    },
+    {
+      "month": "2024-03",
+      "actual": 12092671.75,
+      "expected": 12926669.538345614,
+      "hours": 743,
+      "saving_pct": 6.451760725155442
+    },
+    {
+      "month": "2024-04",
+      "actual": 11392236.5,
+      "expected": 12109431.081654513,
+      "hours": 720,
+      "saving_pct": 5.922611696771163
+    },
+    {
+      "month": "2024-05",
+      "actual": 10922213.0,
+      "expected": 11778175.463074448,
+      "hours": 744,
+      "saving_pct": 7.267360430806624
+    },
+    {
+      "month": "2024-06",
+      "actual": 10770662.0,
+      "expected": 11451345.832424916,
+      "hours": 720,
+      "saving_pct": 5.944138290693612
+    },
+    {
+      "month": "2024-07",
+      "actual": 11146466.5,
+      "expected": 11814326.027182339,
+      "hours": 744,
+      "saving_pct": 5.652963407694445
+    },
+    {
+      "month": "2024-08",
+      "actual": 11110742.75,
+      "expected": 11532782.316810736,
+      "hours": 744,
+      "saving_pct": 3.6594774375958816
+    },
+    {
+      "month": "2024-09",
+      "actual": 10969476.75,
+      "expected": 11665477.015708566,
+      "hours": 720,
+      "saving_pct": 5.96632494986139
+    },
+    {
+      "month": "2024-10",
+      "actual": 11896451.0,
+      "expected": 12839644.069130601,
+      "hours": 745,
+      "saving_pct": 7.345944046831098
+    },
+    {
+      "month": "2024-11",
+      "actual": 12478939.0,
+      "expected": 13180049.94989698,
+      "hours": 720,
+      "saving_pct": 5.31948628846024
+    },
+    {
+      "month": "2024-12",
+      "actual": 12552167.0,
+      "expected": 13132710.356406163,
+      "hours": 744,
+      "saving_pct": 4.4205905761332325
+    },
+    {
+      "month": "2025-01",
+      "actual": 13238286.0,
+      "expected": 13922531.922900772,
+      "hours": 744,
+      "saving_pct": 4.914665857402523
+    },
+    {
+      "month": "2025-02",
+      "actual": 11990388.25,
+      "expected": 12673091.855215417,
+      "hours": 672,
+      "saving_pct": 5.387032722677388
+    },
+    {
+      "month": "2025-03",
+      "actual": 12025561.61,
+      "expected": 12950863.903405413,
+      "hours": 743,
+      "saving_pct": 7.144714826028764
+    },
+    {
+      "month": "2025-04",
+      "actual": 10747434.55,
+      "expected": 11784874.248948244,
+      "hours": 720,
+      "saving_pct": 8.803146109436266
+    },
+    {
+      "month": "2025-05",
+      "actual": 10678973.27,
+      "expected": 11834900.947017664,
+      "hours": 744,
+      "saving_pct": 9.767109012508913
+    },
+    {
+      "month": "2025-06",
+      "actual": 10507494.27,
+      "expected": 11297304.216321897,
+      "hours": 720,
+      "saving_pct": 6.991136391465947
+    },
+    {
+      "month": "2025-07",
+      "actual": 11124645.49,
+      "expected": 11875970.841872973,
+      "hours": 744,
+      "saving_pct": 6.326433113357832
+    },
+    {
+      "month": "2025-08",
+      "actual": 10565086.74,
+      "expected": 11437929.479626946,
+      "hours": 744,
+      "saving_pct": 7.63112538140438
+    },
+    {
+      "month": "2025-09",
+      "actual": 10857850.15,
+      "expected": 11720786.628305472,
+      "hours": 720,
+      "saving_pct": 7.362445078741531
+    },
+    {
+      "month": "2025-10",
+      "actual": 12016965.46,
+      "expected": 12920609.455909425,
+      "hours": 745,
+      "saving_pct": 6.993818666163076
+    },
+    {
+      "month": "2025-11",
+      "actual": 12422317.08,
+      "expected": 13096110.546417367,
+      "hours": 720,
+      "saving_pct": 5.144989147955026
+    },
+    {
+      "month": "2025-12",
+      "actual": 12628010.52,
+      "expected": 13128617.942678811,
+      "hours": 744,
+      "saving_pct": 3.813100700047223
+    },
+    {
+      "month": "2026-01",
+      "actual": 13606756.07,
+      "expected": 13901861.588734351,
+      "hours": 744,
+      "saving_pct": 2.1227769881804526
+    },
+    {
+      "month": "2026-02",
+      "actual": 12054457.57,
+      "expected": 12610515.978713222,
+      "hours": 672,
+      "saving_pct": 4.4094818138437635
+    },
+    {
+      "month": "2026-03",
+      "actual": 11856947.56,
+      "expected": 13031608.952918593,
+      "hours": 743,
+      "saving_pct": 9.013939853186837
+    },
+    {
+      "month": "2026-04",
+      "actual": 10586558.39,
+      "expected": 11787272.69879956,
+      "hours": 720,
+      "saving_pct": 10.186532028921691
+    },
+    {
+      "month": "2026-05",
+      "actual": 10403829.91,
+      "expected": 11691974.959782613,
+      "hours": 744,
+      "saving_pct": 11.017343555844938
+    },
+    {
+      "month": "2026-06",
+      "actual": 10516566.65,
+      "expected": 11657061.48764168,
+      "hours": 720,
+      "saving_pct": 9.783724988075104
+    },
+    {
+      "month": "2026-07",
+      "actual": 10695222.67,
+      "expected": 11815814.303180771,
+      "hours": 744,
+      "saving_pct": 9.483829082174323
+    },
+    {
+      "month": "2026-08",
+      "actual": 11221530.66,
+      "expected": 11560659.717164125,
+      "hours": 744,
+      "saving_pct": 2.9334749526501502
+    },
+    {
+      "month": "2026-09",
+      "actual": 11193919.17,
+      "expected": 11719255.90470516,
+      "hours": 720,
+      "saving_pct": 4.482679949793078
+    },
+    {
+      "month": "2026-10",
+      "actual": 3805150.93,
+      "expected": 3935590.867314176,
+      "hours": 233,
+      "saving_pct": 3.314367313876665
+    }
+  ],
+  "profile_2022_23": {
+    "by_hour": {
+      "0": 6.712225129001359,
+      "1": 6.659174411125813,
+      "2": 6.360645056245162,
+      "3": 6.1021892723306825,
+      "4": 5.872739953473882,
+      "5": 6.159765252562222,
+      "6": 6.2499948432094055,
+      "7": 6.761676164191998,
+      "8": 6.564722322258354,
+      "9": 6.259061037753044,
+      "10": 6.063571829490666,
+      "11": 6.06324909568875,
+      "12": 5.978940718262282,
+      "13": 5.927531166648747,
+      "14": 6.149946346111057,
+      "15": 6.563096019798575,
+      "16": 6.7671800383665826,
+      "17": 6.8446642767097,
+      "18": 7.035664162457145,
+      "19": 7.295098025505176,
+      "20": 7.072618542256903,
+      "21": 6.703449661909833,
+      "22": 7.334614475859391,
+      "23": 6.648588417153811
+    },
+    "workdays_pct": 6.386995621289371,
+    "weekends_holidays_pct": 6.870805393384661,
+    "workday_daytime_pct": 6.297558065401843
+  },
+  "industry": {
+    "available": false
+  },
+  "feature_importance": {
+    "hour": 9191.7,
+    "dow": 4602.4,
+    "sun_elev": 1228.9,
+    "dst": 1159.8,
+    "holiday_share": 793.6,
+    "temp_72h": 610.7,
+    "doy": 577.7,
+    "is_weekend": 210.3,
+    "school_share": 204.8,
+    "level_year": 200.6,
+    "temp": 125.3,
+    "sun_daily": 119.1,
+    "national_holiday": 91.6,
+    "hdd": 86.8,
+    "sun": 79.7,
+    "temp_daily": 76.8,
+    "month": 68.3,
+    "temp_24h": 57.7,
+    "covid": 50.8,
+    "holiday_share_prev": 42.9,
+    "days_to_xmas": 41.1,
+    "bridge_share": 30.8,
+    "holiday_share_next": 19.7,
+    "cdd": 6.6,
+    "between_years": 4.6,
+    "is_dec24": 1.6,
+    "is_dec31": 0.1
+  }
+}
