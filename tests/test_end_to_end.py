@@ -71,3 +71,21 @@ def test_forecasts_are_frozen_and_scored(demo_run):
     assert len(sc) >= 9 and sc["hours"].between(23, 25).all()
     issued = pd.to_datetime(fc["issued_utc"], utc=True)
     assert (issued < fc.index).all()        # every forecast was made before the hour it describes
+
+
+@pytest.mark.slow
+def test_energy_charts_fills_missing_hours(demo_run):
+    """Delete two recent SMARD hours; the backup must put scaled values back."""
+    cfg = demo_run
+    from desave import store
+    from desave.sources import energy_charts
+    df = store.load(cfg, "load")
+    last_month = sorted((cfg.path("data") / "load").glob("*.parquet"))[-1]
+    month = pd.read_parquet(last_month)
+    gone = month.index[-30:-28]
+    month.drop(gone).to_parquet(last_month)
+    assert energy_charts.fill_gaps(cfg) == 2
+    back = store.load(cfg, "load")
+    assert set(back.loc[gone, "source"]) == {"energy_charts_scaled"}
+    ratio = (back.loc[gone, "load_mwh"] / df.loc[gone, "load_mwh"]).to_numpy()
+    assert abs(ratio - 1).max() < 0.02   # scaled back to SMARD level

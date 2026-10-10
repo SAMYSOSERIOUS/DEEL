@@ -7,7 +7,7 @@ import pytest
 import pandas as pd
 
 from desave import store
-from desave.sources import dwd, entsoe, eurostat, opsd, smard, weather_forecast
+from desave.sources import dwd, energy_charts, entsoe, eurostat, opsd, smard, weather_forecast
 
 
 def test_smard_drops_unpublished_hours():
@@ -123,3 +123,16 @@ def test_national_average_handles_missing_station(cfg):
     df.iloc[1, 1] = 99.0
     t = dwd.national(df, cfg, "temp")
     assert t.iloc[0] == pytest.approx(10.0) and t.notna().all() and t.iloc[1] > 10.0
+
+
+def test_energy_charts_load():
+    """Real format checked on 2026-10-08: MW every 15 minutes, a 'Load' series among others."""
+    t0 = 1791410400  # 2026-10-08 00:00 German time
+    payload = {"unix_seconds": [t0 + 900 * i for i in range(8)], "deprecated": False,
+               "production_types": [{"name": "Solar", "data": [0.0] * 8},
+                                    {"name": "Load", "data": [45806.7, 45626.1, 45918.1, 45679.8,
+                                                              45000.0, None, None, None]}]}
+    s = energy_charts.parse_public_power(payload)
+    assert s.index[0] == pd.Timestamp("2026-10-07 22:00", tz="UTC")
+    assert s.iloc[0] == pytest.approx((45806.7 + 45626.1 + 45918.1 + 45679.8) / 4)
+    assert len(s) == 1   # the second hour has only 1 of 4 quarter-hours, so it is left out

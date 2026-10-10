@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 300
     env:
-      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}
+      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}   # optional; not needed
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

@@ -20,7 +20,9 @@ sources:
     load_filter: 410            # "Stromverbrauch: Gesamt (Netzlast)" = grid load, MWh per hour
     resolution: "hour"
     refetch_days: 21            # re-download the last 3 weeks every day, because SMARD corrects recent values
-  entsoe:                       # backup source for load if SMARD fails
+  energy_charts:                # backup source for load if SMARD misses hours (no key needed)
+    base_url: "https://api.energy-charts.info"
+  entsoe:                       # optional second backup (needs a free key, asked for by e-mail)
     base_url: "https://web-api.tp.entsoe.eu/api"
     area: "10Y1001A1001A83F"    # Germany
     token_env: "ENTSOE_API_KEY" # put your free key in this environment variable

@@ -68,6 +68,16 @@ class Handler(SimpleHTTPRequestHandler):
             return self._json({"hourly": {"time": [t.strftime("%Y-%m-%dT%H:%M") for t in temp.index],
                                           "temperature_2m": [round(float(v), 1) for v in temp],
                                           "sunshine_duration": [None if pd.isna(v) else float(v) * 60 for v in sun_end]}})
+        if u.path.startswith("/energycharts/public_power"):
+            load = pd.read_parquet(self.root / "_truth" / "load.parquet")["load_mwh"]
+            s = pd.Timestamp(q["start"]).tz_localize("Europe/Berlin").tz_convert("UTC")
+            e = (pd.Timestamp(q["end"]) + pd.Timedelta(days=1)).tz_localize("Europe/Berlin").tz_convert("UTC")
+            part = load[(load.index >= s) & (load.index < e)] * 0.97  # slightly different definition
+            q15 = part.resample("15min").ffill()
+            return self._json({"unix_seconds": [int(t.value // 10**9) for t in q15.index],
+                               "production_types": [{"name": "Solar", "data": [0.0] * len(q15)},
+                                                    {"name": "Load", "data": [round(float(v), 1) for v in q15]}],
+                               "deprecated": False})
         if u.path.startswith("/eurostat/sts_inpr_m"):
             f = self.root / "eurostat" / f"{q.get('nace_r2')}.json"
             if not f.exists():
@@ -96,5 +106,6 @@ def demo_overrides(base: str) -> dict:
         "brightsky": {"base_url": f"{base}/brightsky"},
         "openmeteo": {"base_url": f"{base}/openmeteo"},
         "eurostat": {"base_url": f"{base}/eurostat"},
+        "energy_charts": {"base_url": f"{base}/energycharts"},
         "opsd": {"url": f"{base}/opsd/time_series_60min_singleindex.csv"},
     }}

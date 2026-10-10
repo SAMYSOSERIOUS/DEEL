@@ -64,12 +64,14 @@ def cmd_check_sources(cfg) -> int:
             params={"lat": 52.47, "lon": 13.40, "date": now.isoformat(),
                     "last_date": (now + pd.Timedelta(days=2)).isoformat()}).json())))
     report("Eurostat industry index", lambda: f"{len(need_rows(eurostat.download(cfg, 'C20'), 'months'))} months")
+    from .sources import energy_charts
+    report("Energy-Charts backup (no key)", lambda: f"{len(need_rows(energy_charts.download(cfg, now - pd.Timedelta(days=3), now), 'hours'))} hours")
     key = os.environ.get(cfg["sources"]["entsoe"]["token_env"])
     if key:
         from .sources import entsoe
         report("ENTSO-E backup", lambda: f"{len(entsoe.download(cfg, now - pd.Timedelta(days=3), now))} hours")
     else:
-        print(f"  --    ENTSO-E backup: no key in ${cfg['sources']['entsoe']['token_env']} (optional)")
+        print(f"  --    ENTSO-E backup: not used (optional; needs a key in ${cfg['sources']['entsoe']['token_env']})")
     print("All sources work." if ok else "Some sources failed (see above).")
     return 0 if ok else 1
 

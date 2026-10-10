@@ -27,7 +27,7 @@ yesterday's forecast, and publishes everything on a small web page.
 | **Daily forecast** | Tomorrow, hour by hour, with a 90% range, compared with "same week last year". |
 | **Web page** | Tomorrow's forecast, the last 30 days of forecast vs. reality, the running error compared with the baseline, the savings result, and the date of the last retrain. |
 | **Monthly retrain** | The daily model retrains on all data each month, and only replaces the old one if it beats the baseline on the last 4 weeks. |
-| **Tests** | 69 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
+| **Tests** | 71 tests: data checks, clock changes, holidays, every file format, no peeking at the future, and a full run on stand-in data where a known saving was planted and must be found. |
 
 Full results with all charts: **[reports/REPORT.md](reports/REPORT.md)** (written automatically).
 Method in detail: **[docs/METHOD.md](docs/METHOD.md)**.
@@ -101,10 +101,9 @@ saving.
 
 1. Push this folder to a GitHub repository.
 2. **Settings → Pages → Source: GitHub Actions.**
-3. Optional backup data source: register at the
-   [ENTSO-E Transparency Platform](https://transparency.entsoe.eu/), ask for an API key, and add it
-   under **Settings → Secrets and variables → Actions** as `ENTSOE_API_KEY`. If SMARD ever misses
-   hours, ENTSO-E fills them (scaled to match SMARD).
+3. Nothing else to set up: if SMARD ever misses hours, the project fills them automatically from
+   **Energy-Charts** (Fraunhofer ISE), which needs no key. *(Optional extra backup: an ENTSO-E key
+   saved as the secret `ENTSOE_API_KEY`. You don't need it.)*
 4. **Actions → "first run" → Run workflow.** This downloads everything, runs the analysis and
    publishes the page.
 5. From then on, **"daily forecast"** runs every morning and **"monthly retrain"** on the 1st of each
@@ -120,7 +119,8 @@ Prefer your own computer or server? See `scripts/cron_example.txt`.
 config/settings.yaml          every choice in one place (dates, stations, model size...)
 src/desave/
   sources/                    one downloader per source: smard, dwd, weather_forecast,
-                              entsoe (backup), opsd (cross-check), eurostat (industry)
+                              energy_charts (backup, no key), entsoe (optional backup),
+                              opsd (cross-check), eurostat (industry)
   timeutils.py                UTC storage, German calendar days, clock-change-safe shifting
   validate.py                 data checks used by both the tests and the daily job
   features.py                 calendar, holidays by state, weather and lag inputs
@@ -135,7 +135,7 @@ src/desave/
   pipeline/retrain.py         the monthly job
   web/                        the static web page
   demo/                       stand-in data and a local fake server
-tests/                        69 tests
+tests/                        71 tests
 .github/workflows/            tests, daily, monthly, first run
 ```
 
@@ -166,7 +166,7 @@ Details and numbers: [reports/REPORT.md](reports/REPORT.md#what-this-analysis-ca
 - Weather forecasts: DWD MOSMIX via **Bright Sky** (brightsky.dev); backup DWD ICON via **Open-Meteo**.
 - Cross-check: **Open Power System Data**, time series package 2020-10-06.
 - Industry output: **Eurostat**, table sts_inpr_m.
-- Backup demand: **ENTSO-E Transparency Platform**.
+- Backup demand: **Energy-Charts, Fraunhofer ISE** (energy-charts.info); optional **ENTSO-E Transparency Platform**.
 - Holidays and school holidays: **python-holidays**.
 
 Code: MIT licence.

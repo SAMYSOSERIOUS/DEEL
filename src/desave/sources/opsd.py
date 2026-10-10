@@ -37,7 +37,7 @@ def download(cfg: Settings) -> pd.Series:
 
 
 def cross_check(smard: pd.Series, opsd: pd.Series) -> dict:
-    both = pd.concat([smard.rename("smard"), opsd.rename("opsd")], axis=1).dropna()
+    both = pd.concat([smard.rename("smard"), opsd.rename("opsd")], axis=1, sort=True).dropna()
     if both.empty:
         return {"overlap_hours": 0}
     ratio = both["smard"] / both["opsd"]

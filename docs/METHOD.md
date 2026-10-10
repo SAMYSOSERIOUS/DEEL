@@ -7,7 +7,7 @@ This page explains every choice in plain words, so a reader can check it or disa
 | What | Source | Detail |
 |---|---|---|
 | Electricity demand | SMARD (Bundesnetzagentur), series 410 "Netzlast" | MWh per hour, 2015 to today. Downloaded through the same data feed the SMARD website uses (weekly files, times in milliseconds UTC). The last 3 weeks are downloaded again every day because SMARD corrects recent values. |
-| Backup demand | ENTSO-E "actual total load", Germany | Only used to fill missing SMARD hours. Its definition differs a little, so it is scaled to SMARD with hour-of-day factors from the last year where both exist. |
+| Backup demand | Energy-Charts (Fraunhofer ISE) "Load", no key needed; optionally ENTSO-E "actual total load" | Only used to fill missing SMARD hours. The definitions differ a little, so the backup is scaled to SMARD with hour-of-day factors from recent hours where both exist. Filled hours are marked in the data. |
 | Temperature, sunshine | DWD hourly station data | 19 points where people live, weighted by population (big states get two points). For each point the closest station with data from 2015 until now is chosen once and saved, so the inputs don't change from day to day. If a station is missing for an hour, the others are reweighted. |
 | Weather forecast | Bright Sky (DWD MOSMIX), backup Open-Meteo (DWD ICON) | Asked for the exact station coordinates, so forecast and history describe the same places. |
 | Holidays | python-holidays | Public holidays per state, weighted by state population; partial holidays (Assumption Day in Bavaria, Corpus Christi in a few Saxon and Thuringian towns); school holidays per state. |

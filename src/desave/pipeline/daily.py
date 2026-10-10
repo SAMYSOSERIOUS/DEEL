@@ -1,6 +1,6 @@
 """The daily job (runs early morning, German time).
 
-  1. Download new demand (SMARD; ENTSO-E fills gaps if a key is set) and weather (DWD).
+  1. Download new demand (SMARD; Energy-Charts fills any missing hours) and weather (DWD).
   2. Check the data. Bad data stops the job (the web page then shows a warning).
   3. Get the weather forecast and forecast TOMORROW hour by hour, with a range.
   4. Score every earlier forecast whose day is now complete against what really happened.
@@ -22,7 +22,7 @@ from .. import dataset
 from .. import features as F
 from ..config import Settings
 from ..models import operational
-from ..sources import dwd, entsoe, smard, weather_forecast
+from ..sources import dwd, energy_charts, entsoe, smard, weather_forecast
 from ..timeutils import expected_hours, hourly_utc_range, local_dates
 
 log = logging.getLogger(__name__)
@@ -42,11 +42,15 @@ def update_data(cfg: Settings) -> dict:
     status = {}
     smard.update(cfg)
     status["smard"] = "ok"
+    # backups for missing SMARD hours: Energy-Charts (no key), then ENTSO-E (only if a key is set)
     try:
-        n = entsoe.fill_gaps(cfg)
-        status["entsoe_filled_hours"] = n
-    except RuntimeError as e:  # no key or no overlap: fine, just report
-        status["entsoe"] = str(e)
+        status["energy_charts_filled_hours"] = energy_charts.fill_gaps(cfg)
+    except Exception as e:  # noqa: BLE001 - a backup failing must not stop the job
+        status["energy_charts"] = f"{type(e).__name__}: {e}"
+        try:
+            status["entsoe_filled_hours"] = entsoe.fill_gaps(cfg)
+        except Exception as e2:  # noqa: BLE001 - no key or no overlap: fine, just report
+            status["entsoe"] = str(e2)
     dwd.update(cfg)
     status["dwd"] = "ok"
     return status

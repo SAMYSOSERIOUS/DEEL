@@ -104,7 +104,7 @@ def download(cfg: Settings, start: pd.Timestamp, end: pd.Timestamp) -> pd.Series
 
 def calibrate(smard: pd.Series, entsoe: pd.Series, days: int = 365) -> pd.Series:
     """Hour-of-day scale factors that turn ENTSO-E load into SMARD-like load."""
-    both = pd.concat([smard.rename("s"), entsoe.rename("e")], axis=1).dropna()
+    both = pd.concat([smard.rename("s"), entsoe.rename("e")], axis=1, sort=True).dropna()
     both = both[both.index >= both.index.max() - pd.Timedelta(days=days)]
     if len(both) < 24 * 14:
         raise RuntimeError("Not enough overlap between SMARD and ENTSO-E to calibrate")

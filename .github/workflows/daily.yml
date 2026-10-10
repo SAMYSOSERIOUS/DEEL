@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     env:
-      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}   # optional backup source
+      ENTSOE_API_KEY: ${{ secrets.ENTSOE_API_KEY }}   # optional; Energy-Charts is the default backup and needs no key
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
