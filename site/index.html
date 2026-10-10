@@ -3,172 +3,351 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>German Power Forecast</title>
-<meta name="description" content="Tomorrow's German electricity demand, how good the forecasts are, and how much Germany saved in the 2022 energy crisis.">
+<title>Netzlast Watch</title>
+<meta name="description" content="Did Germany really save electricity in the 2022 energy crisis? Weather-adjusted savings, tomorrow's demand forecast and how good it is. Updated every morning.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+/* Look: a German grid control room (Netzleitstelle) at night. Flag gold = energy and forecast,
+   flag red = savings, blue = what really happened, grey = the simple baseline.
+   Dark is the default; "light" is a printed grid plan. */
 :root {
-  color-scheme: light;
-  --surface-0: #f4f3ef; --surface-1: #fcfcfb; --border: #e3e2dc;
-  --text-primary: #0b0b0b; --text-secondary: #52514e; --text-muted: #7a7974;
-  --grid: #e6e5e0; --band: rgba(235,104,52,0.16); --shade: rgba(82,81,78,0.10);
-  --actual: #2a78d6; --model: #eb6834; --base: #1baf7a; --check: #9a998f;
-  --warn-bg: #fff4d6; --warn-ink: #6b4b00; --good: #008300;
+  color-scheme: dark;
+  --ground: #0A0D12; --panel: #11161D; --panel-2: #0D1219; --line: #1E2833; --line-2: #33465A;
+  --ink: #ECEFF3; --ink-2: #A3AEBA; --muted: #7A8693;
+  --gold: #F2B705; --gold-soft: rgba(242,183,5,0.18); --gold-hi: #FFE38A;
+  --red: #E2392D; --blue: #4A9EFF; --grey: #8C97A3; --check: #56616D;
+  --shade: rgba(236,239,243,0.06); --warn-bg: #3A2F10; --warn-ink: #F3D68A;
+  --map-land: #141B24; --map-edge: #3B5068; --on-gold: #0A0D12;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: Barlow, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-    --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
-    --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-    --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
-    --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
-    --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --ground: #F3F1EA; --panel: #FBFAF6; --panel-2: #ECE9DF; --line: #D9D5C9; --line-2: #B8B2A3;
+    --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A;
+    --gold: #A87A00; --gold-soft: rgba(168,122,0,0.16); --gold-hi: #D9A100;
+    --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
+    --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
+    --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
   }
 }
-:root[data-theme="dark"] {
-  color-scheme: dark;
-  --surface-0: #121211; --surface-1: #1a1a19; --border: #2e2e2b;
-  --text-primary: #f0efec; --text-secondary: #c3c2b7; --text-muted: #8f8e86;
-  --grid: #2b2b28; --band: rgba(217,89,38,0.22); --shade: rgba(240,239,236,0.07);
-  --actual: #3987e5; --model: #d95926; --base: #199e70; --check: #6f6e68;
-  --warn-bg: #3a2f10; --warn-ink: #f3d68a; --good: #3fae3f;
+:root[data-theme="light"] {
+  color-scheme: light;
+  --ground: #F3F1EA; --panel: #FBFAF6; --panel-2: #ECE9DF; --line: #D9D5C9; --line-2: #B8B2A3;
+  --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A;
+  --gold: #A87A00; --gold-soft: rgba(168,122,0,0.16); --gold-hi: #D9A100;
+  --red: #C2261C; --blue: #1F66C9; --grey: #6F7883; --check: #A5A9AE;
+  --shade: rgba(20,24,29,0.05); --warn-bg: #FFF1C9; --warn-ink: #5E4500;
+  --map-land: #E4E0D4; --map-edge: #8C8574; --on-gold: #FFFFFF;
 }
 * { box-sizing: border-box; }
-body { margin: 0; background: var(--surface-0); color: var(--text-primary);
-  font: 15px/1.55 "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; }
-.tile .v, table, .meta { font-family: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace; }
-main { max-width: 1080px; margin: 0 auto; padding: 28px 16px 48px; }
-header h1 { text-wrap: balance; font-size: 28px; line-height: 1.2; margin: 0 0 6px; letter-spacing: -0.01em; }
-header p { margin: 0; color: var(--text-secondary); }
-.meta { font-size: 13px; color: var(--text-muted); margin-top: 8px; }
-.banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px;
-  margin: 16px 0 0; font-size: 14px; }
-section.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px;
-  padding: 20px; margin-top: 18px; }
-section.card h2 { font-size: 18px; margin: 0 0 4px; text-wrap: balance; }
-.theme:focus-visible, summary:focus-visible { outline: 2px solid var(--actual); outline-offset: 2px; }
-.sub { color: var(--text-secondary); margin: 0 0 14px; font-size: 14px; }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 12px; }
-.tile { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
-.tile .k { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
-.tile .v { font-size: 26px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
-.tile .n { font-size: 13px; color: var(--text-secondary); }
-.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--text-secondary); margin: 2px 0 6px; }
-.legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-.legend i.band { height: 10px; }
-.chart { width: 100%; height: 320px; position: relative; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 16px/1.55 var(--body); }
+a { color: var(--gold); }
+a:hover { color: var(--gold-hi); }
+:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+.flag { display: flex; height: 4px; }
+.flag span { flex: 1; }
+.wrap { max-width: 1200px; margin: 0 auto; padding-inline: 24px; }
+@media (max-width: 560px) { .wrap { padding-inline: 16px; } }
+
+/* header */
+header.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); }
+.brand b { font: 700 22px/1 var(--display); letter-spacing: 0.06em; }
+nav.sections { display: flex; flex-wrap: wrap; align-items: center; gap: 2px; font-size: 14px; }
+nav.sections a { color: var(--ink-2); text-decoration: none; padding: 10px 12px; border-radius: 6px; }
+nav.sections a:hover { color: var(--ink); background: var(--shade); }
+nav.sections a.cta { color: var(--on-gold); background: var(--gold); font-weight: 600; }
+.theme-btn { background: none; border: 1px solid var(--line-2); color: var(--ink-2); border-radius: 6px;
+  padding: 9px 12px; font: inherit; font-size: 13px; cursor: pointer; min-height: 40px; }
+.meta { font: 12px/1.5 var(--mono); color: var(--muted); padding-bottom: 8px; }
+.banner { background: var(--warn-bg); color: var(--warn-ink); border-radius: 10px; padding: 10px 14px; margin: 8px 0; font-size: 14px; }
+
+/* hero */
+.hero { display: flex; flex-wrap: wrap; gap: 32px; align-items: center; padding-block: 20px 40px; }
+.hero-text { flex: 1 1 400px; min-width: 0; display: flex; flex-direction: column; gap: 14px; }
+.eyebrow { font: 500 12px/1.4 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; }
+.big { margin: 0; font: 700 clamp(96px, 16vw, 176px)/0.86 var(--display); letter-spacing: -0.02em; color: var(--gold); }
+.big small { font-size: 0.56em; }
+.lede { margin: 0; font-size: clamp(20px, 2.4vw, 26px); line-height: 1.3; font-weight: 500; max-width: 30ch; text-wrap: balance; }
+.range { margin: 0; font: 14px/1.5 var(--mono); color: var(--ink-2); }
+.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 6px; }
+.fact { border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; background: var(--panel); }
+.fact .k { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.fact .v { font-size: 16px; margin-top: 4px; }
+.fact b.r { color: var(--red); }
+
+.stage { flex: 1 1 460px; min-width: 0; margin: 0; position: relative; height: 560px; border-radius: 18px;
+  background: radial-gradient(120% 80% at 50% 30%, var(--panel) 0%, var(--panel-2) 70%); border: 1px solid var(--line); overflow: hidden; }
+@media (max-width: 560px) { .stage { height: 440px; } }
+.stage canvas { display: block; width: 100%; height: 100%; cursor: grab; touch-action: pan-y; }
+.stage canvas:active { cursor: grabbing; }
+.stage .hud { position: absolute; left: 16px; top: 14px; font: 12px/1.5 var(--mono); color: var(--ink-2); letter-spacing: 0.06em; pointer-events: none; }
+.stage .hud b { color: var(--ink); font-weight: 500; font-size: 15px; }
+.stage .city { position: absolute; font: 600 11px/1 var(--body); color: var(--ink-2); letter-spacing: 0.04em; pointer-events: none;
+  transform: translate(-50%, -160%); white-space: nowrap; text-shadow: 0 1px 3px var(--ground); }
+.stage .controls { position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; align-items: center; gap: 12px; }
+.play { width: 44px; height: 44px; border-radius: 22px; border: 1px solid var(--line-2); background: var(--panel);
+  color: var(--ink); cursor: pointer; display: flex; align-items: center; justify-content: center; flex: none; }
+.scrub { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.scrub input { width: 100%; accent-color: var(--gold); height: 28px; margin: 0; }
+.scrub .ticks { display: flex; justify-content: space-between; font: 11px/1 var(--mono); color: var(--muted); }
+.stage .note { position: absolute; left: 16px; top: 62px; font: 11px/1.4 var(--mono); color: var(--muted); pointer-events: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.map2d { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; perspective: 1100px; }
+.map2d > div { transform: rotateX(50deg) rotateZ(-16deg) translateY(-24px); }
+.map2d .flow { stroke-dasharray: 2 26; animation: flow 2.4s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -28; } }
+@media (prefers-reduced-motion: reduce) { .map2d .flow { animation: none; } }
+
+/* area picker */
+.areabar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; margin: 6px 0 4px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+.crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font: 600 15px/1.2 var(--body); min-width: 0; }
+.crumbs button { background: none; border: 0; color: var(--ink-2); font: inherit; cursor: pointer; padding: 8px 6px; border-radius: 6px; }
+.crumbs button:hover { color: var(--ink); background: var(--shade); }
+.crumbs button[aria-current="true"] { color: var(--ink); cursor: default; }
+.crumbs .sep { color: var(--muted); }
+.pick select { font: 500 14px var(--body); color: var(--ink); background: var(--panel-2); border: 1px solid var(--line-2);
+  border-radius: 8px; padding: 9px 10px; min-height: 40px; max-width: 100%; }
+.badge { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1.2 var(--body); letter-spacing: 0.04em;
+  padding: 7px 10px; border-radius: 999px; border: 1px solid currentColor; }
+.badge.measured { color: var(--blue); }
+.badge.estimate { color: var(--gold); }
+.badge.rough { color: var(--red); }
+.badge::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.area-note { margin: 4px 2px 0; font-size: 14px; color: var(--ink-2); max-width: 90ch; }
+.stage .chips { position: absolute; right: 12px; top: 12px; display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; max-width: 70%; }
+.stage .chips button { font: 600 12px/1 var(--body); color: var(--ink-2); background: var(--panel); border: 1px solid var(--line-2);
+  border-radius: 999px; padding: 8px 10px; cursor: pointer; min-height: 32px; }
+.stage .chips button[aria-pressed="true"] { color: var(--on-gold); background: var(--gold); border-color: var(--gold); }
+.hidden-sec { display: none; }
+
+/* kpis */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding-bottom: 40px; }
+.kpi { border-top: 2px solid var(--gold); padding: 14px 4px; }
+.kpi.b { border-top-color: var(--blue); }
+.kpi .k { font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.kpi .v { font: 500 30px/1.2 var(--mono); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.kpi .n { font-size: 14px; color: var(--ink-2); }
+
+/* sections */
+section.block { border-top: 1px solid var(--line); padding-block: 44px; }
+.split { display: flex; flex-wrap: wrap; gap: 32px; }
+.split > .side { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
+.split > .main { flex: 3 1 560px; min-width: 0; }
+h2 { margin: 0; font: 600 clamp(30px, 4vw, 40px)/1.1 var(--display); text-wrap: balance; }
+.sub { margin: 0; color: var(--ink-2); max-width: 68ch; }
+.legend { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-2); }
+.legend.row { flex-direction: row; flex-wrap: wrap; gap: 16px; }
+.legend i { display: inline-block; width: 18px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 8px; }
+.legend i.band { height: 10px; background: var(--gold-soft); }
+.legend i.dash { height: 0; border-top: 2px dashed var(--grey); }
+.chart { width: 100%; height: 300px; position: relative; }
+.chart.short { height: 220px; }
 .chart svg { display: block; width: 100%; height: 100%; overflow: visible; }
-.chart text { font-family: "IBM Plex Sans", system-ui, sans-serif; font-size: 11px; fill: var(--text-muted); }
-.chart .tip { position: absolute; pointer-events: none; background: var(--surface-1); border: 1px solid var(--border);
-  border-radius: 8px; padding: 6px 9px; font-size: 12px; color: var(--text-primary); box-shadow: 0 4px 14px rgba(0,0,0,.12);
-  white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2; }
+.chart text { font: 11px var(--mono); fill: var(--muted); }
+.chart .tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--line-2); border-radius: 8px;
+  padding: 7px 10px; font-size: 12px; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums; z-index: 2;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25); }
 .chart .tip i { display: inline-block; width: 10px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
-details { margin-top: 10px; font-size: 14px; }
-summary { cursor: pointer; color: var(--text-secondary); }
-table { border-collapse: collapse; width: 100%; font-size: 13px; margin-top: 8px; font-variant-numeric: tabular-nums; }
-th, td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--border); }
+.chart-missing { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line-2); border-radius: 10px;
+  color: var(--muted); font-size: 14px; padding: 16px; text-align: center; }
+details { margin-top: 12px; font-size: 14px; }
+summary { cursor: pointer; color: var(--ink-2); padding: 6px 0; }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { text-align: right; padding: 10px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 th:first-child, td:first-child { text-align: left; }
-th { color: var(--text-muted); font-weight: 500; }
-.headline { font-size: 20px; font-weight: 600; line-height: 1.35; margin: 4px 0 10px; }
-.verdict { color: var(--text-secondary); margin: 0 0 12px; }
-.empty { color: var(--text-muted); font-style: italic; }
-.chart-missing { display: flex; align-items: center; justify-content: center; border: 1px dashed var(--border); border-radius: 10px; color: var(--text-muted); font-size: 14px; padding: 16px; text-align: center; }
-footer { margin-top: 28px; font-size: 13px; color: var(--text-muted); }
-footer a, .card a { color: var(--actual); }
-.theme { float: right; background: none; border: 1px solid var(--border); color: var(--text-secondary);
-  border-radius: 8px; padding: 4px 10px; font: inherit; font-size: 13px; cursor: pointer; }
-@media (max-width: 560px) { header h1 { font-size: 22px; } .tile .v { font-size: 22px; } .chart { height: 280px; } }
+th { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; }
+td { font-family: var(--mono); }
+tr:last-child td { border-bottom: 0; }
+td.neg { color: var(--red); }
+.ok-pill { display: inline-block; font: 600 11px/1 var(--body); letter-spacing: 0.06em; padding: 5px 8px; border-radius: 999px; border: 1px solid currentColor; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-top: 16px; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 18px; background: var(--panel); display: flex; flex-direction: column; gap: 8px; }
+.card h3 { margin: 0; font: 600 22px/1.2 var(--display); }
+.card p { margin: 0; color: var(--ink-2); font-size: 15px; }
+.empty { color: var(--muted); font-style: italic; }
+footer { border-top: 1px solid var(--line); padding-block: 28px 44px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 13px; color: var(--muted); }
 </style>
 </head>
 <body>
-<main>
-  <header>
-    <button class="theme" id="theme" type="button" aria-label="Switch light or dark">Light / dark</button>
-    <h1>German electricity demand: forecast and crisis savings</h1>
-    <p>Tomorrow's demand hour by hour, how good our forecasts have been, and how much less power Germany used after the 2022 energy crisis.</p>
-    <div class="meta" id="meta"></div>
-    <div id="banners"></div>
+<div class="flag" aria-hidden="true"><span style="background:#000"></span><span style="background:#DD0000"></span><span style="background:#FFCE00"></span></div>
+<div class="wrap">
+  <header class="top">
+    <a class="brand" href="#top" aria-label="Netzlast Watch, back to top">
+      <svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M6 25 L15 4 L24 25 M9.5 17 H20.5 M11.5 12 H18.5" fill="none" style="stroke: var(--gold)" stroke-width="2" stroke-linejoin="round"/><path d="M16.5 13 L13 19 H16 L13.5 24" fill="none" style="stroke: var(--ink)" stroke-width="1.6" stroke-linejoin="round"/></svg>
+      <b>NETZLAST WATCH</b>
+    </a>
+    <nav class="sections" aria-label="Sections">
+      <a href="#savings">Savings</a>
+      <a href="#check">Official check</a>
+      <a href="#tomorrow">Tomorrow</a>
+      <a href="#accuracy">Accuracy</a>
+      <a class="cta" href="report.html">Full report</a>
+      <button class="theme-btn" id="theme" type="button">Light / dark</button>
+    </nav>
   </header>
+  <div class="meta" id="meta"></div>
+  <div id="banners"></div>
+  <div class="areabar" role="group" aria-label="Choose an area">
+    <nav class="crumbs" id="crumbs" aria-label="Area levels"></nav>
+    <label class="pick"><span class="sr-only">Area</span><select id="area"></select></label>
+    <span class="badge measured" id="badge">Measured</span>
+  </div>
+  <p class="area-note" id="area-note"></p>
 
-  <section class="card" id="tomorrow">
-    <h2>Tomorrow</h2>
-    <p class="sub" id="tomorrow-sub"></p>
-    <div class="tiles" id="tomorrow-tiles"></div>
-    <div class="legend">
-      <span><i style="background:var(--model)"></i>Forecast</span>
-      <span><i class="band" style="background:var(--band)"></i>90% range</span>
-      <span><i style="background:var(--base)"></i>Same week last year</span>
+  <section class="hero" id="top">
+    <div class="hero-text">
+      <div class="eyebrow" style="color: var(--gold)" id="hero-eyebrow">Energiekrise · Winter 2022/23</div>
+      <h1 class="big" id="big">–</h1>
+      <p class="lede" id="lede">less grid electricity than the weather and calendar predicted.</p>
+      <p class="range" id="range"></p>
+      <div class="facts" id="facts"></div>
     </div>
-    <div class="chart" id="chart-tomorrow" role="img" aria-label="Hourly forecast for tomorrow"></div>
-    <details><summary>Show as a table</summary><div id="table-tomorrow"></div></details>
+    <figure class="stage" id="stage" aria-label="3D map of the German power grid. Cities light up hour by hour with tomorrow's demand forecast.">
+      <div class="hud" id="hud"></div>
+      <div class="note" id="stage-note">drag to turn · click a city</div>
+      <div class="chips" id="chips" role="group" aria-label="Zoom to a grid region"></div>
+      <div class="controls">
+        <button class="play" id="play" type="button" aria-label="Pause the animation"></button>
+        <div class="scrub">
+          <label for="hour" class="sr-only">Hour of tomorrow</label>
+          <input id="hour" type="range" min="0" max="23" step="1" value="19">
+          <div class="ticks" aria-hidden="true"><span>00:00</span><span>06:00</span><span>12:00</span><span>18:00</span><span>23:00</span></div>
+        </div>
+      </div>
+    </figure>
   </section>
 
-  <section class="card" id="history">
-    <h2>Last 30 days: forecast vs. what really happened</h2>
-    <p class="sub">Each forecast is saved the morning it was made and never changed afterwards.</p>
-    <div class="legend">
-      <span><i style="background:var(--actual)"></i>Real demand</span>
-      <span><i style="background:var(--model)"></i>Our forecast (day before)</span>
-      <span><i style="background:var(--base)"></i>Same week last year</span>
-    </div>
-    <div class="chart" id="chart-history" role="img" aria-label="Forecast versus actual, last 30 days"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <section class="block" id="savings">
+    <div class="eyebrow" style="color: var(--red)">Einsparung je Winter</div>
+    <h2 style="margin-top: 8px">Saving per winter, after removing weather and holidays</h2>
+    <p class="sub" style="margin-top: 10px">Grey bars are normal winters, forecast as if unknown: they should sit near zero. Red bars are the crisis winter and every winter since. The thin lines show the 90% range.</p>
+    <p class="sub" id="verdict" style="margin-top: 10px; color: var(--ink)"></p>
+    <div class="chart" id="chart-savings" role="img" aria-label="Saving per winter with ranges" style="margin-top: 16px"></div>
+    <details><summary>Show as a table</summary><div class="tablebox" id="table-savings"></div></details>
   </section>
 
-  <section class="card" id="accuracy">
-    <h2>How good are the forecasts?</h2>
-    <p class="sub">Average hourly error over the last 30 scored days. Lower is better. The model must beat the simple "same week last year" guess to be worth using.</p>
-    <div class="tiles" id="score-tiles"></div>
-    <div class="legend">
-      <span><i style="background:var(--model)"></i>Our model (running average)</span>
-      <span><i style="background:var(--base)"></i>Same week last year (running average)</span>
+  <section class="block" id="regions">
+    <div class="eyebrow" style="color: var(--blue)">Regelzonen im Vergleich</div>
+    <h2 style="margin-top: 8px">The four grid regions compared</h2>
+    <p class="sub" style="margin-top: 10px">Germany's transmission grid is run by four companies, each in its own area. SMARD measures each area every hour, so these are measured results, each with its own weather and holidays. Click a bar to open that region.</p>
+    <div class="legend row" style="margin-top: 12px">
+      <span><i style="background: var(--red)"></i>Winter 2022/23</span>
+      <span><i style="background: var(--gold)"></i><span id="regions-latest-label">Latest winter</span></span>
     </div>
-    <div class="chart" id="chart-scores" style="height:240px" role="img" aria-label="Running average error"></div>
-    <details><summary>Daily scores</summary><div id="table-scores"></div></details>
+    <div class="chart" id="chart-regions" role="img" aria-label="Saving per grid region" style="margin-top: 8px"></div>
+    <details><summary>Show as a table</summary><div class="tablebox" id="table-regions"></div></details>
   </section>
 
-  <section class="card" id="savings">
-    <h2>Did Germany really save electricity in the 2022 crisis?</h2>
-    <p class="headline" id="headline"></p>
-    <p class="verdict" id="verdict"></p>
-    <div class="legend">
-      <span><i style="background:var(--check)"></i>Normal winters used as a test (should be near 0)</span>
-      <span><i style="background:var(--model)"></i>Crisis winter and after</span>
+  <section class="block" id="check">
+    <div class="eyebrow" style="color: var(--gold)">Abgleich mit der Bundesnetzagentur</div>
+    <h2 style="margin-top: 8px">Do our raw numbers match the official ones?</h2>
+    <p class="sub" style="margin-top: 10px">Before any weather adjustment, our yearly totals should match what the Bundesnetzagentur published from the same SMARD data. If they did not, something in our download would be wrong.</p>
+    <div class="tablebox" id="table-official"></div>
+    <p class="sub" id="official-note" style="margin-top: 10px; font-size: 14px"></p>
+  </section>
+
+  <section class="block" id="tomorrow">
+    <div class="split">
+      <div class="side">
+        <div class="eyebrow" style="color: var(--gold)">Prognose · Morgen</div>
+        <h2>Tomorrow, hour by hour</h2>
+        <p class="sub" id="tomorrow-sub"></p>
+        <div class="legend">
+          <span><i style="background: var(--gold)"></i>Forecast</span>
+          <span><i class="band"></i>90% range</span>
+          <span><i class="dash"></i>Same week last year</span>
+        </div>
+      </div>
+      <div class="main">
+        <div class="chart" id="chart-tomorrow" role="img" aria-label="Tomorrow's hourly forecast with range"></div>
+        <details><summary>Show as a table</summary><div class="tablebox" id="table-tomorrow"></div></details>
+      </div>
     </div>
-    <div class="chart" id="chart-savings" role="img" aria-label="Saving by winter with ranges"></div>
-    <details><summary>Show as a table</summary><div id="table-savings"></div></details>
-    <p class="sub" style="margin-top:12px">Saving = how much less electricity flowed through the grid than a model of normal behaviour predicted from the real weather and calendar. Full method, tests and limits: <a href="REPORT.md">report</a>.</p>
+  </section>
+
+  <section class="block" id="history">
+    <div class="eyebrow" style="color: var(--blue)">Rückblick · 30 Tage</div>
+    <h2 style="margin-top: 8px">Last 30 days: forecast vs. what really happened</h2>
+    <p class="sub" style="margin-top: 10px">Each forecast is saved the morning it was made and never changed afterwards.</p>
+    <div class="legend row" style="margin-top: 12px">
+      <span><i style="background: var(--blue)"></i>Real demand</span>
+      <span><i style="background: var(--gold)"></i>Our forecast (day before)</span>
+      <span><i class="dash"></i>Same week last year</span>
+    </div>
+    <div class="chart" id="chart-history" role="img" aria-label="Forecast versus actual, last 30 days" style="margin-top: 8px"></div>
+  </section>
+
+  <section class="block" id="accuracy">
+    <div class="split">
+      <div class="side">
+        <div class="eyebrow" style="color: var(--blue)">Treffsicherheit</div>
+        <h2>How good are the forecasts?</h2>
+        <p class="sub">Running average hourly error. The model has to beat the simple “same week last year” guess to earn its place.</p>
+        <div class="legend">
+          <span><i style="background: var(--gold)"></i>Our model</span>
+          <span><i style="background: var(--grey)"></i>Same week last year</span>
+        </div>
+        <p class="sub" id="range-note" style="font-size: 14px"></p>
+      </div>
+      <div class="main">
+        <div class="chart short" id="chart-scores" role="img" aria-label="Running forecast error, model versus baseline"></div>
+        <details><summary>Daily scores</summary><div class="tablebox" id="table-scores"></div></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="method">
+    <div class="eyebrow" style="color: var(--muted)">Methode</div>
+    <h2 style="margin-top: 8px">How it works, and what it can't tell</h2>
+    <div class="cards">
+      <div class="card"><h3>Learn “normal”</h3><p>A model learns from 2015 to August 2022 how demand follows the hour, weekday, holidays in each state, school holidays, temperature and sunshine.</p></div>
+      <div class="card"><h3>Test it first</h3><p>It forecasts four normal winters it never saw. Those errors set the width of every range on this page.</p></div>
+      <div class="card"><h3>Forecast “no crisis”</h3><p>Fed the real weather of each winter since 2022, it says what demand would have been. The gap is the saving.</p></div>
+      <div class="card"><h3>Honest limits</h3><p>Grid data can't say who saved, or separate thrift from closed factories, or price effects from appeals. The report goes through each one.</p></div>
+    </div>
+    <p style="margin-top: 18px"><a href="report.html">Read the full report with all tests and charts →</a></p>
   </section>
 
   <footer>
-    Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst (DWD) · weather forecasts via Bright Sky (DWD MOSMIX) or Open-Meteo (DWD ICON) · Eurostat · python-holidays.
-    Times are German local time.
+    <span>Data: Bundesnetzagentur | SMARD.de (CC BY 4.0) · Deutscher Wetterdienst · Energy-Charts (Fraunhofer ISE) · Eurostat · map: Natural Earth</span>
+    <span style="font-family: var(--mono)">Times: German time (MEZ/MESZ)</span>
   </footer>
-</main>
+</div>
+
+<script src="vendor/three.min.js"></script>
 <script>
-const D = {"generated_utc": "2026-10-10T11:54+00:00", "demo": false, "tz": "Europe/Berlin", "status": {"started_utc": "2026-10-10T11:54:04+00:00", "download": {"smard": "ok", "energy_charts_filled_hours": 0, "dwd": "ok"}, "data_check": "passed", "forecast_for": "2026-10-11", "forecast_total_gwh": 1090.2, "days_scored": 29, "finished_utc": "2026-10-10T11:54:35+00:00"}, "retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 10:00:00+00:00", "window_end": "2026-10-10 10:00:00+00:00", "model_mape": 2.4739103458087124, "baseline_mape": 4.191707946603121, "passed": true}}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [41.13, 39.61, 38.81, 38.37, 38.29, 39.18, 40.14, 42.12, 44.76, 47.1, 49.01, 49.78, 49.11, 47.89, 45.87, 45.38, 45.99, 49.04, 51.64, 52.67, 50.88, 49.47, 48.01, 45.99], "low_gw": [39.06, 37.69, 37.19, 36.36, 36.36, 37.54, 38.49, 40.25, 42.73, 44.84, 46.43, 46.73, 46.03, 44.93, 43.01, 42.22, 43.48, 46.43, 48.9, 49.6, 48.64, 47.06, 45.45, 43.25], "high_gw": [43.74, 41.75, 40.96, 40.73, 40.53, 41.44, 42.49, 44.41, 47.18, 49.54, 51.44, 51.3, 50.31, 49.46, 47.18, 46.69, 48.17, 51.83, 54.17, 55.12, 53.72, 51.73, 50.65, 48.24], "baseline_gw": [41.07, 39.21, 38.22, 37.77, 38.13, 38.63, 39.76, 41.79, 44.27, 47.11, 48.46, 50.22, 50.4, 48.66, 46.9, 45.93, 46.38, 49.19, 51.96, 52.49, 49.97, 47.88, 46.22, 43.72], "total_gwh": 1090.0, "total_low_gwh": 1033.0, "total_high_gwh": 1143.0, "peak_gw": 52.7, "peak_hour": "19:00"}, "last30": {"time": ["2026-09-11T00:00", "2026-09-11T01:00", "2026-09-11T02:00", "2026-09-11T03:00", "2026-09-11T04:00", "2026-09-11T05:00", "2026-09-11T06:00", "2026-09-11T07:00", "2026-09-11T08:00", "2026-09-11T09:00", "2026-09-11T10:00", "2026-09-11T11:00", "2026-09-11T12:00", "2026-09-11T13:00", "2026-09-11T14:00", "2026-09-11T15:00", "2026-09-11T16:00", "2026-09-11T17:00", "2026-09-11T18:00", "2026-09-11T19:00", "2026-09-11T20:00", "2026-09-11T21:00", "2026-09-11T22:00", "2026-09-11T23:00", "2026-09-12T00:00", "2026-09-12T01:00", "2026-09-12T02:00", "2026-09-12T03:00", "2026-09-12T04:00", "2026-09-12T05:00", "2026-09-12T06:00", "2026-09-12T07:00", "2026-09-12T08:00", "2026-09-12T09:00", "2026-09-12T10:00", "2026-09-12T11:00", "2026-09-12T12:00", "2026-09-12T13:00", "2026-09-12T14:00", "2026-09-12T15:00", "2026-09-12T16:00", "2026-09-12T17:00", "2026-09-12T18:00", "2026-09-12T19:00", "2026-09-12T20:00", "2026-09-12T21:00", "2026-09-12T22:00", "2026-09-12T23:00", "2026-09-13T00:00", "2026-09-13T01:00", "2026-09-13T02:00", "2026-09-13T03:00", "2026-09-13T04:00", "2026-09-13T05:00", "2026-09-13T06:00", "2026-09-13T07:00", "2026-09-13T08:00", "2026-09-13T09:00", "2026-09-13T10:00", "2026-09-13T11:00", "2026-09-13T12:00", "2026-09-13T13:00", "2026-09-13T14:00", "2026-09-13T15:00", "2026-09-13T16:00", "2026-09-13T17:00", "2026-09-13T18:00", "2026-09-13T19:00", "2026-09-13T20:00", "2026-09-13T21:00", "2026-09-13T22:00", "2026-09-13T23:00", "2026-09-14T00:00", "2026-09-14T01:00", "2026-09-14T02:00", "2026-09-14T03:00", "2026-09-14T04:00", "2026-09-14T05:00", "2026-09-14T06:00", "2026-09-14T07:00", "2026-09-14T08:00", "2026-09-14T09:00", "2026-09-14T10:00", "2026-09-14T11:00", "2026-09-14T12:00", "2026-09-14T13:00", "2026-09-14T14:00", "2026-09-14T15:00", "2026-09-14T16:00", "2026-09-14T17:00", "2026-09-14T18:00", "2026-09-14T19:00", "2026-09-14T20:00", "2026-09-14T21:00", "2026-09-14T22:00", "2026-09-14T23:00", "2026-09-15T00:00", "2026-09-15T01:00", "2026-09-15T02:00", "2026-09-15T03:00", "2026-09-15T04:00", "2026-09-15T05:00", "2026-09-15T06:00", "2026-09-15T07:00", "2026-09-15T08:00", "2026-09-15T09:00", "2026-09-15T10:00", "2026-09-15T11:00", "2026-09-15T12:00", "2026-09-15T13:00", "2026-09-15T14:00", "2026-09-15T15:00", "2026-09-15T16:00", "2026-09-15T17:00", "2026-09-15T18:00", "2026-09-15T19:00", "2026-09-15T20:00", "2026-09-15T21:00", "2026-09-15T22:00", "2026-09-15T23:00", "2026-09-16T00:00", "2026-09-16T01:00", "2026-09-16T02:00", "2026-09-16T03:00", "2026-09-16T04:00", "2026-09-16T05:00", "2026-09-16T06:00", "2026-09-16T07:00", "2026-09-16T08:00", "2026-09-16T09:00", "2026-09-16T10:00", "2026-09-16T11:00", "2026-09-16T12:00", "2026-09-16T13:00", "2026-09-16T14:00", "2026-09-16T15:00", "2026-09-16T16:00", "2026-09-16T17:00", "2026-09-16T18:00", "2026-09-16T19:00", "2026-09-16T20:00", "2026-09-16T21:00", "2026-09-16T22:00", "2026-09-16T23:00", "2026-09-17T00:00", "2026-09-17T01:00", "2026-09-17T02:00", "2026-09-17T03:00", "2026-09-17T04:00", "2026-09-17T05:00", "2026-09-17T06:00", "2026-09-17T07:00", "2026-09-17T08:00", "2026-09-17T09:00", "2026-09-17T10:00", "2026-09-17T11:00", "2026-09-17T12:00", "2026-09-17T13:00", "2026-09-17T14:00", "2026-09-17T15:00", "2026-09-17T16:00", "2026-09-17T17:00", "2026-09-17T18:00", "2026-09-17T19:00", "2026-09-17T20:00", "2026-09-17T21:00", "2026-09-17T22:00", "2026-09-17T23:00", "2026-09-18T00:00", "2026-09-18T01:00", "2026-09-18T02:00", "2026-09-18T03:00", "2026-09-18T04:00", "2026-09-18T05:00", "2026-09-18T06:00", "2026-09-18T07:00", "2026-09-18T08:00", "2026-09-18T09:00", "2026-09-18T10:00", "2026-09-18T11:00", "2026-09-18T12:00", "2026-09-18T13:00", "2026-09-18T14:00", "2026-09-18T15:00", "2026-09-18T16:00", "2026-09-18T17:00", "2026-09-18T18:00", "2026-09-18T19:00", "2026-09-18T20:00", "2026-09-18T21:00", "2026-09-18T22:00", "2026-09-18T23:00", "2026-09-19T00:00", "2026-09-19T01:00", "2026-09-19T02:00", "2026-09-19T03:00", "2026-09-19T04:00", "2026-09-19T05:00", "2026-09-19T06:00", "2026-09-19T07:00", "2026-09-19T08:00", "2026-09-19T09:00", "2026-09-19T10:00", "2026-09-19T11:00", "2026-09-19T12:00", "2026-09-19T13:00", "2026-09-19T14:00", "2026-09-19T15:00", "2026-09-19T16:00", "2026-09-19T17:00", "2026-09-19T18:00", "2026-09-19T19:00", "2026-09-19T20:00", "2026-09-19T21:00", "2026-09-19T22:00", "2026-09-19T23:00", "2026-09-20T00:00", "2026-09-20T01:00", "2026-09-20T02:00", "2026-09-20T03:00", "2026-09-20T04:00", "2026-09-20T05:00", "2026-09-20T06:00", "2026-09-20T07:00", "2026-09-20T08:00", "2026-09-20T09:00", "2026-09-20T10:00", "2026-09-20T11:00", "2026-09-20T12:00", "2026-09-20T13:00", "2026-09-20T14:00", "2026-09-20T15:00", "2026-09-20T16:00", "2026-09-20T17:00", "2026-09-20T18:00", "2026-09-20T19:00", "2026-09-20T20:00", "2026-09-20T21:00", "2026-09-20T22:00", "2026-09-20T23:00", "2026-09-21T00:00", "2026-09-21T01:00", "2026-09-21T02:00", "2026-09-21T03:00", "2026-09-21T04:00", "2026-09-21T05:00", "2026-09-21T06:00", "2026-09-21T07:00", "2026-09-21T08:00", "2026-09-21T09:00", "2026-09-21T10:00", "2026-09-21T11:00", "2026-09-21T12:00", "2026-09-21T13:00", "2026-09-21T14:00", "2026-09-21T15:00", "2026-09-21T16:00", "2026-09-21T17:00", "2026-09-21T18:00", "2026-09-21T19:00", "2026-09-21T20:00", "2026-09-21T21:00", "2026-09-21T22:00", "2026-09-21T23:00", "2026-09-22T00:00", "2026-09-22T01:00", "2026-09-22T02:00", "2026-09-22T03:00", "2026-09-22T04:00", "2026-09-22T05:00", "2026-09-22T06:00", "2026-09-22T07:00", "2026-09-22T08:00", "2026-09-22T09:00", "2026-09-22T10:00", "2026-09-22T11:00", "2026-09-22T12:00", "2026-09-22T13:00", "2026-09-22T14:00", "2026-09-22T15:00", "2026-09-22T16:00", "2026-09-22T17:00", "2026-09-22T18:00", "2026-09-22T19:00", "2026-09-22T20:00", "2026-09-22T21:00", "2026-09-22T22:00", "2026-09-22T23:00", "2026-09-23T00:00", "2026-09-23T01:00", "2026-09-23T02:00", "2026-09-23T03:00", "2026-09-23T04:00", "2026-09-23T05:00", "2026-09-23T06:00", "2026-09-23T07:00", "2026-09-23T08:00", "2026-09-23T09:00", "2026-09-23T10:00", "2026-09-23T11:00", "2026-09-23T12:00", "2026-09-23T13:00", "2026-09-23T14:00", "2026-09-23T15:00", "2026-09-23T16:00", "2026-09-23T17:00", "2026-09-23T18:00", "2026-09-23T19:00", "2026-09-23T20:00", "2026-09-23T21:00", "2026-09-23T22:00", "2026-09-23T23:00", "2026-09-24T00:00", "2026-09-24T01:00", "2026-09-24T02:00", "2026-09-24T03:00", "2026-09-24T04:00", "2026-09-24T05:00", "2026-09-24T06:00", "2026-09-24T07:00", "2026-09-24T08:00", "2026-09-24T09:00", "2026-09-24T10:00", "2026-09-24T11:00", "2026-09-24T12:00", "2026-09-24T13:00", "2026-09-24T14:00", "2026-09-24T15:00", "2026-09-24T16:00", "2026-09-24T17:00", "2026-09-24T18:00", "2026-09-24T19:00", "2026-09-24T20:00", "2026-09-24T21:00", "2026-09-24T22:00", "2026-09-24T23:00", "2026-09-25T00:00", "2026-09-25T01:00", "2026-09-25T02:00", "2026-09-25T03:00", "2026-09-25T04:00", "2026-09-25T05:00", "2026-09-25T06:00", "2026-09-25T07:00", "2026-09-25T08:00", "2026-09-25T09:00", "2026-09-25T10:00", "2026-09-25T11:00", "2026-09-25T12:00", "2026-09-25T13:00", "2026-09-25T14:00", "2026-09-25T15:00", "2026-09-25T16:00", "2026-09-25T17:00", "2026-09-25T18:00", "2026-09-25T19:00", "2026-09-25T20:00", "2026-09-25T21:00", "2026-09-25T22:00", "2026-09-25T23:00", "2026-09-26T00:00", "2026-09-26T01:00", "2026-09-26T02:00", "2026-09-26T03:00", "2026-09-26T04:00", "2026-09-26T05:00", "2026-09-26T06:00", "2026-09-26T07:00", "2026-09-26T08:00", "2026-09-26T09:00", "2026-09-26T10:00", "2026-09-26T11:00", "2026-09-26T12:00", "2026-09-26T13:00", "2026-09-26T14:00", "2026-09-26T15:00", "2026-09-26T16:00", "2026-09-26T17:00", "2026-09-26T18:00", "2026-09-26T19:00", "2026-09-26T20:00", "2026-09-26T21:00", "2026-09-26T22:00", "2026-09-26T23:00", "2026-09-27T00:00", "2026-09-27T01:00", "2026-09-27T02:00", "2026-09-27T03:00", "2026-09-27T04:00", "2026-09-27T05:00", "2026-09-27T06:00", "2026-09-27T07:00", "2026-09-27T08:00", "2026-09-27T09:00", "2026-09-27T10:00", "2026-09-27T11:00", "2026-09-27T12:00", "2026-09-27T13:00", "2026-09-27T14:00", "2026-09-27T15:00", "2026-09-27T16:00", "2026-09-27T17:00", "2026-09-27T18:00", "2026-09-27T19:00", "2026-09-27T20:00", "2026-09-27T21:00", "2026-09-27T22:00", "2026-09-27T23:00", "2026-09-28T00:00", "2026-09-28T01:00", "2026-09-28T02:00", "2026-09-28T03:00", "2026-09-28T04:00", "2026-09-28T05:00", "2026-09-28T06:00", "2026-09-28T07:00", "2026-09-28T08:00", "2026-09-28T09:00", "2026-09-28T10:00", "2026-09-28T11:00", "2026-09-28T12:00", "2026-09-28T13:00", "2026-09-28T14:00", "2026-09-28T15:00", "2026-09-28T16:00", "2026-09-28T17:00", "2026-09-28T18:00", "2026-09-28T19:00", "2026-09-28T20:00", "2026-09-28T21:00", "2026-09-28T22:00", "2026-09-28T23:00", "2026-09-29T00:00", "2026-09-29T01:00", "2026-09-29T02:00", "2026-09-29T03:00", "2026-09-29T04:00", "2026-09-29T05:00", "2026-09-29T06:00", "2026-09-29T07:00", "2026-09-29T08:00", "2026-09-29T09:00", "2026-09-29T10:00", "2026-09-29T11:00", "2026-09-29T12:00", "2026-09-29T13:00", "2026-09-29T14:00", "2026-09-29T15:00", "2026-09-29T16:00", "2026-09-29T17:00", "2026-09-29T18:00", "2026-09-29T19:00", "2026-09-29T20:00", "2026-09-29T21:00", "2026-09-29T22:00", "2026-09-29T23:00", "2026-09-30T00:00", "2026-09-30T01:00", "2026-09-30T02:00", "2026-09-30T03:00", "2026-09-30T04:00", "2026-09-30T05:00", "2026-09-30T06:00", "2026-09-30T07:00", "2026-09-30T08:00", "2026-09-30T09:00", "2026-09-30T10:00", "2026-09-30T11:00", "2026-09-30T12:00", "2026-09-30T13:00", "2026-09-30T14:00", "2026-09-30T15:00", "2026-09-30T16:00", "2026-09-30T17:00", "2026-09-30T18:00", "2026-09-30T19:00", "2026-09-30T20:00", "2026-09-30T21:00", "2026-09-30T22:00", "2026-09-30T23:00", "2026-10-01T00:00", "2026-10-01T01:00", "2026-10-01T02:00", "2026-10-01T03:00", "2026-10-01T04:00", "2026-10-01T05:00", "2026-10-01T06:00", "2026-10-01T07:00", "2026-10-01T08:00", "2026-10-01T09:00", "2026-10-01T10:00", "2026-10-01T11:00", "2026-10-01T12:00", "2026-10-01T13:00", "2026-10-01T14:00", "2026-10-01T15:00", "2026-10-01T16:00", "2026-10-01T17:00", "2026-10-01T18:00", "2026-10-01T19:00", "2026-10-01T20:00", "2026-10-01T21:00", "2026-10-01T22:00", "2026-10-01T23:00", "2026-10-02T00:00", "2026-10-02T01:00", "2026-10-02T02:00", "2026-10-02T03:00", "2026-10-02T04:00", "2026-10-02T05:00", "2026-10-02T06:00", "2026-10-02T07:00", "2026-10-02T08:00", "2026-10-02T09:00", "2026-10-02T10:00", "2026-10-02T11:00", "2026-10-02T12:00", "2026-10-02T13:00", "2026-10-02T14:00", "2026-10-02T15:00", "2026-10-02T16:00", "2026-10-02T17:00", "2026-10-02T18:00", "2026-10-02T19:00", "2026-10-02T20:00", "2026-10-02T21:00", "2026-10-02T22:00", "2026-10-02T23:00", "2026-10-03T00:00", "2026-10-03T01:00", "2026-10-03T02:00", "2026-10-03T03:00", "2026-10-03T04:00", "2026-10-03T05:00", "2026-10-03T06:00", "2026-10-03T07:00", "2026-10-03T08:00", "2026-10-03T09:00", "2026-10-03T10:00", "2026-10-03T11:00", "2026-10-03T12:00", "2026-10-03T13:00", "2026-10-03T14:00", "2026-10-03T15:00", "2026-10-03T16:00", "2026-10-03T17:00", "2026-10-03T18:00", "2026-10-03T19:00", "2026-10-03T20:00", "2026-10-03T21:00", "2026-10-03T22:00", "2026-10-03T23:00", "2026-10-04T00:00", "2026-10-04T01:00", "2026-10-04T02:00", "2026-10-04T03:00", "2026-10-04T04:00", "2026-10-04T05:00", "2026-10-04T06:00", "2026-10-04T07:00", "2026-10-04T08:00", "2026-10-04T09:00", "2026-10-04T10:00", "2026-10-04T11:00", "2026-10-04T12:00", "2026-10-04T13:00", "2026-10-04T14:00", "2026-10-04T15:00", "2026-10-04T16:00", "2026-10-04T17:00", "2026-10-04T18:00", "2026-10-04T19:00", "2026-10-04T20:00", "2026-10-04T21:00", "2026-10-04T22:00", "2026-10-04T23:00", "2026-10-05T00:00", "2026-10-05T01:00", "2026-10-05T02:00", "2026-10-05T03:00", "2026-10-05T04:00", "2026-10-05T05:00", "2026-10-05T06:00", "2026-10-05T07:00", "2026-10-05T08:00", "2026-10-05T09:00", "2026-10-05T10:00", "2026-10-05T11:00", "2026-10-05T12:00", "2026-10-05T13:00", "2026-10-05T14:00", "2026-10-05T15:00", "2026-10-05T16:00", "2026-10-05T17:00", "2026-10-05T18:00", "2026-10-05T19:00", "2026-10-05T20:00", "2026-10-05T21:00", "2026-10-05T22:00", "2026-10-05T23:00", "2026-10-06T00:00", "2026-10-06T01:00", "2026-10-06T02:00", "2026-10-06T03:00", "2026-10-06T04:00", "2026-10-06T05:00", "2026-10-06T06:00", "2026-10-06T07:00", "2026-10-06T08:00", "2026-10-06T09:00", "2026-10-06T10:00", "2026-10-06T11:00", "2026-10-06T12:00", "2026-10-06T13:00", "2026-10-06T14:00", "2026-10-06T15:00", "2026-10-06T16:00", "2026-10-06T17:00", "2026-10-06T18:00", "2026-10-06T19:00", "2026-10-06T20:00", "2026-10-06T21:00", "2026-10-06T22:00", "2026-10-06T23:00", "2026-10-07T00:00", "2026-10-07T01:00", "2026-10-07T02:00", "2026-10-07T03:00", "2026-10-07T04:00", "2026-10-07T05:00", "2026-10-07T06:00", "2026-10-07T07:00", "2026-10-07T08:00", "2026-10-07T09:00", "2026-10-07T10:00", "2026-10-07T11:00", "2026-10-07T12:00", "2026-10-07T13:00", "2026-10-07T14:00", "2026-10-07T15:00", "2026-10-07T16:00", "2026-10-07T17:00", "2026-10-07T18:00", "2026-10-07T19:00", "2026-10-07T20:00", "2026-10-07T21:00", "2026-10-07T22:00", "2026-10-07T23:00", "2026-10-08T00:00", "2026-10-08T01:00", "2026-10-08T02:00", "2026-10-08T03:00", "2026-10-08T04:00", "2026-10-08T05:00", "2026-10-08T06:00", "2026-10-08T07:00", "2026-10-08T08:00", "2026-10-08T09:00", "2026-10-08T10:00", "2026-10-08T11:00", "2026-10-08T12:00", "2026-10-08T13:00", "2026-10-08T14:00", "2026-10-08T15:00", "2026-10-08T16:00", "2026-10-08T17:00", "2026-10-08T18:00", "2026-10-08T19:00", "2026-10-08T20:00", "2026-10-08T21:00", "2026-10-08T22:00", "2026-10-08T23:00", "2026-10-09T00:00", "2026-10-09T01:00", "2026-10-09T02:00", "2026-10-09T03:00", "2026-10-09T04:00", "2026-10-09T05:00", "2026-10-09T06:00", "2026-10-09T07:00", "2026-10-09T08:00", "2026-10-09T09:00", "2026-10-09T10:00", "2026-10-09T11:00", "2026-10-09T12:00", "2026-10-09T13:00", "2026-10-09T14:00", "2026-10-09T15:00", "2026-10-09T16:00", "2026-10-09T17:00", "2026-10-09T18:00", "2026-10-09T19:00", "2026-10-09T20:00", "2026-10-09T21:00", "2026-10-09T22:00", "2026-10-09T23:00", "2026-10-10T00:00", "2026-10-10T01:00", "2026-10-10T02:00", "2026-10-10T03:00", "2026-10-10T04:00", "2026-10-10T05:00", "2026-10-10T06:00", "2026-10-10T07:00", "2026-10-10T08:00", "2026-10-10T09:00", "2026-10-10T10:00", "2026-10-10T11:00", "2026-10-10T12:00", "2026-10-10T13:00", "2026-10-10T14:00", "2026-10-10T15:00", "2026-10-10T16:00", "2026-10-10T17:00", "2026-10-10T18:00", "2026-10-10T19:00", "2026-10-10T20:00", "2026-10-10T21:00", "2026-10-10T22:00", "2026-10-10T23:00"], "actual_gw": [46.91, 45.84, 45.0, 45.52, 45.99, 48.75, 55.08, 58.02, 60.88, 62.58, 62.19, 60.2, 57.55, 56.53, 55.18, 54.1, 55.01, 56.21, 56.81, 56.02, 54.07, 51.16, 48.22, 45.58, 42.66, 41.06, 40.08, 39.28, 39.96, 40.67, 42.7, 44.47, 48.2, 51.42, 52.78, 51.86, 49.77, 47.85, 46.54, 45.09, 46.31, 47.85, 48.21, 48.03, 47.27, 45.27, 43.09, 40.97, 38.64, 36.88, 36.42, 36.38, 35.95, 36.6, 37.76, 39.38, 42.38, 45.34, 47.68, 49.81, 49.56, 48.0, 46.93, 46.49, 47.17, 49.27, 50.6, 49.47, 48.61, 47.2, 46.29, 44.21, 42.77, 41.79, 41.47, 41.03, 42.39, 46.28, 53.9, 57.28, 60.43, 62.53, 63.73, 63.49, 60.7, 59.32, 58.4, 57.07, 57.3, 58.43, 58.84, 58.39, 57.48, 54.9, 51.86, 48.61, 47.07, 45.12, 43.99, 44.37, 45.14, 48.69, 54.88, 57.82, 61.94, 62.4, 61.59, 60.9, 60.46, 59.17, 57.46, 56.97, 56.97, 58.94, 60.8, 59.97, 59.43, 56.21, 53.1, 49.84, 47.32, 45.79, 45.1, 44.16, 45.22, 48.09, 55.14, 58.84, 62.0, 63.86, 64.74, 64.06, 62.87, 62.39, 60.55, 60.35, 60.53, 61.35, 61.25, 60.49, 59.01, 55.85, 52.4, 48.93, 46.88, 45.53, 44.73, 44.66, 46.03, 49.73, 55.17, 58.82, 61.89, 61.89, 62.16, 61.5, 60.66, 59.56, 57.35, 56.83, 57.4, 58.33, 59.82, 60.02, 58.27, 56.13, 52.6, 49.51, 45.56, 43.69, 42.75, 43.25, 43.83, 46.85, 53.93, 57.45, 59.51, 61.09, 61.86, 60.79, 58.88, 58.24, 57.21, 56.61, 55.35, 55.0, 56.09, 55.13, 53.87, 50.95, 47.21, 44.15, 40.76, 40.39, 40.25, 40.51, 40.78, 40.88, 42.57, 44.51, 47.95, 49.3, 50.91, 51.71, 50.13, 48.94, 46.6, 46.6, 46.52, 49.22, 50.04, 48.92, 47.95, 45.99, 43.95, 41.56, 39.62, 37.16, 35.97, 35.36, 35.07, 35.57, 37.27, 38.49, 42.39, 45.48, 48.1, 50.21, 49.19, 47.78, 46.55, 45.56, 46.45, 47.09, 49.39, 49.48, 48.12, 45.69, 44.78, 42.76, 40.33, 39.43, 39.36, 39.38, 40.3, 43.59, 50.83, 54.77, 57.26, 59.0, 60.84, 60.91, 59.77, 59.15, 56.37, 55.55, 55.64, 55.62, 57.78, 58.29, 55.76, 52.69, 49.25, 46.56, 45.57, 43.97, 43.14, 42.9, 44.12, 47.74, 55.01, 57.82, 60.37, 60.99, 60.15, 57.39, 56.09, 55.25, 53.34, 52.12, 53.75, 55.99, 57.55, 57.62, 56.19, 53.36, 49.83, 47.67, 44.67, 43.67, 43.82, 44.15, 45.18, 48.19, 54.67, 57.98, 61.54, 61.46, 59.99, 58.21, 57.06, 56.05, 53.89, 53.37, 54.45, 57.66, 59.65, 60.91, 60.43, 55.27, 50.89, 48.06, 45.61, 43.62, 43.27, 43.83, 44.54, 46.62, 53.7, 56.61, 59.13, 61.14, 61.79, 62.35, 61.82, 61.79, 60.41, 59.6, 57.48, 58.65, 59.54, 59.94, 57.37, 54.57, 51.61, 48.24, 45.95, 44.72, 43.75, 43.44, 44.82, 47.74, 54.63, 58.29, 62.35, 62.92, 60.86, 59.63, 56.56, 55.6, 53.69, 52.09, 52.87, 55.11, 56.15, 56.38, 55.49, 52.37, 48.89, 45.96, 42.92, 41.22, 39.83, 39.54, 39.91, 40.68, 42.4, 44.13, 47.73, 49.48, 50.9, 49.68, 49.34, 48.57, 46.06, 45.43, 47.19, 49.6, 50.66, 50.19, 48.16, 46.28, 44.61, 42.31, 39.19, 37.66, 36.41, 35.98, 35.99, 36.9, 38.47, 39.98, 41.79, 44.39, 46.92, 47.79, 46.48, 44.77, 42.65, 41.71, 42.16, 44.34, 47.58, 49.32, 48.12, 46.82, 45.55, 43.77, 41.3, 40.1, 39.99, 40.09, 41.4, 45.8, 53.22, 56.7, 59.26, 60.92, 61.56, 59.78, 58.36, 58.64, 57.3, 56.38, 57.2, 58.29, 59.3, 59.23, 56.73, 53.06, 49.83, 46.8, 44.6, 43.39, 42.7, 43.19, 44.84, 48.96, 54.95, 58.7, 61.08, 61.04, 60.34, 59.9, 59.6, 60.23, 58.01, 57.73, 57.66, 58.0, 58.25, 58.73, 55.81, 52.87, 49.12, 45.96, 43.68, 42.77, 42.14, 41.78, 42.37, 46.14, 53.8, 57.38, 59.57, 61.74, 62.49, 61.88, 60.94, 59.84, 57.65, 56.71, 57.25, 59.36, 60.43, 61.07, 58.68, 54.88, 51.05, 48.12, 45.88, 44.41, 43.69, 43.63, 43.96, 47.33, 54.78, 58.12, 60.01, 62.16, 62.75, 64.72, 64.11, 63.49, 62.72, 62.59, 62.31, 62.21, 61.71, 61.82, 59.38, 56.82, 53.28, 50.8, 48.64, 46.83, 46.48, 46.7, 47.64, 50.25, 56.61, 60.15, 63.12, 64.89, 65.68, 64.86, 64.01, 61.83, 58.25, 58.47, 59.06, 59.15, 58.93, 58.82, 56.66, 54.14, 50.83, 48.08, 45.43, 44.4, 43.26, 43.15, 42.76, 42.6, 43.82, 44.63, 47.82, 50.86, 51.55, 51.66, 51.3, 48.93, 46.14, 45.31, 46.39, 48.93, 50.25, 51.15, 49.56, 47.95, 45.86, 43.8, 41.75, 40.13, 39.42, 38.97, 38.95, 39.81, 40.97, 42.25, 45.11, 47.31, 47.99, 47.48, 47.02, 46.0, 43.74, 43.04, 45.5, 49.72, 51.83, 52.36, 51.06, 49.62, 48.01, 46.21, 43.87, 42.91, 42.43, 42.3, 44.26, 47.41, 54.63, 58.77, 61.08, 63.11, 62.48, 60.82, 59.19, 58.37, 57.41, 56.26, 56.76, 59.01, 60.66, 61.31, 58.13, 54.66, 51.49, 49.2, 47.03, 45.32, 44.71, 44.64, 45.67, 48.63, 55.67, 59.44, 61.91, 63.53, 64.09, 62.12, 60.38, 59.49, 57.67, 56.68, 57.31, 58.59, 59.96, 60.18, 58.3, 54.28, 50.68, 47.83, 45.79, 44.76, 44.08, 45.17, 46.31, 49.24, 55.16, 59.73, 62.71, 63.92, 63.33, 60.93, 58.82, 58.73, 57.31, 58.04, 58.39, 59.87, 60.96, 62.08, 59.64, 55.99, 51.96, 47.85, 45.76, 44.31, 43.1, 44.73, 46.17, 49.55, 54.63, 58.5, 61.4, 64.06, 65.51, 66.55, 66.12, 65.32, 64.22, 61.88, 60.95, 60.9, 61.88, 62.55, 59.76, 55.88, 52.81, 48.7, 44.99, 43.77, 42.81, 43.96, 44.48, 47.24, 54.01, 57.91, 60.62, 62.46, 62.13, 63.55, 63.09, 60.44, 59.25, 58.7, 58.33, 58.45, 58.94, 58.51, 55.0, 51.54, 49.12, 47.15, 43.85, 40.19, 41.02, 40.08, 39.89, 40.95, 42.85, 45.49, 48.1, 50.57, 54.16, 54.89, 54.02, null, null, null, null, null, null, null, null, null, null, null], "forecast_gw": [44.33, 42.81, 42.09, 42.45, 43.78, 47.09, 53.17, 57.83, 60.88, 61.73, 61.45, 61.36, 60.5, 58.85, 57.73, 56.37, 56.1, 56.43, 56.47, 55.79, 54.04, 50.41, 47.84, 45.15, 41.87, 40.65, 39.56, 39.45, 39.16, 40.33, 41.56, 43.78, 47.92, 50.96, 52.35, 51.53, 50.28, 49.16, 47.02, 46.3, 46.96, 47.73, 48.23, 48.27, 47.37, 45.32, 43.5, 40.91, 38.12, 36.98, 36.21, 36.15, 36.19, 36.77, 37.3, 38.66, 42.4, 45.68, 47.22, 48.51, 48.2, 47.06, 45.63, 44.51, 44.51, 46.54, 48.36, 48.76, 48.5, 46.5, 44.79, 43.5, 40.87, 39.65, 39.49, 39.75, 40.44, 44.53, 52.0, 56.33, 59.81, 60.95, 61.91, 61.49, 60.51, 58.97, 57.06, 56.78, 56.5, 57.03, 57.88, 58.73, 57.06, 52.99, 49.52, 46.9, 44.24, 42.52, 42.13, 41.92, 42.88, 45.98, 52.42, 56.12, 59.53, 60.47, 60.19, 60.09, 59.04, 58.35, 57.25, 56.8, 56.54, 57.4, 58.37, 58.73, 58.12, 54.32, 50.79, 47.7, 45.14, 43.64, 42.87, 42.58, 44.05, 47.3, 54.05, 58.14, 61.58, 63.19, 63.65, 63.73, 62.21, 61.45, 59.89, 59.21, 58.69, 59.06, 59.78, 60.1, 58.33, 54.63, 51.13, 47.68, 45.88, 43.97, 42.95, 42.56, 43.63, 47.22, 54.8, 58.15, 60.43, 61.01, 60.94, 61.15, 60.92, 59.84, 57.67, 57.43, 57.51, 58.28, 58.73, 59.37, 57.55, 54.13, 50.48, 47.66, 45.19, 43.74, 42.88, 43.38, 44.45, 47.72, 55.03, 58.68, 61.43, 62.49, 62.32, 61.47, 60.9, 59.56, 58.04, 56.63, 56.54, 57.02, 57.36, 57.41, 55.02, 51.1, 47.91, 45.16, 42.48, 40.78, 40.06, 39.58, 39.85, 40.84, 42.76, 44.73, 48.9, 51.51, 53.0, 52.21, 50.68, 49.2, 47.0, 46.13, 46.2, 47.94, 48.6, 48.67, 47.56, 45.36, 43.06, 40.66, 38.11, 36.74, 36.17, 36.13, 35.84, 36.77, 37.64, 39.35, 42.59, 45.46, 47.26, 48.65, 48.47, 47.41, 45.98, 46.12, 46.14, 47.57, 49.21, 49.95, 48.92, 46.81, 45.21, 42.83, 41.71, 40.12, 39.83, 39.43, 41.03, 44.91, 53.08, 57.25, 59.94, 61.85, 62.61, 62.01, 59.83, 58.79, 57.0, 55.97, 56.46, 57.71, 58.38, 59.49, 57.47, 54.01, 50.86, 47.31, 44.48, 42.57, 41.85, 42.06, 43.0, 46.81, 53.89, 57.44, 60.38, 60.44, 59.98, 59.45, 58.48, 56.92, 55.25, 54.73, 54.78, 56.48, 57.27, 58.63, 57.48, 54.23, 51.09, 47.27, 44.43, 42.86, 42.28, 41.89, 43.12, 46.51, 54.2, 57.86, 60.07, 61.01, 60.93, 59.71, 58.23, 56.96, 55.56, 55.4, 55.78, 57.08, 58.35, 59.0, 57.54, 54.13, 51.09, 47.47, 45.43, 43.82, 42.87, 42.91, 44.23, 48.36, 55.41, 59.0, 61.68, 61.95, 62.13, 62.16, 61.39, 59.98, 58.08, 57.19, 57.53, 58.48, 59.22, 59.97, 58.01, 55.26, 51.91, 48.2, 44.79, 43.38, 42.63, 43.05, 43.83, 47.46, 54.82, 58.22, 60.44, 60.99, 60.38, 59.54, 57.73, 56.15, 54.64, 54.19, 54.1, 54.86, 55.71, 56.85, 54.69, 51.32, 47.8, 44.72, 42.02, 40.58, 40.14, 39.87, 40.28, 40.71, 42.89, 44.99, 48.77, 50.6, 51.37, 51.14, 49.39, 47.77, 46.02, 45.59, 46.19, 48.25, 49.45, 49.78, 48.31, 45.97, 43.57, 41.07, 38.31, 36.25, 35.36, 35.36, 34.62, 35.61, 36.9, 38.37, 42.02, 44.85, 46.72, 47.75, 46.98, 45.38, 43.98, 43.42, 44.61, 46.63, 48.83, 49.93, 48.11, 45.94, 45.04, 42.66, 41.09, 39.79, 39.29, 39.26, 40.92, 45.22, 52.93, 57.2, 59.98, 61.43, 61.85, 61.58, 59.44, 58.86, 57.47, 56.93, 57.77, 58.52, 59.61, 60.72, 57.82, 54.51, 51.16, 47.85, 45.96, 44.0, 42.78, 43.21, 44.25, 48.3, 55.58, 59.13, 61.92, 62.28, 61.73, 60.39, 59.7, 58.85, 57.62, 57.19, 57.4, 59.15, 60.89, 61.36, 59.15, 55.37, 52.12, 48.87, 46.24, 44.53, 43.8, 43.57, 44.98, 48.23, 55.78, 59.35, 62.3, 62.87, 62.65, 61.58, 60.61, 59.82, 58.8, 58.4, 58.75, 60.01, 61.08, 62.23, 60.09, 56.07, 52.16, 48.64, 46.23, 44.79, 43.92, 44.18, 45.3, 48.69, 55.43, 59.41, 62.65, 63.4, 64.0, 64.15, 63.6, 62.83, 60.88, 60.39, 59.94, 60.65, 61.91, 62.18, 59.05, 55.59, 52.32, 48.84, 45.92, 44.15, 43.2, 43.27, 44.49, 47.62, 54.42, 58.87, 61.74, 62.44, 61.77, 61.3, 59.12, 57.4, 55.31, 54.87, 53.67, 55.09, 56.45, 57.22, 53.86, 50.26, 47.03, 44.15, 42.43, 40.65, 39.57, 39.42, 39.52, 39.44, 40.12, 42.2, 45.81, 47.73, 48.63, 49.16, 48.69, 46.81, 44.16, 44.05, 44.39, 46.97, 48.81, 49.96, 47.27, 44.47, 43.4, 41.32, 39.17, 37.5, 36.51, 36.12, 36.07, 37.12, 38.97, 40.9, 43.11, 45.18, 47.74, 48.87, 47.96, 46.54, 44.72, 44.21, 44.63, 46.28, 49.16, 50.98, 48.97, 47.18, 45.73, 43.24, 41.16, 39.93, 39.82, 39.92, 41.32, 45.44, 53.16, 57.46, 59.67, 60.51, 60.74, 59.64, 58.02, 57.1, 55.58, 55.35, 55.92, 57.11, 59.03, 60.48, 57.53, 53.7, 50.25, 47.45, 45.03, 43.32, 42.62, 42.93, 44.37, 48.29, 55.5, 59.2, 61.28, 61.16, 60.61, 59.33, 58.53, 57.73, 55.83, 55.72, 56.1, 57.12, 58.71, 60.04, 57.02, 53.78, 50.26, 47.48, 44.49, 43.26, 43.03, 43.22, 44.2, 47.69, 55.22, 59.06, 61.56, 61.92, 61.7, 60.36, 59.22, 57.6, 56.4, 56.18, 56.83, 58.98, 60.79, 62.07, 59.6, 55.59, 51.76, 48.42, 46.33, 44.58, 44.05, 44.3, 45.26, 48.11, 55.61, 59.35, 61.88, 63.76, 64.47, 65.62, 65.34, 64.87, 63.79, 62.65, 61.9, 61.69, 62.78, 63.06, 59.57, 56.64, 53.14, 49.54, 47.23, 45.92, 45.53, 45.63, 46.79, 50.19, 57.39, 61.57, 64.77, 65.9, 66.08, 65.94, 65.32, 63.37, 60.62, 59.93, 60.01, 60.91, 61.35, 60.91, 58.44, 55.08, 51.69, 48.31, 45.5, 43.97, 42.92, 42.7, 43.08, 43.46, 44.97, 46.67, 50.47, 53.03, 54.37, 54.6, 54.4, 53.31, 50.84, 50.24, 51.15, 53.63, 54.88, 54.74, 53.04, 50.86, 48.71, 46.03], "baseline_gw": [44.24, 42.18, 41.2, 41.87, 42.53, 45.84, 53.05, 57.15, 59.87, 60.41, 60.91, 61.22, 59.63, 56.56, 55.08, 53.59, 53.04, 54.54, 55.38, 55.43, 54.22, 50.38, 47.21, 44.35, 40.82, 38.94, 38.44, 38.25, 37.77, 38.51, 40.63, 42.64, 45.78, 48.81, 50.42, 50.84, 49.61, 47.56, 45.96, 45.46, 45.64, 46.91, 48.68, 47.9, 47.41, 44.44, 42.19, 40.04, 37.46, 35.73, 34.85, 34.41, 34.09, 34.91, 35.84, 37.71, 40.67, 43.24, 45.26, 46.4, 45.47, 43.33, 41.64, 40.84, 41.26, 43.52, 45.86, 47.14, 46.85, 44.74, 42.7, 40.84, 39.51, 38.39, 38.12, 38.14, 39.5, 44.25, 53.63, 58.73, 61.65, 61.84, 61.88, 61.49, 60.04, 58.06, 56.03, 55.25, 55.2, 57.09, 58.85, 59.27, 58.61, 54.89, 51.21, 47.8, 45.32, 43.2, 42.06, 42.48, 43.75, 48.39, 56.38, 60.3, 63.13, 63.62, 63.69, 62.66, 60.48, 59.33, 57.52, 56.39, 57.11, 59.47, 59.55, 60.65, 57.79, 50.92, 47.03, 43.95, 42.52, 42.76, 42.36, 42.28, 43.22, 46.6, 55.05, 59.56, 61.26, 62.34, 61.87, 61.46, 59.76, 58.49, 56.98, 56.7, 57.21, 59.26, 59.93, 59.61, 59.27, 55.06, 50.53, 47.01, 44.11, 42.44, 41.33, 41.65, 43.08, 47.34, 55.19, 59.55, 61.71, 61.91, 61.91, 61.42, 60.69, 58.87, 57.52, 56.4, 56.67, 58.15, 59.2, 60.26, 58.85, 55.28, 51.03, 47.81, 44.92, 43.25, 42.22, 42.13, 43.13, 47.2, 55.04, 59.23, 61.79, 62.14, 61.59, 60.47, 58.92, 56.72, 55.13, 54.1, 53.71, 54.74, 55.37, 55.59, 53.93, 50.54, 46.93, 44.03, 41.17, 39.77, 38.81, 37.76, 37.42, 38.05, 40.0, 42.12, 46.06, 49.0, 49.97, 49.37, 47.66, 45.76, 44.45, 44.64, 45.8, 47.73, 49.13, 49.96, 48.08, 44.95, 42.82, 39.8, 37.37, 36.1, 35.45, 35.02, 35.11, 35.82, 37.72, 39.65, 42.53, 45.72, 47.42, 48.44, 47.37, 46.62, 45.64, 45.47, 46.25, 48.34, 50.35, 50.83, 49.96, 47.23, 44.78, 41.62, 39.64, 38.55, 37.6, 38.04, 39.79, 43.74, 52.08, 57.28, 60.44, 61.64, 62.63, 63.22, 62.94, 61.19, 59.26, 58.81, 58.01, 58.99, 59.01, 58.94, 57.26, 53.33, 49.5, 45.65, 43.23, 41.38, 40.45, 40.6, 41.52, 45.27, 53.12, 57.86, 60.74, 61.19, 61.27, 61.2, 59.38, 58.55, 57.04, 56.24, 56.65, 57.73, 58.74, 59.51, 57.48, 53.51, 49.34, 45.67, 42.66, 41.2, 39.99, 40.08, 41.52, 45.55, 53.31, 58.78, 61.61, 62.26, 62.47, 62.28, 61.76, 60.22, 59.36, 59.41, 59.02, 60.15, 61.34, 61.95, 60.06, 56.25, 51.89, 48.1, 45.66, 43.88, 42.95, 42.97, 44.78, 48.27, 56.36, 61.81, 64.23, 64.51, 65.02, 64.74, 64.21, 63.68, 62.23, 61.35, 61.67, 62.34, 62.55, 63.53, 60.74, 57.27, 53.42, 49.61, 46.27, 44.19, 43.21, 43.27, 44.33, 48.26, 56.5, 61.24, 63.9, 64.95, 65.92, 65.97, 64.47, 63.22, 60.5, 60.66, 59.95, 59.83, 60.29, 61.23, 58.54, 54.92, 50.89, 46.9, 43.6, 41.59, 40.14, 40.03, 39.78, 40.4, 42.83, 45.18, 48.45, 49.69, 51.3, 51.93, 50.89, 49.05, 47.74, 48.2, 48.67, 50.09, 51.55, 52.86, 50.41, 47.25, 44.81, 41.97, 39.35, 37.25, 35.77, 35.19, 35.43, 36.02, 37.31, 39.14, 42.41, 45.28, 46.74, 48.57, 47.83, 45.37, 43.96, 43.26, 43.36, 45.76, 48.61, 50.59, 49.92, 47.5, 45.61, 42.8, 40.32, 39.08, 38.4, 38.64, 40.12, 44.37, 52.91, 58.04, 61.27, 62.07, 62.45, 62.16, 61.3, 58.68, 56.91, 56.57, 56.34, 57.97, 59.51, 60.78, 58.17, 54.14, 49.98, 46.9, 44.03, 42.29, 41.28, 41.45, 42.98, 46.67, 54.65, 59.3, 61.6, 62.32, 63.14, 63.07, 61.84, 59.69, 58.4, 56.75, 56.69, 57.94, 58.84, 60.01, 57.96, 54.58, 50.26, 46.71, 44.1, 41.96, 40.95, 41.23, 42.68, 47.05, 55.04, 59.67, 61.74, 62.43, 61.6, 60.27, 58.87, 57.03, 55.01, 54.94, 56.05, 57.06, 59.03, 60.24, 57.98, 54.49, 50.72, 47.17, 44.76, 43.04, 42.42, 42.73, 44.04, 47.93, 55.43, 60.3, 62.34, 62.5, 61.33, 60.7, 57.8, 55.79, 54.68, 54.5, 54.42, 55.71, 57.21, 58.62, 55.82, 52.64, 48.94, 45.17, 42.51, 41.21, 40.14, 39.55, 39.8, 40.43, 41.27, 42.36, 44.71, 47.78, 49.16, 50.22, 49.72, 47.9, 45.83, 45.48, 46.03, 47.58, 50.15, 52.63, 51.01, 48.92, 47.32, 44.63, 42.41, 40.45, 39.45, 39.75, 40.87, 42.11, 44.61, 47.14, 50.05, 52.76, 54.88, 55.77, 54.58, 52.47, 51.54, 51.53, 51.67, 53.04, 54.96, 55.5, 52.54, 49.65, 47.24, 44.43, 42.03, 40.43, 39.54, 39.07, 39.55, 39.86, 41.15, 42.67, 45.16, 48.2, 50.71, 53.36, 52.69, 50.98, 49.35, 48.03, 48.33, 51.37, 54.21, 54.59, 52.2, 49.99, 49.32, 47.11, 43.62, 42.6, 42.02, 42.26, 43.89, 48.16, 56.89, 62.85, 65.28, 66.02, 66.06, 66.37, 65.99, 66.02, 64.15, 63.0, 61.79, 61.7, 62.09, 62.62, 59.29, 55.39, 51.68, 47.75, 44.7, 42.99, 42.18, 42.1, 43.71, 47.31, 55.08, 60.22, 62.54, 63.06, 63.86, 64.69, 63.38, 62.71, 60.75, 60.12, 59.53, 60.65, 61.87, 62.68, 59.64, 55.73, 52.26, 48.6, 45.48, 43.8, 42.94, 42.98, 44.28, 48.44, 56.21, 61.25, 63.49, 63.46, 63.57, 63.54, 62.76, 61.62, 60.07, 59.12, 58.36, 59.56, 61.15, 61.5, 58.24, 54.61, 50.94, 47.27, 44.36, 42.39, 41.67, 42.01, 43.85, 47.77, 55.72, 61.15, 63.48, 63.92, 65.02, 65.37, 64.47, 63.81, 62.16, 61.31, 60.88, 62.35, 64.25, 64.85, 61.77, 58.28, 53.93, 50.34, 47.43, 45.72, 44.65, 44.98, 46.34, 49.74, 58.27, 63.64, 66.25, 66.55, 66.54, 66.53, 65.28, 64.06, 62.19, 61.31, 60.95, 61.64, 62.65, 62.81, 59.85, 56.09, 52.39, 48.72, 45.48, 43.86, 42.41, 42.54, 42.9, 43.61, 45.61, 48.36, 50.6, 53.28, 54.22, 54.7, 54.51, 52.77, 51.41, 50.76, 50.66, 52.52, 54.39, 54.42, 51.44, 49.01, 46.79, 43.79], "backfilled_until": "2026-10-10 23:00"}, "scores": {"days": 29, "model_mape": 2.49, "baseline_mape": 4.15, "inside_range_pct": 76.0, "backfilled_days": 29, "table": [{"date": "2026-10-09", "model_mape": 4.81, "baseline_mape": 5.9, "model_daily_error_pct": 4.78, "inside_range_pct": 50.0}, {"date": "2026-10-08", "model_mape": 1.27, "baseline_mape": 2.92, "model_daily_error_pct": 0.22, "inside_range_pct": 100.0}, {"date": "2026-10-07", "model_mape": 1.85, "baseline_mape": 2.31, "model_daily_error_pct": -1.62, "inside_range_pct": 83.33}, {"date": "2026-10-06", "model_mape": 2.45, "baseline_mape": 3.47, "model_daily_error_pct": -2.43, "inside_range_pct": 79.17}, {"date": "2026-10-05", "model_mape": 3.26, "baseline_mape": 4.8, "model_daily_error_pct": -3.08, "inside_range_pct": 66.67}, {"date": "2026-10-04", "model_mape": 4.46, "baseline_mape": 4.1, "model_daily_error_pct": -3.45, "inside_range_pct": 29.17}, {"date": "2026-10-03", "model_mape": 5.62, "baseline_mape": 6.62, "model_daily_error_pct": -5.54, "inside_range_pct": 25.0}, {"date": "2026-10-02", "model_mape": 5.74, "baseline_mape": 18.28, "model_daily_error_pct": -5.66, "inside_range_pct": 37.5}, {"date": "2026-10-01", "model_mape": 1.91, "baseline_mape": 6.07, "model_daily_error_pct": -0.17, "inside_range_pct": 91.67}, {"date": "2026-09-30", "model_mape": 2.64, "baseline_mape": 2.28, "model_daily_error_pct": 2.37, "inside_range_pct": 66.67}, {"date": "2026-09-29", "model_mape": 2.27, "baseline_mape": 2.39, "model_daily_error_pct": 1.66, "inside_range_pct": 83.33}, {"date": "2026-09-28", "model_mape": 1.33, "baseline_mape": 2.02, "model_daily_error_pct": 0.78, "inside_range_pct": 95.83}, {"date": "2026-09-27", "model_mape": 2.42, "baseline_mape": 2.06, "model_daily_error_pct": -0.11, "inside_range_pct": 87.5}, {"date": "2026-09-26", "model_mape": 1.42, "baseline_mape": 2.05, "model_daily_error_pct": -0.19, "inside_range_pct": 95.83}, {"date": "2026-09-25", "model_mape": 1.7, "baseline_mape": 6.26, "model_daily_error_pct": -0.62, "inside_range_pct": 87.5}, {"date": "2026-09-24", "model_mape": 1.57, "baseline_mape": 4.15, "model_daily_error_pct": 0.15, "inside_range_pct": 87.5}, {"date": "2026-09-23", "model_mape": 2.3, "baseline_mape": 4.87, "model_daily_error_pct": -0.76, "inside_range_pct": 70.83}, {"date": "2026-09-22", "model_mape": 2.11, "baseline_mape": 3.96, "model_daily_error_pct": 0.55, "inside_range_pct": 79.17}, {"date": "2026-09-21", "model_mape": 2.33, "baseline_mape": 3.2, "model_daily_error_pct": 2.29, "inside_range_pct": 66.67}, {"date": "2026-09-20", "model_mape": 1.45, "baseline_mape": 1.99, "model_daily_error_pct": 0.17, "inside_range_pct": 100.0}, {"date": "2026-09-19", "model_mape": 1.64, "baseline_mape": 3.69, "model_daily_error_pct": 0.08, "inside_range_pct": 95.83}, {"date": "2026-09-18", "model_mape": 1.75, "baseline_mape": 1.6, "model_daily_error_pct": 1.75, "inside_range_pct": 100.0}, {"date": "2026-09-17", "model_mape": 2.12, "baseline_mape": 2.27, "model_daily_error_pct": -1.75, "inside_range_pct": 79.17}, {"date": "2026-09-16", "model_mape": 2.2, "baseline_mape": 3.88, "model_daily_error_pct": -2.09, "inside_range_pct": 83.33}, {"date": "2026-09-15", "model_mape": 3.26, "baseline_mape": 3.28, "model_daily_error_pct": -3.12, "inside_range_pct": 33.33}, {"date": "2026-09-14", "model_mape": 2.61, "baseline_mape": 3.21, "model_daily_error_pct": -2.41, "inside_range_pct": 95.83}, {"date": "2026-09-13", "model_mape": 1.95, "baseline_mape": 6.64, "model_daily_error_pct": -1.88, "inside_range_pct": 66.67}, {"date": "2026-09-12", "model_mape": 1.07, "baseline_mape": 2.78, "model_daily_error_pct": -0.11, "inside_range_pct": 100.0}, {"date": "2026-09-11", "model_mape": 2.77, "baseline_mape": 3.3, "model_daily_error_pct": -0.68, "inside_range_pct": 54.17}], "running_model": [2.77, 1.92, 1.93, 2.1, 2.33, 2.31, 2.28, 2.22, 2.15, 2.08, 2.1, 2.1, 2.12, 2.08, 2.06, 2.02, 2.04, 2.0, 2.01, 2.05, 2.04, 2.21, 2.36, 2.44, 2.48, 2.47, 2.45, 2.41, 2.49], "running_baseline": [3.3, 3.04, 4.24, 3.98, 3.84, 3.85, 3.62, 3.37, 3.41, 3.26, 3.26, 3.32, 3.44, 3.49, 3.67, 3.57, 3.48, 3.4, 3.35, 3.29, 3.43, 4.1, 4.21, 4.21, 4.23, 4.2, 4.13, 4.09, 4.15], "dates": ["2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"]}, "savings": {"headline": {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.08, "actual_twh": 240.40176, "expected_twh": 263.5148673131742, "saving_twh": 23.113107313174186, "saving_pct": 8.771082842056654, "low_pct": 6.185361462366323, "high_pct": 11.21809197919681, "typical_error_pct": 1.4821894401990003}, "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electricity than the weather and calendar predicted (90% range 6.2% to 11.2%), about 23.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 4.2% below the pre-crisis pattern (range 1.5% to 6.8%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 9.2%.", "winters": [{"winter": "2021/22", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.0, "actual_twh": 264.55, "expected_twh": 264.54, "saving_twh": -0.01, "saving_pct": -0.0, "low_pct": -2.84, "high_pct": 2.68, "typical_error_pct": 1.48}, {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.08, "actual_twh": 240.4, "expected_twh": 263.51, "saving_twh": 23.11, "saving_pct": 8.77, "low_pct": 6.19, "high_pct": 11.22, "typical_error_pct": 1.48}, {"winter": "2023/24", "complete": true, "coverage": 1.0, "hours": 4392, "years_ahead": 1.08, "actual_twh": 245.13, "expected_twh": 263.51, "saving_twh": 18.38, "saving_pct": 6.98, "low_pct": 4.34, "high_pct": 9.47, "typical_error_pct": 1.48}, {"winter": "2024/25", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 2.08, "actual_twh": 246.1, "expected_twh": 263.19, "saving_twh": 17.09, "saving_pct": 6.49, "low_pct": 3.84, "high_pct": 9.0, "typical_error_pct": 1.48}, {"winter": "2025/26", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 3.08, "actual_twh": 251.95, "expected_twh": 263.12, "saving_twh": 11.17, "saving_pct": 4.25, "low_pct": 1.53, "high_pct": 6.81, "typical_error_pct": 1.48}], "checks": [{"winter": "2016/17", "kind": "check (normal winter)", "saving_pct": -1.23, "low_pct": -4.1, "high_pct": 1.49, "typical_error_pct": 1.48}, {"winter": "2017/18", "kind": "check (normal winter)", "saving_pct": -1.12, "low_pct": -3.99, "high_pct": 1.59, "typical_error_pct": 1.48}, {"winter": "2018/19", "kind": "check (normal winter)", "saving_pct": 1.04, "low_pct": -1.77, "high_pct": 3.69, "typical_error_pct": 1.48}, {"winter": "2019/20", "kind": "check (normal winter)", "saving_pct": 1.31, "low_pct": -1.49, "high_pct": 3.95, "typical_error_pct": 1.48}], "dark": {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 2495, "years_ahead": 0.08, "actual_twh": 127.9302655, "expected_twh": 140.91442625834685, "saving_twh": 12.984160758346855, "saving_pct": 9.21421681449578, "low_pct": 6.641055279011631, "high_pct": 11.649339886194, "typical_error_pct": 1.4821894401990003}, "generated": "2026-10-10"}, "data_until": "2026-10-10 12:00", "data_days": 4301};
+const D = {"retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 10:00:00+00:00", "window_end": "2026-10-10 10:00:00+00:00", "model_mape": 2.4739103458087124, "baseline_mape": 4.191707946603121, "passed": true}}, "range_calibration": {"scale": 1.55, "days_used": 30, "hours_used": 712, "coverage_before": 75.8, "coverage_after": 90.4, "target": 90, "computed_utc": "2026-10-10T15:36:05+00:00"}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [41.13, 39.61, 38.8, 38.37, 38.29, 39.18, 40.13, 42.11, 44.75, 47.1, 49.01, 49.73, 49.11, 47.88, 45.86, 45.38, 45.99, 49.03, 51.62, 52.65, 50.85, 49.45, 47.99, 45.98], "low_gw": [37.92, 36.64, 36.3, 35.25, 35.3, 36.64, 37.53, 39.23, 41.62, 43.59, 45.01, 45.07, 44.33, 43.31, 41.45, 40.48, 42.1, 44.99, 47.41, 47.92, 47.42, 45.75, 44.05, 41.75], "high_gw": [45.18, 42.92, 42.14, 42.03, 41.76, 42.68, 43.78, 45.68, 48.51, 50.88, 52.77, 52.17, 50.97, 50.34, 47.92, 47.43, 49.38, 53.37, 55.6, 56.47, 55.3, 52.99, 52.12, 49.48], "baseline_gw": [41.07, 39.21, 38.22, 37.77, 38.13, 38.63, 39.76, 41.79, 44.27, 47.11, 48.46, 50.22, 50.4, 48.66, 46.9, 45.93, 46.38, 49.19, 51.96, 52.49, 49.97, 47.88, 46.22, 43.72], "total_gwh": 1090.0, "total_low_gwh": 1001.0, "total_high_gwh": 1172.0, "peak_gw": 52.7, "peak_hour": "19:00"}, "last30": {"time": ["2026-09-11T00:00", "2026-09-11T01:00", "2026-09-11T02:00", "2026-09-11T03:00", "2026-09-11T04:00", "2026-09-11T05:00", "2026-09-11T06:00", "2026-09-11T07:00", "2026-09-11T08:00", "2026-09-11T09:00", "2026-09-11T10:00", "2026-09-11T11:00", "2026-09-11T12:00", "2026-09-11T13:00", "2026-09-11T14:00", "2026-09-11T15:00", "2026-09-11T16:00", "2026-09-11T17:00", "2026-09-11T18:00", "2026-09-11T19:00", "2026-09-11T20:00", "2026-09-11T21:00", "2026-09-11T22:00", "2026-09-11T23:00", "2026-09-12T00:00", "2026-09-12T01:00", "2026-09-12T02:00", "2026-09-12T03:00", "2026-09-12T04:00", "2026-09-12T05:00", "2026-09-12T06:00", "2026-09-12T07:00", "2026-09-12T08:00", "2026-09-12T09:00", "2026-09-12T10:00", "2026-09-12T11:00", "2026-09-12T12:00", "2026-09-12T13:00", "2026-09-12T14:00", "2026-09-12T15:00", "2026-09-12T16:00", "2026-09-12T17:00", "2026-09-12T18:00", "2026-09-12T19:00", "2026-09-12T20:00", "2026-09-12T21:00", "2026-09-12T22:00", "2026-09-12T23:00", "2026-09-13T00:00", "2026-09-13T01:00", "2026-09-13T02:00", "2026-09-13T03:00", "2026-09-13T04:00", "2026-09-13T05:00", "2026-09-13T06:00", "2026-09-13T07:00", "2026-09-13T08:00", "2026-09-13T09:00", "2026-09-13T10:00", "2026-09-13T11:00", "2026-09-13T12:00", "2026-09-13T13:00", "2026-09-13T14:00", "2026-09-13T15:00", "2026-09-13T16:00", "2026-09-13T17:00", "2026-09-13T18:00", "2026-09-13T19:00", "2026-09-13T20:00", "2026-09-13T21:00", "2026-09-13T22:00", "2026-09-13T23:00", "2026-09-14T00:00", "2026-09-14T01:00", "2026-09-14T02:00", "2026-09-14T03:00", "2026-09-14T04:00", "2026-09-14T05:00", "2026-09-14T06:00", "2026-09-14T07:00", "2026-09-14T08:00", "2026-09-14T09:00", "2026-09-14T10:00", "2026-09-14T11:00", "2026-09-14T12:00", "2026-09-14T13:00", "2026-09-14T14:00", "2026-09-14T15:00", "2026-09-14T16:00", "2026-09-14T17:00", "2026-09-14T18:00", "2026-09-14T19:00", "2026-09-14T20:00", "2026-09-14T21:00", "2026-09-14T22:00", "2026-09-14T23:00", "2026-09-15T00:00", "2026-09-15T01:00", "2026-09-15T02:00", "2026-09-15T03:00", "2026-09-15T04:00", "2026-09-15T05:00", "2026-09-15T06:00", "2026-09-15T07:00", "2026-09-15T08:00", "2026-09-15T09:00", "2026-09-15T10:00", "2026-09-15T11:00", "2026-09-15T12:00", "2026-09-15T13:00", "2026-09-15T14:00", "2026-09-15T15:00", "2026-09-15T16:00", "2026-09-15T17:00", "2026-09-15T18:00", "2026-09-15T19:00", "2026-09-15T20:00", "2026-09-15T21:00", "2026-09-15T22:00", "2026-09-15T23:00", "2026-09-16T00:00", "2026-09-16T01:00", "2026-09-16T02:00", "2026-09-16T03:00", "2026-09-16T04:00", "2026-09-16T05:00", "2026-09-16T06:00", "2026-09-16T07:00", "2026-09-16T08:00", "2026-09-16T09:00", "2026-09-16T10:00", "2026-09-16T11:00", "2026-09-16T12:00", "2026-09-16T13:00", "2026-09-16T14:00", "2026-09-16T15:00", "2026-09-16T16:00", "2026-09-16T17:00", "2026-09-16T18:00", "2026-09-16T19:00", "2026-09-16T20:00", "2026-09-16T21:00", "2026-09-16T22:00", "2026-09-16T23:00", "2026-09-17T00:00", "2026-09-17T01:00", "2026-09-17T02:00", "2026-09-17T03:00", "2026-09-17T04:00", "2026-09-17T05:00", "2026-09-17T06:00", "2026-09-17T07:00", "2026-09-17T08:00", "2026-09-17T09:00", "2026-09-17T10:00", "2026-09-17T11:00", "2026-09-17T12:00", "2026-09-17T13:00", "2026-09-17T14:00", "2026-09-17T15:00", "2026-09-17T16:00", "2026-09-17T17:00", "2026-09-17T18:00", "2026-09-17T19:00", "2026-09-17T20:00", "2026-09-17T21:00", "2026-09-17T22:00", "2026-09-17T23:00", "2026-09-18T00:00", "2026-09-18T01:00", "2026-09-18T02:00", "2026-09-18T03:00", "2026-09-18T04:00", "2026-09-18T05:00", "2026-09-18T06:00", "2026-09-18T07:00", "2026-09-18T08:00", "2026-09-18T09:00", "2026-09-18T10:00", "2026-09-18T11:00", "2026-09-18T12:00", "2026-09-18T13:00", "2026-09-18T14:00", "2026-09-18T15:00", "2026-09-18T16:00", "2026-09-18T17:00", "2026-09-18T18:00", "2026-09-18T19:00", "2026-09-18T20:00", "2026-09-18T21:00", "2026-09-18T22:00", "2026-09-18T23:00", "2026-09-19T00:00", "2026-09-19T01:00", "2026-09-19T02:00", "2026-09-19T03:00", "2026-09-19T04:00", "2026-09-19T05:00", "2026-09-19T06:00", "2026-09-19T07:00", "2026-09-19T08:00", "2026-09-19T09:00", "2026-09-19T10:00", "2026-09-19T11:00", "2026-09-19T12:00", "2026-09-19T13:00", "2026-09-19T14:00", "2026-09-19T15:00", "2026-09-19T16:00", "2026-09-19T17:00", "2026-09-19T18:00", "2026-09-19T19:00", "2026-09-19T20:00", "2026-09-19T21:00", "2026-09-19T22:00", "2026-09-19T23:00", "2026-09-20T00:00", "2026-09-20T01:00", "2026-09-20T02:00", "2026-09-20T03:00", "2026-09-20T04:00", "2026-09-20T05:00", "2026-09-20T06:00", "2026-09-20T07:00", "2026-09-20T08:00", "2026-09-20T09:00", "2026-09-20T10:00", "2026-09-20T11:00", "2026-09-20T12:00", "2026-09-20T13:00", "2026-09-20T14:00", "2026-09-20T15:00", "2026-09-20T16:00", "2026-09-20T17:00", "2026-09-20T18:00", "2026-09-20T19:00", "2026-09-20T20:00", "2026-09-20T21:00", "2026-09-20T22:00", "2026-09-20T23:00", "2026-09-21T00:00", "2026-09-21T01:00", "2026-09-21T02:00", "2026-09-21T03:00", "2026-09-21T04:00", "2026-09-21T05:00", "2026-09-21T06:00", "2026-09-21T07:00", "2026-09-21T08:00", "2026-09-21T09:00", "2026-09-21T10:00", "2026-09-21T11:00", "2026-09-21T12:00", "2026-09-21T13:00", "2026-09-21T14:00", "2026-09-21T15:00", "2026-09-21T16:00", "2026-09-21T17:00", "2026-09-21T18:00", "2026-09-21T19:00", "2026-09-21T20:00", "2026-09-21T21:00", "2026-09-21T22:00", "2026-09-21T23:00", "2026-09-22T00:00", "2026-09-22T01:00", "2026-09-22T02:00", "2026-09-22T03:00", "2026-09-22T04:00", "2026-09-22T05:00", "2026-09-22T06:00", "2026-09-22T07:00", "2026-09-22T08:00", "2026-09-22T09:00", "2026-09-22T10:00", "2026-09-22T11:00", "2026-09-22T12:00", "2026-09-22T13:00", "2026-09-22T14:00", "2026-09-22T15:00", "2026-09-22T16:00", "2026-09-22T17:00", "2026-09-22T18:00", "2026-09-22T19:00", "2026-09-22T20:00", "2026-09-22T21:00", "2026-09-22T22:00", "2026-09-22T23:00", "2026-09-23T00:00", "2026-09-23T01:00", "2026-09-23T02:00", "2026-09-23T03:00", "2026-09-23T04:00", "2026-09-23T05:00", "2026-09-23T06:00", "2026-09-23T07:00", "2026-09-23T08:00", "2026-09-23T09:00", "2026-09-23T10:00", "2026-09-23T11:00", "2026-09-23T12:00", "2026-09-23T13:00", "2026-09-23T14:00", "2026-09-23T15:00", "2026-09-23T16:00", "2026-09-23T17:00", "2026-09-23T18:00", "2026-09-23T19:00", "2026-09-23T20:00", "2026-09-23T21:00", "2026-09-23T22:00", "2026-09-23T23:00", "2026-09-24T00:00", "2026-09-24T01:00", "2026-09-24T02:00", "2026-09-24T03:00", "2026-09-24T04:00", "2026-09-24T05:00", "2026-09-24T06:00", "2026-09-24T07:00", "2026-09-24T08:00", "2026-09-24T09:00", "2026-09-24T10:00", "2026-09-24T11:00", "2026-09-24T12:00", "2026-09-24T13:00", "2026-09-24T14:00", "2026-09-24T15:00", "2026-09-24T16:00", "2026-09-24T17:00", "2026-09-24T18:00", "2026-09-24T19:00", "2026-09-24T20:00", "2026-09-24T21:00", "2026-09-24T22:00", "2026-09-24T23:00", "2026-09-25T00:00", "2026-09-25T01:00", "2026-09-25T02:00", "2026-09-25T03:00", "2026-09-25T04:00", "2026-09-25T05:00", "2026-09-25T06:00", "2026-09-25T07:00", "2026-09-25T08:00", "2026-09-25T09:00", "2026-09-25T10:00", "2026-09-25T11:00", "2026-09-25T12:00", "2026-09-25T13:00", "2026-09-25T14:00", "2026-09-25T15:00", "2026-09-25T16:00", "2026-09-25T17:00", "2026-09-25T18:00", "2026-09-25T19:00", "2026-09-25T20:00", "2026-09-25T21:00", "2026-09-25T22:00", "2026-09-25T23:00", "2026-09-26T00:00", "2026-09-26T01:00", "2026-09-26T02:00", "2026-09-26T03:00", "2026-09-26T04:00", "2026-09-26T05:00", "2026-09-26T06:00", "2026-09-26T07:00", "2026-09-26T08:00", "2026-09-26T09:00", "2026-09-26T10:00", "2026-09-26T11:00", "2026-09-26T12:00", "2026-09-26T13:00", "2026-09-26T14:00", "2026-09-26T15:00", "2026-09-26T16:00", "2026-09-26T17:00", "2026-09-26T18:00", "2026-09-26T19:00", "2026-09-26T20:00", "2026-09-26T21:00", "2026-09-26T22:00", "2026-09-26T23:00", "2026-09-27T00:00", "2026-09-27T01:00", "2026-09-27T02:00", "2026-09-27T03:00", "2026-09-27T04:00", "2026-09-27T05:00", "2026-09-27T06:00", "2026-09-27T07:00", "2026-09-27T08:00", "2026-09-27T09:00", "2026-09-27T10:00", "2026-09-27T11:00", "2026-09-27T12:00", "2026-09-27T13:00", "2026-09-27T14:00", "2026-09-27T15:00", "2026-09-27T16:00", "2026-09-27T17:00", "2026-09-27T18:00", "2026-09-27T19:00", "2026-09-27T20:00", "2026-09-27T21:00", "2026-09-27T22:00", "2026-09-27T23:00", "2026-09-28T00:00", "2026-09-28T01:00", "2026-09-28T02:00", "2026-09-28T03:00", "2026-09-28T04:00", "2026-09-28T05:00", "2026-09-28T06:00", "2026-09-28T07:00", "2026-09-28T08:00", "2026-09-28T09:00", "2026-09-28T10:00", "2026-09-28T11:00", "2026-09-28T12:00", "2026-09-28T13:00", "2026-09-28T14:00", "2026-09-28T15:00", "2026-09-28T16:00", "2026-09-28T17:00", "2026-09-28T18:00", "2026-09-28T19:00", "2026-09-28T20:00", "2026-09-28T21:00", "2026-09-28T22:00", "2026-09-28T23:00", "2026-09-29T00:00", "2026-09-29T01:00", "2026-09-29T02:00", "2026-09-29T03:00", "2026-09-29T04:00", "2026-09-29T05:00", "2026-09-29T06:00", "2026-09-29T07:00", "2026-09-29T08:00", "2026-09-29T09:00", "2026-09-29T10:00", "2026-09-29T11:00", "2026-09-29T12:00", "2026-09-29T13:00", "2026-09-29T14:00", "2026-09-29T15:00", "2026-09-29T16:00", "2026-09-29T17:00", "2026-09-29T18:00", "2026-09-29T19:00", "2026-09-29T20:00", "2026-09-29T21:00", "2026-09-29T22:00", "2026-09-29T23:00", "2026-09-30T00:00", "2026-09-30T01:00", "2026-09-30T02:00", "2026-09-30T03:00", "2026-09-30T04:00", "2026-09-30T05:00", "2026-09-30T06:00", "2026-09-30T07:00", "2026-09-30T08:00", "2026-09-30T09:00", "2026-09-30T10:00", "2026-09-30T11:00", "2026-09-30T12:00", "2026-09-30T13:00", "2026-09-30T14:00", "2026-09-30T15:00", "2026-09-30T16:00", "2026-09-30T17:00", "2026-09-30T18:00", "2026-09-30T19:00", "2026-09-30T20:00", "2026-09-30T21:00", "2026-09-30T22:00", "2026-09-30T23:00", "2026-10-01T00:00", "2026-10-01T01:00", "2026-10-01T02:00", "2026-10-01T03:00", "2026-10-01T04:00", "2026-10-01T05:00", "2026-10-01T06:00", "2026-10-01T07:00", "2026-10-01T08:00", "2026-10-01T09:00", "2026-10-01T10:00", "2026-10-01T11:00", "2026-10-01T12:00", "2026-10-01T13:00", "2026-10-01T14:00", "2026-10-01T15:00", "2026-10-01T16:00", "2026-10-01T17:00", "2026-10-01T18:00", "2026-10-01T19:00", "2026-10-01T20:00", "2026-10-01T21:00", "2026-10-01T22:00", "2026-10-01T23:00", "2026-10-02T00:00", "2026-10-02T01:00", "2026-10-02T02:00", "2026-10-02T03:00", "2026-10-02T04:00", "2026-10-02T05:00", "2026-10-02T06:00", "2026-10-02T07:00", "2026-10-02T08:00", "2026-10-02T09:00", "2026-10-02T10:00", "2026-10-02T11:00", "2026-10-02T12:00", "2026-10-02T13:00", "2026-10-02T14:00", "2026-10-02T15:00", "2026-10-02T16:00", "2026-10-02T17:00", "2026-10-02T18:00", "2026-10-02T19:00", "2026-10-02T20:00", "2026-10-02T21:00", "2026-10-02T22:00", "2026-10-02T23:00", "2026-10-03T00:00", "2026-10-03T01:00", "2026-10-03T02:00", "2026-10-03T03:00", "2026-10-03T04:00", "2026-10-03T05:00", "2026-10-03T06:00", "2026-10-03T07:00", "2026-10-03T08:00", "2026-10-03T09:00", "2026-10-03T10:00", "2026-10-03T11:00", "2026-10-03T12:00", "2026-10-03T13:00", "2026-10-03T14:00", "2026-10-03T15:00", "2026-10-03T16:00", "2026-10-03T17:00", "2026-10-03T18:00", "2026-10-03T19:00", "2026-10-03T20:00", "2026-10-03T21:00", "2026-10-03T22:00", "2026-10-03T23:00", "2026-10-04T00:00", "2026-10-04T01:00", "2026-10-04T02:00", "2026-10-04T03:00", "2026-10-04T04:00", "2026-10-04T05:00", "2026-10-04T06:00", "2026-10-04T07:00", "2026-10-04T08:00", "2026-10-04T09:00", "2026-10-04T10:00", "2026-10-04T11:00", "2026-10-04T12:00", "2026-10-04T13:00", "2026-10-04T14:00", "2026-10-04T15:00", "2026-10-04T16:00", "2026-10-04T17:00", "2026-10-04T18:00", "2026-10-04T19:00", "2026-10-04T20:00", "2026-10-04T21:00", "2026-10-04T22:00", "2026-10-04T23:00", "2026-10-05T00:00", "2026-10-05T01:00", "2026-10-05T02:00", "2026-10-05T03:00", "2026-10-05T04:00", "2026-10-05T05:00", "2026-10-05T06:00", "2026-10-05T07:00", "2026-10-05T08:00", "2026-10-05T09:00", "2026-10-05T10:00", "2026-10-05T11:00", "2026-10-05T12:00", "2026-10-05T13:00", "2026-10-05T14:00", "2026-10-05T15:00", "2026-10-05T16:00", "2026-10-05T17:00", "2026-10-05T18:00", "2026-10-05T19:00", "2026-10-05T20:00", "2026-10-05T21:00", "2026-10-05T22:00", "2026-10-05T23:00", "2026-10-06T00:00", "2026-10-06T01:00", "2026-10-06T02:00", "2026-10-06T03:00", "2026-10-06T04:00", "2026-10-06T05:00", "2026-10-06T06:00", "2026-10-06T07:00", "2026-10-06T08:00", "2026-10-06T09:00", "2026-10-06T10:00", "2026-10-06T11:00", "2026-10-06T12:00", "2026-10-06T13:00", "2026-10-06T14:00", "2026-10-06T15:00", "2026-10-06T16:00", "2026-10-06T17:00", "2026-10-06T18:00", "2026-10-06T19:00", "2026-10-06T20:00", "2026-10-06T21:00", "2026-10-06T22:00", "2026-10-06T23:00", "2026-10-07T00:00", "2026-10-07T01:00", "2026-10-07T02:00", "2026-10-07T03:00", "2026-10-07T04:00", "2026-10-07T05:00", "2026-10-07T06:00", "2026-10-07T07:00", "2026-10-07T08:00", "2026-10-07T09:00", "2026-10-07T10:00", "2026-10-07T11:00", "2026-10-07T12:00", "2026-10-07T13:00", "2026-10-07T14:00", "2026-10-07T15:00", "2026-10-07T16:00", "2026-10-07T17:00", "2026-10-07T18:00", "2026-10-07T19:00", "2026-10-07T20:00", "2026-10-07T21:00", "2026-10-07T22:00", "2026-10-07T23:00", "2026-10-08T00:00", "2026-10-08T01:00", "2026-10-08T02:00", "2026-10-08T03:00", "2026-10-08T04:00", "2026-10-08T05:00", "2026-10-08T06:00", "2026-10-08T07:00", "2026-10-08T08:00", "2026-10-08T09:00", "2026-10-08T10:00", "2026-10-08T11:00", "2026-10-08T12:00", "2026-10-08T13:00", "2026-10-08T14:00", "2026-10-08T15:00", "2026-10-08T16:00", "2026-10-08T17:00", "2026-10-08T18:00", "2026-10-08T19:00", "2026-10-08T20:00", "2026-10-08T21:00", "2026-10-08T22:00", "2026-10-08T23:00", "2026-10-09T00:00", "2026-10-09T01:00", "2026-10-09T02:00", "2026-10-09T03:00", "2026-10-09T04:00", "2026-10-09T05:00", "2026-10-09T06:00", "2026-10-09T07:00", "2026-10-09T08:00", "2026-10-09T09:00", "2026-10-09T10:00", "2026-10-09T11:00", "2026-10-09T12:00", "2026-10-09T13:00", "2026-10-09T14:00", "2026-10-09T15:00", "2026-10-09T16:00", "2026-10-09T17:00", "2026-10-09T18:00", "2026-10-09T19:00", "2026-10-09T20:00", "2026-10-09T21:00", "2026-10-09T22:00", "2026-10-09T23:00", "2026-10-10T00:00", "2026-10-10T01:00", "2026-10-10T02:00", "2026-10-10T03:00", "2026-10-10T04:00", "2026-10-10T05:00", "2026-10-10T06:00", "2026-10-10T07:00", "2026-10-10T08:00", "2026-10-10T09:00", "2026-10-10T10:00", "2026-10-10T11:00", "2026-10-10T12:00", "2026-10-10T13:00", "2026-10-10T14:00", "2026-10-10T15:00", "2026-10-10T16:00", "2026-10-10T17:00", "2026-10-10T18:00", "2026-10-10T19:00", "2026-10-10T20:00", "2026-10-10T21:00", "2026-10-10T22:00", "2026-10-10T23:00"], "actual_gw": [46.91, 45.84, 45.0, 45.52, 45.99, 48.75, 55.08, 58.02, 60.88, 62.58, 62.19, 60.2, 57.55, 56.53, 55.18, 54.1, 55.01, 56.21, 56.81, 56.02, 54.07, 51.16, 48.22, 45.58, 42.66, 41.06, 40.08, 39.28, 39.96, 40.67, 42.7, 44.47, 48.2, 51.42, 52.78, 51.86, 49.77, 47.85, 46.54, 45.09, 46.31, 47.85, 48.21, 48.03, 47.27, 45.27, 43.09, 40.97, 38.64, 36.88, 36.42, 36.38, 35.95, 36.6, 37.76, 39.38, 42.38, 45.34, 47.68, 49.81, 49.56, 48.0, 46.93, 46.49, 47.17, 49.27, 50.6, 49.47, 48.61, 47.2, 46.29, 44.21, 42.77, 41.79, 41.47, 41.03, 42.39, 46.28, 53.9, 57.28, 60.43, 62.53, 63.73, 63.49, 60.7, 59.32, 58.4, 57.07, 57.3, 58.43, 58.84, 58.39, 57.48, 54.9, 51.86, 48.61, 47.07, 45.12, 43.99, 44.37, 45.14, 48.69, 54.88, 57.82, 61.94, 62.4, 61.59, 60.9, 60.46, 59.17, 57.46, 56.97, 56.97, 58.94, 60.8, 59.97, 59.43, 56.21, 53.1, 49.84, 47.32, 45.79, 45.1, 44.16, 45.22, 48.09, 55.14, 58.84, 62.0, 63.86, 64.74, 64.06, 62.87, 62.39, 60.55, 60.35, 60.53, 61.35, 61.25, 60.49, 59.01, 55.85, 52.4, 48.93, 46.88, 45.53, 44.73, 44.66, 46.03, 49.73, 55.17, 58.82, 61.89, 61.89, 62.16, 61.5, 60.66, 59.56, 57.35, 56.83, 57.4, 58.33, 59.82, 60.02, 58.27, 56.13, 52.6, 49.51, 45.56, 43.69, 42.75, 43.25, 43.83, 46.85, 53.93, 57.45, 59.51, 61.09, 61.86, 60.79, 58.88, 58.24, 57.21, 56.61, 55.35, 55.0, 56.09, 55.13, 53.87, 50.95, 47.21, 44.15, 40.76, 40.39, 40.25, 40.51, 40.78, 40.88, 42.57, 44.51, 47.95, 49.3, 50.91, 51.71, 50.13, 48.94, 46.6, 46.6, 46.52, 49.22, 50.04, 48.92, 47.95, 45.99, 43.95, 41.56, 39.62, 37.16, 35.97, 35.36, 35.07, 35.57, 37.27, 38.49, 42.39, 45.48, 48.1, 50.21, 49.19, 47.78, 46.55, 45.56, 46.45, 47.09, 49.39, 49.48, 48.12, 45.69, 44.78, 42.76, 40.33, 39.43, 39.36, 39.38, 40.3, 43.59, 50.83, 54.77, 57.26, 59.0, 60.84, 60.91, 59.77, 59.15, 56.37, 55.55, 55.64, 55.62, 57.78, 58.29, 55.76, 52.69, 49.25, 46.56, 45.57, 43.97, 43.14, 42.9, 44.12, 47.74, 55.01, 57.82, 60.37, 60.99, 60.15, 57.39, 56.09, 55.25, 53.34, 52.12, 53.75, 55.99, 57.55, 57.62, 56.19, 53.36, 49.83, 47.67, 44.67, 43.67, 43.82, 44.15, 45.18, 48.19, 54.67, 57.98, 61.54, 61.46, 59.99, 58.21, 57.06, 56.05, 53.89, 53.37, 54.45, 57.66, 59.65, 60.91, 60.43, 55.27, 50.89, 48.06, 45.61, 43.62, 43.27, 43.83, 44.54, 46.62, 53.7, 56.61, 59.13, 61.14, 61.79, 62.35, 61.82, 61.79, 60.41, 59.6, 57.48, 58.65, 59.54, 59.94, 57.37, 54.57, 51.61, 48.24, 45.95, 44.72, 43.75, 43.44, 44.82, 47.74, 54.63, 58.29, 62.35, 62.92, 60.86, 59.63, 56.56, 55.6, 53.69, 52.09, 52.87, 55.11, 56.15, 56.38, 55.49, 52.37, 48.89, 45.96, 42.92, 41.22, 39.83, 39.54, 39.91, 40.68, 42.4, 44.13, 47.73, 49.48, 50.9, 49.68, 49.34, 48.57, 46.06, 45.43, 47.19, 49.6, 50.66, 50.19, 48.16, 46.28, 44.61, 42.31, 39.19, 37.66, 36.41, 35.98, 35.99, 36.9, 38.47, 39.98, 41.79, 44.39, 46.92, 47.79, 46.48, 44.77, 42.65, 41.71, 42.16, 44.34, 47.58, 49.32, 48.12, 46.82, 45.55, 43.77, 41.3, 40.1, 39.99, 40.09, 41.4, 45.8, 53.22, 56.7, 59.26, 60.92, 61.56, 59.78, 58.36, 58.64, 57.3, 56.38, 57.2, 58.29, 59.3, 59.23, 56.73, 53.06, 49.83, 46.8, 44.6, 43.39, 42.7, 43.19, 44.84, 48.96, 54.95, 58.7, 61.08, 61.04, 60.34, 59.9, 59.6, 60.23, 58.01, 57.73, 57.66, 58.0, 58.25, 58.73, 55.81, 52.87, 49.12, 45.96, 43.68, 42.77, 42.14, 41.78, 42.37, 46.14, 53.8, 57.38, 59.57, 61.74, 62.49, 61.88, 60.94, 59.84, 57.65, 56.71, 57.25, 59.36, 60.43, 61.07, 58.68, 54.88, 51.05, 48.12, 45.88, 44.41, 43.69, 43.63, 43.96, 47.33, 54.78, 58.12, 60.01, 62.16, 62.75, 64.72, 64.11, 63.49, 62.72, 62.59, 62.31, 62.21, 61.71, 61.82, 59.38, 56.82, 53.28, 50.8, 48.64, 46.83, 46.48, 46.7, 47.64, 50.25, 56.61, 60.15, 63.12, 64.89, 65.68, 64.86, 64.01, 61.83, 58.25, 58.47, 59.06, 59.15, 58.93, 58.82, 56.66, 54.14, 50.83, 48.08, 45.43, 44.4, 43.26, 43.15, 42.76, 42.6, 43.82, 44.63, 47.82, 50.86, 51.55, 51.66, 51.3, 48.93, 46.14, 45.31, 46.39, 48.93, 50.25, 51.15, 49.56, 47.95, 45.86, 43.8, 41.75, 40.13, 39.42, 38.97, 38.95, 39.81, 40.97, 42.25, 45.11, 47.31, 47.99, 47.48, 47.02, 46.0, 43.74, 43.04, 45.5, 49.72, 51.83, 52.36, 51.06, 49.62, 48.01, 46.21, 43.87, 42.91, 42.43, 42.3, 44.26, 47.41, 54.63, 58.77, 61.08, 63.11, 62.48, 60.82, 59.19, 58.37, 57.41, 56.26, 56.76, 59.01, 60.66, 61.31, 58.13, 54.66, 51.49, 49.2, 47.03, 45.32, 44.71, 44.64, 45.67, 48.63, 55.67, 59.44, 61.91, 63.53, 64.09, 62.12, 60.38, 59.49, 57.67, 56.68, 57.31, 58.59, 59.96, 60.18, 58.3, 54.28, 50.68, 47.83, 45.79, 44.76, 44.08, 45.17, 46.31, 49.24, 55.16, 59.73, 62.71, 63.92, 63.33, 60.93, 58.82, 58.73, 57.31, 58.04, 58.39, 59.87, 60.96, 62.08, 59.64, 55.99, 51.96, 47.85, 45.76, 44.31, 43.1, 44.73, 46.17, 49.55, 54.63, 58.5, 61.4, 64.06, 65.51, 66.55, 66.12, 65.32, 64.22, 61.88, 60.95, 60.9, 61.88, 62.55, 59.76, 55.88, 52.81, 48.7, 44.99, 43.77, 42.81, 43.96, 44.48, 47.24, 54.01, 57.91, 60.62, 62.46, 62.13, 63.55, 63.09, 60.44, 59.25, 58.7, 58.33, 58.45, 58.94, 58.51, 55.0, 51.54, 49.12, 47.15, 43.87, 40.2, 41.03, 40.09, 39.9, 40.97, 42.87, 45.51, 48.11, 50.59, 54.19, 54.91, 54.02, 51.6, 50.09, 48.59, null, null, null, null, null, null, null, null], "forecast_gw": [44.33, 42.81, 42.09, 42.45, 43.78, 47.09, 53.17, 57.83, 60.88, 61.73, 61.45, 61.36, 60.5, 58.85, 57.73, 56.37, 56.1, 56.43, 56.47, 55.79, 54.04, 50.41, 47.84, 45.15, 41.87, 40.65, 39.56, 39.45, 39.16, 40.33, 41.56, 43.78, 47.92, 50.96, 52.35, 51.53, 50.28, 49.16, 47.02, 46.3, 46.96, 47.73, 48.23, 48.27, 47.37, 45.32, 43.5, 40.91, 38.12, 36.98, 36.21, 36.15, 36.19, 36.77, 37.3, 38.66, 42.4, 45.68, 47.22, 48.51, 48.2, 47.06, 45.63, 44.51, 44.51, 46.54, 48.36, 48.76, 48.5, 46.5, 44.79, 43.5, 40.87, 39.65, 39.49, 39.75, 40.44, 44.53, 52.0, 56.33, 59.81, 60.95, 61.91, 61.49, 60.51, 58.97, 57.06, 56.78, 56.5, 57.03, 57.88, 58.73, 57.06, 52.99, 49.52, 46.9, 44.24, 42.52, 42.13, 41.92, 42.88, 45.98, 52.42, 56.12, 59.53, 60.47, 60.19, 60.09, 59.04, 58.35, 57.25, 56.8, 56.54, 57.4, 58.37, 58.73, 58.12, 54.32, 50.79, 47.7, 45.14, 43.64, 42.87, 42.58, 44.05, 47.3, 54.05, 58.14, 61.58, 63.19, 63.65, 63.73, 62.21, 61.45, 59.89, 59.21, 58.69, 59.06, 59.78, 60.1, 58.33, 54.63, 51.13, 47.68, 45.88, 43.97, 42.95, 42.56, 43.63, 47.22, 54.8, 58.15, 60.43, 61.01, 60.94, 61.15, 60.92, 59.84, 57.67, 57.43, 57.51, 58.28, 58.73, 59.37, 57.55, 54.13, 50.48, 47.66, 45.19, 43.74, 42.88, 43.38, 44.45, 47.72, 55.03, 58.68, 61.43, 62.49, 62.32, 61.47, 60.9, 59.56, 58.04, 56.63, 56.54, 57.02, 57.36, 57.41, 55.02, 51.1, 47.91, 45.16, 42.48, 40.78, 40.06, 39.58, 39.85, 40.84, 42.76, 44.73, 48.9, 51.51, 53.0, 52.21, 50.68, 49.2, 47.0, 46.13, 46.2, 47.94, 48.6, 48.67, 47.56, 45.36, 43.06, 40.66, 38.11, 36.74, 36.17, 36.13, 35.84, 36.77, 37.64, 39.35, 42.59, 45.46, 47.26, 48.65, 48.47, 47.41, 45.98, 46.12, 46.14, 47.57, 49.21, 49.95, 48.92, 46.81, 45.21, 42.83, 41.71, 40.12, 39.83, 39.43, 41.03, 44.91, 53.08, 57.25, 59.94, 61.85, 62.61, 62.01, 59.83, 58.79, 57.0, 55.97, 56.46, 57.71, 58.38, 59.49, 57.47, 54.01, 50.86, 47.31, 44.48, 42.57, 41.85, 42.06, 43.0, 46.81, 53.89, 57.44, 60.38, 60.44, 59.98, 59.45, 58.48, 56.92, 55.25, 54.73, 54.78, 56.48, 57.27, 58.63, 57.48, 54.23, 51.09, 47.27, 44.43, 42.86, 42.28, 41.89, 43.12, 46.51, 54.2, 57.86, 60.07, 61.01, 60.93, 59.71, 58.23, 56.96, 55.56, 55.4, 55.78, 57.08, 58.35, 59.0, 57.54, 54.13, 51.09, 47.47, 45.43, 43.82, 42.87, 42.91, 44.23, 48.36, 55.41, 59.0, 61.68, 61.95, 62.13, 62.16, 61.39, 59.98, 58.08, 57.19, 57.53, 58.48, 59.22, 59.97, 58.01, 55.26, 51.91, 48.2, 44.79, 43.38, 42.63, 43.05, 43.83, 47.46, 54.82, 58.22, 60.44, 60.99, 60.38, 59.54, 57.73, 56.15, 54.64, 54.19, 54.1, 54.86, 55.71, 56.85, 54.69, 51.32, 47.8, 44.72, 42.02, 40.58, 40.14, 39.87, 40.28, 40.71, 42.89, 44.99, 48.77, 50.6, 51.37, 51.14, 49.39, 47.77, 46.02, 45.59, 46.19, 48.25, 49.45, 49.78, 48.31, 45.97, 43.57, 41.07, 38.31, 36.25, 35.36, 35.36, 34.62, 35.61, 36.9, 38.37, 42.02, 44.85, 46.72, 47.75, 46.98, 45.38, 43.98, 43.42, 44.61, 46.63, 48.83, 49.93, 48.11, 45.94, 45.04, 42.66, 41.09, 39.79, 39.29, 39.26, 40.92, 45.22, 52.93, 57.2, 59.98, 61.43, 61.85, 61.58, 59.44, 58.86, 57.47, 56.93, 57.77, 58.52, 59.61, 60.72, 57.82, 54.51, 51.16, 47.85, 45.96, 44.0, 42.78, 43.21, 44.25, 48.3, 55.58, 59.13, 61.92, 62.28, 61.73, 60.39, 59.7, 58.85, 57.62, 57.19, 57.4, 59.15, 60.89, 61.36, 59.15, 55.37, 52.12, 48.87, 46.24, 44.53, 43.8, 43.57, 44.98, 48.23, 55.78, 59.35, 62.3, 62.87, 62.65, 61.58, 60.61, 59.82, 58.8, 58.4, 58.75, 60.01, 61.08, 62.23, 60.09, 56.07, 52.16, 48.64, 46.23, 44.79, 43.92, 44.18, 45.3, 48.69, 55.43, 59.41, 62.65, 63.4, 64.0, 64.15, 63.6, 62.83, 60.88, 60.39, 59.94, 60.65, 61.91, 62.18, 59.05, 55.59, 52.32, 48.84, 45.92, 44.15, 43.2, 43.27, 44.49, 47.62, 54.42, 58.87, 61.74, 62.44, 61.77, 61.3, 59.12, 57.4, 55.31, 54.87, 53.67, 55.09, 56.45, 57.22, 53.86, 50.26, 47.03, 44.15, 42.43, 40.65, 39.57, 39.42, 39.52, 39.44, 40.12, 42.2, 45.81, 47.73, 48.63, 49.16, 48.69, 46.81, 44.16, 44.05, 44.39, 46.97, 48.81, 49.96, 47.27, 44.47, 43.4, 41.32, 39.17, 37.5, 36.51, 36.12, 36.07, 37.12, 38.97, 40.9, 43.11, 45.18, 47.74, 48.87, 47.96, 46.54, 44.72, 44.21, 44.63, 46.28, 49.16, 50.98, 48.97, 47.18, 45.73, 43.24, 41.16, 39.93, 39.82, 39.92, 41.32, 45.44, 53.16, 57.46, 59.67, 60.51, 60.74, 59.64, 58.02, 57.1, 55.58, 55.35, 55.92, 57.11, 59.03, 60.48, 57.53, 53.7, 50.25, 47.45, 45.03, 43.32, 42.62, 42.93, 44.37, 48.29, 55.5, 59.2, 61.28, 61.16, 60.61, 59.33, 58.53, 57.73, 55.83, 55.72, 56.1, 57.12, 58.71, 60.04, 57.02, 53.78, 50.26, 47.48, 44.49, 43.26, 43.03, 43.22, 44.2, 47.69, 55.22, 59.06, 61.56, 61.92, 61.7, 60.36, 59.22, 57.6, 56.4, 56.18, 56.83, 58.98, 60.79, 62.07, 59.6, 55.59, 51.76, 48.42, 46.33, 44.58, 44.05, 44.3, 45.26, 48.11, 55.61, 59.35, 61.88, 63.76, 64.47, 65.62, 65.34, 64.87, 63.79, 62.65, 61.9, 61.69, 62.78, 63.06, 59.57, 56.64, 53.14, 49.54, 47.23, 45.92, 45.53, 45.63, 46.79, 50.19, 57.39, 61.57, 64.77, 65.9, 66.08, 65.94, 65.32, 63.37, 60.62, 59.93, 60.01, 60.91, 61.35, 60.91, 58.44, 55.08, 51.69, 48.31, 45.5, 43.97, 42.92, 42.7, 43.08, 43.46, 44.97, 46.67, 50.47, 53.03, 54.37, 54.6, 54.4, 53.31, 50.84, 50.24, 51.15, 53.63, 54.88, 54.74, 53.04, 50.86, 48.71, 46.03], "baseline_gw": [44.24, 42.18, 41.2, 41.87, 42.53, 45.84, 53.05, 57.15, 59.87, 60.41, 60.91, 61.22, 59.63, 56.56, 55.08, 53.59, 53.04, 54.54, 55.38, 55.43, 54.22, 50.38, 47.21, 44.35, 40.82, 38.94, 38.44, 38.25, 37.77, 38.51, 40.63, 42.64, 45.78, 48.81, 50.42, 50.84, 49.61, 47.56, 45.96, 45.46, 45.64, 46.91, 48.68, 47.9, 47.41, 44.44, 42.19, 40.04, 37.46, 35.73, 34.85, 34.41, 34.09, 34.91, 35.84, 37.71, 40.67, 43.24, 45.26, 46.4, 45.47, 43.33, 41.64, 40.84, 41.26, 43.52, 45.86, 47.14, 46.85, 44.74, 42.7, 40.84, 39.51, 38.39, 38.12, 38.14, 39.5, 44.25, 53.63, 58.73, 61.65, 61.84, 61.88, 61.49, 60.04, 58.06, 56.03, 55.25, 55.2, 57.09, 58.85, 59.27, 58.61, 54.89, 51.21, 47.8, 45.32, 43.2, 42.06, 42.48, 43.75, 48.39, 56.38, 60.3, 63.13, 63.62, 63.69, 62.66, 60.48, 59.33, 57.52, 56.39, 57.11, 59.47, 59.55, 60.65, 57.79, 50.92, 47.03, 43.95, 42.52, 42.76, 42.36, 42.28, 43.22, 46.6, 55.05, 59.56, 61.26, 62.34, 61.87, 61.46, 59.76, 58.49, 56.98, 56.7, 57.21, 59.26, 59.93, 59.61, 59.27, 55.06, 50.53, 47.01, 44.11, 42.44, 41.33, 41.65, 43.08, 47.34, 55.19, 59.55, 61.71, 61.91, 61.91, 61.42, 60.69, 58.87, 57.52, 56.4, 56.67, 58.15, 59.2, 60.26, 58.85, 55.28, 51.03, 47.81, 44.92, 43.25, 42.22, 42.13, 43.13, 47.2, 55.04, 59.23, 61.79, 62.14, 61.59, 60.47, 58.92, 56.72, 55.13, 54.1, 53.71, 54.74, 55.37, 55.59, 53.93, 50.54, 46.93, 44.03, 41.17, 39.77, 38.81, 37.76, 37.42, 38.05, 40.0, 42.12, 46.06, 49.0, 49.97, 49.37, 47.66, 45.76, 44.45, 44.64, 45.8, 47.73, 49.13, 49.96, 48.08, 44.95, 42.82, 39.8, 37.37, 36.1, 35.45, 35.02, 35.11, 35.82, 37.72, 39.65, 42.53, 45.72, 47.42, 48.44, 47.37, 46.62, 45.64, 45.47, 46.25, 48.34, 50.35, 50.83, 49.96, 47.23, 44.78, 41.62, 39.64, 38.55, 37.6, 38.04, 39.79, 43.74, 52.08, 57.28, 60.44, 61.64, 62.63, 63.22, 62.94, 61.19, 59.26, 58.81, 58.01, 58.99, 59.01, 58.94, 57.26, 53.33, 49.5, 45.65, 43.23, 41.38, 40.45, 40.6, 41.52, 45.27, 53.12, 57.86, 60.74, 61.19, 61.27, 61.2, 59.38, 58.55, 57.04, 56.24, 56.65, 57.73, 58.74, 59.51, 57.48, 53.51, 49.34, 45.67, 42.66, 41.2, 39.99, 40.08, 41.52, 45.55, 53.31, 58.78, 61.61, 62.26, 62.47, 62.28, 61.76, 60.22, 59.36, 59.41, 59.02, 60.15, 61.34, 61.95, 60.06, 56.25, 51.89, 48.1, 45.66, 43.88, 42.95, 42.97, 44.78, 48.27, 56.36, 61.81, 64.23, 64.51, 65.02, 64.74, 64.21, 63.68, 62.23, 61.35, 61.67, 62.34, 62.55, 63.53, 60.74, 57.27, 53.42, 49.61, 46.27, 44.19, 43.21, 43.27, 44.33, 48.26, 56.5, 61.24, 63.9, 64.95, 65.92, 65.97, 64.47, 63.22, 60.5, 60.66, 59.95, 59.83, 60.29, 61.23, 58.54, 54.92, 50.89, 46.9, 43.6, 41.59, 40.14, 40.03, 39.78, 40.4, 42.83, 45.18, 48.45, 49.69, 51.3, 51.93, 50.89, 49.05, 47.74, 48.2, 48.67, 50.09, 51.55, 52.86, 50.41, 47.25, 44.81, 41.97, 39.35, 37.25, 35.77, 35.19, 35.43, 36.02, 37.31, 39.14, 42.41, 45.28, 46.74, 48.57, 47.83, 45.37, 43.96, 43.26, 43.36, 45.76, 48.61, 50.59, 49.92, 47.5, 45.61, 42.8, 40.32, 39.08, 38.4, 38.64, 40.12, 44.37, 52.91, 58.04, 61.27, 62.07, 62.45, 62.16, 61.3, 58.68, 56.91, 56.57, 56.34, 57.97, 59.51, 60.78, 58.17, 54.14, 49.98, 46.9, 44.03, 42.29, 41.28, 41.45, 42.98, 46.67, 54.65, 59.3, 61.6, 62.32, 63.14, 63.07, 61.84, 59.69, 58.4, 56.75, 56.69, 57.94, 58.84, 60.01, 57.96, 54.58, 50.26, 46.71, 44.1, 41.96, 40.95, 41.23, 42.68, 47.05, 55.04, 59.67, 61.74, 62.43, 61.6, 60.27, 58.87, 57.03, 55.01, 54.94, 56.05, 57.06, 59.03, 60.24, 57.98, 54.49, 50.72, 47.17, 44.76, 43.04, 42.42, 42.73, 44.04, 47.93, 55.43, 60.3, 62.34, 62.5, 61.33, 60.7, 57.8, 55.79, 54.68, 54.5, 54.42, 55.71, 57.21, 58.62, 55.82, 52.64, 48.94, 45.17, 42.51, 41.21, 40.14, 39.55, 39.8, 40.43, 41.27, 42.36, 44.71, 47.78, 49.16, 50.22, 49.72, 47.9, 45.83, 45.48, 46.03, 47.58, 50.15, 52.63, 51.01, 48.92, 47.32, 44.63, 42.41, 40.45, 39.45, 39.75, 40.87, 42.11, 44.61, 47.14, 50.05, 52.76, 54.88, 55.77, 54.58, 52.47, 51.54, 51.53, 51.67, 53.04, 54.96, 55.5, 52.54, 49.65, 47.24, 44.43, 42.03, 40.43, 39.54, 39.07, 39.55, 39.86, 41.15, 42.67, 45.16, 48.2, 50.71, 53.36, 52.69, 50.98, 49.35, 48.03, 48.33, 51.37, 54.21, 54.59, 52.2, 49.99, 49.32, 47.11, 43.62, 42.6, 42.02, 42.26, 43.89, 48.16, 56.89, 62.85, 65.28, 66.02, 66.06, 66.37, 65.99, 66.02, 64.15, 63.0, 61.79, 61.7, 62.09, 62.62, 59.29, 55.39, 51.68, 47.75, 44.7, 42.99, 42.18, 42.1, 43.71, 47.31, 55.08, 60.22, 62.54, 63.06, 63.86, 64.69, 63.38, 62.71, 60.75, 60.12, 59.53, 60.65, 61.87, 62.68, 59.64, 55.73, 52.26, 48.6, 45.48, 43.8, 42.94, 42.98, 44.28, 48.44, 56.21, 61.25, 63.49, 63.46, 63.57, 63.54, 62.76, 61.62, 60.07, 59.12, 58.36, 59.56, 61.15, 61.5, 58.24, 54.61, 50.94, 47.27, 44.36, 42.39, 41.67, 42.01, 43.85, 47.77, 55.72, 61.15, 63.48, 63.92, 65.02, 65.37, 64.47, 63.81, 62.16, 61.31, 60.88, 62.35, 64.25, 64.85, 61.77, 58.28, 53.93, 50.34, 47.43, 45.72, 44.65, 44.98, 46.34, 49.74, 58.27, 63.64, 66.25, 66.55, 66.54, 66.53, 65.28, 64.06, 62.19, 61.31, 60.95, 61.64, 62.65, 62.81, 59.85, 56.09, 52.39, 48.72, 45.48, 43.86, 42.41, 42.54, 42.9, 43.61, 45.61, 48.36, 50.6, 53.28, 54.22, 54.7, 54.51, 52.77, 51.41, 50.76, 50.66, 52.52, 54.39, 54.42, 51.44, 49.01, 46.79, 43.79], "backfilled_until": "2026-10-10T23:00"}, "scores": {"days": 29, "model_mape": 2.49, "baseline_mape": 4.15, "inside_range_pct": 76.0, "backfilled_days": 29, "table": [{"date": "2026-10-09", "model_mape": 4.81, "baseline_mape": 5.9, "model_daily_error_pct": 4.78, "inside_range_pct": 50.0}, {"date": "2026-10-08", "model_mape": 1.27, "baseline_mape": 2.92, "model_daily_error_pct": 0.22, "inside_range_pct": 100.0}, {"date": "2026-10-07", "model_mape": 1.85, "baseline_mape": 2.31, "model_daily_error_pct": -1.62, "inside_range_pct": 83.33}, {"date": "2026-10-06", "model_mape": 2.45, "baseline_mape": 3.47, "model_daily_error_pct": -2.43, "inside_range_pct": 79.17}, {"date": "2026-10-05", "model_mape": 3.26, "baseline_mape": 4.8, "model_daily_error_pct": -3.08, "inside_range_pct": 66.67}, {"date": "2026-10-04", "model_mape": 4.46, "baseline_mape": 4.1, "model_daily_error_pct": -3.45, "inside_range_pct": 29.17}, {"date": "2026-10-03", "model_mape": 5.62, "baseline_mape": 6.62, "model_daily_error_pct": -5.54, "inside_range_pct": 25.0}, {"date": "2026-10-02", "model_mape": 5.74, "baseline_mape": 18.28, "model_daily_error_pct": -5.66, "inside_range_pct": 37.5}, {"date": "2026-10-01", "model_mape": 1.91, "baseline_mape": 6.07, "model_daily_error_pct": -0.17, "inside_range_pct": 91.67}, {"date": "2026-09-30", "model_mape": 2.64, "baseline_mape": 2.28, "model_daily_error_pct": 2.37, "inside_range_pct": 66.67}, {"date": "2026-09-29", "model_mape": 2.27, "baseline_mape": 2.39, "model_daily_error_pct": 1.66, "inside_range_pct": 83.33}, {"date": "2026-09-28", "model_mape": 1.33, "baseline_mape": 2.02, "model_daily_error_pct": 0.78, "inside_range_pct": 95.83}, {"date": "2026-09-27", "model_mape": 2.42, "baseline_mape": 2.06, "model_daily_error_pct": -0.11, "inside_range_pct": 87.5}, {"date": "2026-09-26", "model_mape": 1.42, "baseline_mape": 2.05, "model_daily_error_pct": -0.19, "inside_range_pct": 95.83}, {"date": "2026-09-25", "model_mape": 1.7, "baseline_mape": 6.26, "model_daily_error_pct": -0.62, "inside_range_pct": 87.5}, {"date": "2026-09-24", "model_mape": 1.57, "baseline_mape": 4.15, "model_daily_error_pct": 0.15, "inside_range_pct": 87.5}, {"date": "2026-09-23", "model_mape": 2.3, "baseline_mape": 4.87, "model_daily_error_pct": -0.76, "inside_range_pct": 70.83}, {"date": "2026-09-22", "model_mape": 2.11, "baseline_mape": 3.96, "model_daily_error_pct": 0.55, "inside_range_pct": 79.17}, {"date": "2026-09-21", "model_mape": 2.33, "baseline_mape": 3.2, "model_daily_error_pct": 2.29, "inside_range_pct": 66.67}, {"date": "2026-09-20", "model_mape": 1.45, "baseline_mape": 1.99, "model_daily_error_pct": 0.17, "inside_range_pct": 100.0}, {"date": "2026-09-19", "model_mape": 1.64, "baseline_mape": 3.69, "model_daily_error_pct": 0.08, "inside_range_pct": 95.83}, {"date": "2026-09-18", "model_mape": 1.75, "baseline_mape": 1.6, "model_daily_error_pct": 1.75, "inside_range_pct": 100.0}, {"date": "2026-09-17", "model_mape": 2.12, "baseline_mape": 2.27, "model_daily_error_pct": -1.75, "inside_range_pct": 79.17}, {"date": "2026-09-16", "model_mape": 2.2, "baseline_mape": 3.88, "model_daily_error_pct": -2.09, "inside_range_pct": 83.33}, {"date": "2026-09-15", "model_mape": 3.26, "baseline_mape": 3.28, "model_daily_error_pct": -3.12, "inside_range_pct": 33.33}, {"date": "2026-09-14", "model_mape": 2.61, "baseline_mape": 3.21, "model_daily_error_pct": -2.41, "inside_range_pct": 95.83}, {"date": "2026-09-13", "model_mape": 1.95, "baseline_mape": 6.64, "model_daily_error_pct": -1.88, "inside_range_pct": 66.67}, {"date": "2026-09-12", "model_mape": 1.07, "baseline_mape": 2.78, "model_daily_error_pct": -0.11, "inside_range_pct": 100.0}, {"date": "2026-09-11", "model_mape": 2.77, "baseline_mape": 3.3, "model_daily_error_pct": -0.68, "inside_range_pct": 54.17}], "running_model": [2.77, 1.92, 1.93, 2.1, 2.33, 2.31, 2.28, 2.22, 2.15, 2.08, 2.1, 2.1, 2.12, 2.08, 2.06, 2.02, 2.04, 2.0, 2.01, 2.05, 2.04, 2.21, 2.36, 2.44, 2.48, 2.47, 2.45, 2.41, 2.49], "running_baseline": [3.3, 3.04, 4.24, 3.98, 3.84, 3.85, 3.62, 3.37, 3.41, 3.26, 3.26, 3.32, 3.44, 3.49, 3.67, 3.57, 3.48, 3.4, 3.35, 3.29, 3.43, 4.1, 4.21, 4.21, 4.23, 4.2, 4.13, 4.09, 4.15], "dates": ["2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14", "2026-09-15", "2026-09-16", "2026-09-17", "2026-09-18", "2026-09-19", "2026-09-20", "2026-09-21", "2026-09-22", "2026-09-23", "2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-09-28", "2026-09-29", "2026-09-30", "2026-10-01", "2026-10-02", "2026-10-03", "2026-10-04", "2026-10-05", "2026-10-06", "2026-10-07", "2026-10-08", "2026-10-09"]}, "savings": {"headline": {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.08, "actual_twh": 240.40176, "expected_twh": 263.5148673131742, "saving_twh": 23.113107313174186, "saving_pct": 8.771082842056654, "low_pct": 6.185361462366323, "high_pct": 11.21809197919681, "typical_error_pct": 1.4821894401990003}, "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electricity than the weather and calendar predicted (90% range 6.2% to 11.2%), about 23.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 4.2% below the pre-crisis pattern (range 1.5% to 6.8%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 9.2%.", "winters": [{"winter": "2021/22", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.0, "actual_twh": 264.55, "expected_twh": 264.54, "saving_twh": -0.01, "saving_pct": -0.0, "low_pct": -2.84, "high_pct": 2.68, "typical_error_pct": 1.48}, {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 0.08, "actual_twh": 240.4, "expected_twh": 263.51, "saving_twh": 23.11, "saving_pct": 8.77, "low_pct": 6.19, "high_pct": 11.22, "typical_error_pct": 1.48}, {"winter": "2023/24", "complete": true, "coverage": 1.0, "hours": 4392, "years_ahead": 1.08, "actual_twh": 245.13, "expected_twh": 263.51, "saving_twh": 18.38, "saving_pct": 6.98, "low_pct": 4.34, "high_pct": 9.47, "typical_error_pct": 1.48}, {"winter": "2024/25", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 2.08, "actual_twh": 246.1, "expected_twh": 263.19, "saving_twh": 17.09, "saving_pct": 6.49, "low_pct": 3.84, "high_pct": 9.0, "typical_error_pct": 1.48}, {"winter": "2025/26", "complete": true, "coverage": 1.0, "hours": 4368, "years_ahead": 3.08, "actual_twh": 251.95, "expected_twh": 263.12, "saving_twh": 11.17, "saving_pct": 4.25, "low_pct": 1.53, "high_pct": 6.81, "typical_error_pct": 1.48}], "checks": [{"winter": "2016/17", "kind": "check (normal winter)", "saving_pct": -1.23, "low_pct": -4.1, "high_pct": 1.49, "typical_error_pct": 1.48}, {"winter": "2017/18", "kind": "check (normal winter)", "saving_pct": -1.12, "low_pct": -3.99, "high_pct": 1.59, "typical_error_pct": 1.48}, {"winter": "2018/19", "kind": "check (normal winter)", "saving_pct": 1.04, "low_pct": -1.77, "high_pct": 3.69, "typical_error_pct": 1.48}, {"winter": "2019/20", "kind": "check (normal winter)", "saving_pct": 1.31, "low_pct": -1.49, "high_pct": 3.95, "typical_error_pct": 1.48}], "dark": {"winter": "2022/23", "complete": true, "coverage": 1.0, "hours": 2495, "years_ahead": 0.08, "actual_twh": 127.93, "expected_twh": 140.91, "saving_twh": 12.98, "saving_pct": 9.21, "low_pct": 6.64, "high_pct": 11.65, "typical_error_pct": 1.48}, "generated": "2026-10-10"}, "data_until": "2026-10-10 15:00", "data_days": 4301, "generated_utc": "2026-10-10T15:36+00:00", "demo": false, "tz": "Europe/Berlin", "geo": [[[9.524, 47.524], [9.182, 47.671], [8.879, 47.656], [8.833, 47.704], [8.728, 47.701], [8.573, 47.775], [8.437, 47.732], [8.404, 47.689], [8.411, 47.663], [8.57, 47.638], [8.429, 47.591], [8.199, 47.607], [7.925, 47.564], [7.565, 47.607], [7.529, 47.673], [7.594, 47.906], [7.609, 48.003], [7.583, 48.064], [7.616, 48.157], [7.706, 48.281], [7.839, 48.636], [8.141, 48.886], [8.134, 48.973], [7.612, 49.062], [7.526, 49.086], [7.45, 49.152], [7.036, 49.112], [7, 49.18], [6.892, 49.208], [6.734, 49.161], [6.536, 49.395], [6.457, 49.442], [6.345, 49.452], [6.377, 49.6], [6.485, 49.708], [6.489, 49.798], [6.255, 49.873], [6.14, 49.975], [6.107, 50.095], [6.176, 50.232], [6.363, 50.317], [6.341, 50.452], [6.179, 50.522], [6.169, 50.546], [6.237, 50.596], [5.992, 50.751], [6.05, 50.905], [5.859, 51.03], [5.938, 51.041], [6.129, 51.147], [6.075, 51.225], [6.194, 51.411], [6.194, 51.489], [6.089, 51.598], [6.089, 51.638], [5.949, 51.763], [5.949, 51.803], [6.165, 51.881], [6.356, 51.824], [6.741, 51.911], [6.802, 51.98], [6.716, 52.036], [6.723, 52.081], [6.979, 52.206], [7.036, 52.381], [6.968, 52.444], [6.748, 52.464], [6.691, 52.53], [6.712, 52.617], [6.748, 52.635], [7.015, 52.633], [7.115, 52.886], [7.18, 52.966], [7.198, 53.282], [7.054, 53.376], [7.108, 53.556], [7.205, 53.655], [7.63, 53.697], [8.008, 53.69], [8.167, 53.544], [8.109, 53.468], [8.246, 53.445], [8.332, 53.607], [8.494, 53.515], [8.494, 53.395], [8.537, 53.556], [8.505, 53.671], [8.527, 53.78], [8.62, 53.876], [8.897, 53.836], [9.207, 53.857], [9.322, 53.813], [9.585, 53.6], [9.783, 53.555], [9.632, 53.6], [9.311, 53.858], [8.977, 53.926], [8.905, 54.001], [8.908, 54.261], [8.779, 54.313], [8.645, 54.294], [8.627, 54.353], [8.649, 54.398], [8.951, 54.468], [8.959, 54.539], [8.681, 54.792], [8.671, 54.903], [8.905, 54.897], [9.254, 54.808], [9.617, 54.855], [9.74, 54.825], [9.891, 54.78], [10.021, 54.674], [10.028, 54.581], [9.869, 54.473], [10.143, 54.489], [10.212, 54.409], [10.359, 54.438], [10.73, 54.317], [11.014, 54.379], [11.065, 54.28], [11.007, 54.181], [10.809, 54.075], [10.856, 54.009], [11.104, 54.009], [11.4, 53.945], [11.796, 54.145], [12.112, 54.169], [12.577, 54.468], [13.03, 54.41], [13.149, 54.282], [13.448, 54.141], [13.725, 54.154], [13.822, 54.02], [13.866, 53.853], [14.024, 53.768], [14.258, 53.73], [14.298, 53.556], [14.416, 53.284], [14.413, 53.216], [14.37, 53.105], [14.139, 52.933], [14.128, 52.878], [14.514, 52.645], [14.618, 52.529], [14.553, 52.36], [14.614, 52.277], [14.679, 52.251], [14.704, 52.11], [14.751, 52.082], [14.676, 51.905], [14.6, 51.832], [14.74, 51.628], [14.726, 51.523], [14.906, 51.463], [15.018, 51.253], [14.917, 51.008], [14.766, 50.819], [14.614, 50.855], [14.625, 50.914], [14.546, 50.994], [14.319, 51.037], [14.254, 51.003], [14.37, 50.899], [13.898, 50.761], [13.527, 50.694], [13.473, 50.617], [13.376, 50.622], [13.239, 50.577], [13.182, 50.51], [13.016, 50.491], [12.944, 50.407], [12.764, 50.432], [12.548, 50.393], [12.454, 50.35], [12.278, 50.182], [12.174, 50.289], [12.091, 50.301], [12.21, 50.098], [12.458, 49.956], [12.512, 49.895], [12.39, 49.739], [12.681, 49.414], [12.814, 49.329], [12.915, 49.331], [13.142, 49.159], [13.29, 49.098], [13.401, 48.977], [13.549, 48.959], [13.815, 48.767], [13.786, 48.588], [13.725, 48.543], [13.675, 48.524], [13.488, 48.583], [13.376, 48.362], [12.897, 48.204], [12.76, 48.107], [12.76, 48.076], [12.955, 47.89], [12.955, 47.808], [12.897, 47.722], [13.034, 47.699], [13.056, 47.656], [13.016, 47.479], [12.811, 47.543], [12.771, 47.64], [12.685, 47.67], [12.483, 47.637], [12.21, 47.718], [12.184, 47.619], [11.716, 47.583], [11.392, 47.487], [11.299, 47.425], [11.043, 47.394], [10.982, 47.399], [10.874, 47.52], [10.438, 47.551], [10.37, 47.366], [10.312, 47.314], [10.183, 47.279], [10.201, 47.364], [10.068, 47.394], [10.06, 47.449], [9.97, 47.505], [9.751, 47.576], [9.65, 47.525]], [[13.711, 54.383], [13.736, 54.315], [13.707, 54.282], [13.596, 54.338], [13.48, 54.338], [13.416, 54.249], [13.365, 54.246], [13.189, 54.325], [13.164, 54.365], [13.178, 54.544], [13.232, 54.582], [13.239, 54.638], [13.336, 54.697], [13.423, 54.699], [13.491, 54.615], [13.657, 54.56], [13.671, 54.535], [13.581, 54.464], [13.603, 54.424]], [[14.211, 53.95], [14.197, 53.919], [14.215, 53.871], [14.049, 53.864], [13.927, 53.879], [13.902, 53.938], [13.923, 53.997], [13.826, 54.06], [13.826, 54.127]], [[8.307, 54.787], [8.285, 54.766], [8.296, 54.909], [8.404, 55.058], [8.451, 55.055], [8.39, 54.987], [8.379, 54.9], [8.631, 54.891], [8.602, 54.865], [8.347, 54.848]], [[11.284, 54.417], [11.13, 54.416], [11.011, 54.466], [11.043, 54.516], [11.086, 54.534], [11.234, 54.501]], [[8.588, 54.713], [8.548, 54.688], [8.455, 54.692], [8.401, 54.714], [8.419, 54.739], [8.509, 54.761], [8.573, 54.749]]], "points": [{"name": "Berlin", "lat": 52.52, "lon": 13.4, "weight": 0.0445}, {"name": "Hamburg", "lat": 53.55, "lon": 10.0, "weight": 0.0224}, {"name": "Muenchen", "lat": 48.14, "lon": 11.58, "weight": 0.0951}, {"name": "Nuernberg", "lat": 49.45, "lon": 11.08, "weight": 0.0634}, {"name": "Koeln", "lat": 50.94, "lon": 6.96, "weight": 0.1075}, {"name": "Dortmund", "lat": 51.51, "lon": 7.47, "weight": 0.1075}, {"name": "Stuttgart", "lat": 48.78, "lon": 9.18, "weight": 0.0869}, {"name": "Freiburg", "lat": 47.99, "lon": 7.85, "weight": 0.0468}, {"name": "Hannover", "lat": 52.37, "lon": 9.73, "weight": 0.0965}, {"name": "Frankfurt", "lat": 50.11, "lon": 8.68, "weight": 0.0758}, {"name": "Leipzig", "lat": 51.34, "lon": 12.37, "weight": 0.0485}, {"name": "Mainz", "lat": 50.0, "lon": 8.27, "weight": 0.0493}, {"name": "Kiel", "lat": 54.32, "lon": 10.13, "weight": 0.035}, {"name": "Potsdam", "lat": 52.39, "lon": 13.06, "weight": 0.0305}, {"name": "Magdeburg", "lat": 52.13, "lon": 11.62, "weight": 0.0259}, {"name": "Erfurt", "lat": 50.98, "lon": 11.03, "weight": 0.0252}, {"name": "Rostock", "lat": 54.09, "lon": 12.1, "weight": 0.0193}, {"name": "Saarbruecken", "lat": 49.24, "lon": 6.99, "weight": 0.0118}, {"name": "Bremen", "lat": 53.08, "lon": 8.8, "weight": 0.0081}], "hierarchy": {"regions": [{"code": "50Hertz", "name": "50Hertz", "area_name": "East and Hamburg", "states": ["BE", "BB", "MV", "SN", "ST", "TH", "HH"], "pop_k": 18250}, {"code": "TenneT", "name": "TenneT", "area_name": "North, Hesse and Bavaria", "states": ["SH", "NI", "HB", "HE", "BY"], "pop_k": 31538}, {"code": "Amprion", "name": "Amprion", "area_name": "West", "states": ["NW", "RP", "SL"], "pop_k": 23292}, {"code": "TransnetBW", "name": "TransnetBW", "area_name": "Baden-W\u00fcrttemberg", "states": ["BW"], "pop_k": 11280}], "states": [{"code": "BB", "name": "Brandenburg", "region": "50Hertz", "pop_k": 2573, "share_of_region": 0.141}, {"code": "BE", "name": "Berlin", "region": "50Hertz", "pop_k": 3755, "share_of_region": 0.2058}, {"code": "BW", "name": "Baden-W\u00fcrttemberg", "region": "TransnetBW", "pop_k": 11280, "share_of_region": 1.0}, {"code": "BY", "name": "Bayern", "region": "TenneT", "pop_k": 13369, "share_of_region": 0.4239}, {"code": "HB", "name": "Bremen", "region": "TenneT", "pop_k": 685, "share_of_region": 0.0217}, {"code": "HE", "name": "Hessen", "region": "TenneT", "pop_k": 6391, "share_of_region": 0.2026}, {"code": "HH", "name": "Hamburg", "region": "50Hertz", "pop_k": 1892, "share_of_region": 0.1037}, {"code": "MV", "name": "Mecklenburg-Vorpommern", "region": "50Hertz", "pop_k": 1628, "share_of_region": 0.0892}, {"code": "NI", "name": "Niedersachsen", "region": "TenneT", "pop_k": 8140, "share_of_region": 0.2581}, {"code": "NW", "name": "Nordrhein-Westfalen", "region": "Amprion", "pop_k": 18140, "share_of_region": 0.7788}, {"code": "RP", "name": "Rheinland-Pfalz", "region": "Amprion", "pop_k": 4159, "share_of_region": 0.1786}, {"code": "SH", "name": "Schleswig-Holstein", "region": "TenneT", "pop_k": 2953, "share_of_region": 0.0936}, {"code": "SL", "name": "Saarland", "region": "Amprion", "pop_k": 993, "share_of_region": 0.0426}, {"code": "SN", "name": "Sachsen", "region": "50Hertz", "pop_k": 4089, "share_of_region": 0.2241}, {"code": "ST", "name": "Sachsen-Anhalt", "region": "50Hertz", "pop_k": 2186, "share_of_region": 0.1198}, {"code": "TH", "name": "Th\u00fcringen", "region": "50Hertz", "pop_k": 2127, "share_of_region": 0.1165}], "cities": [{"code": "Berlin", "name": "Berlin", "state": "BE", "region": "50Hertz", "pop_k": 3755, "share_of_state": 1.0, "lat": 52.52, "lon": 13.4}, {"code": "Hamburg", "name": "Hamburg", "state": "HH", "region": "50Hertz", "pop_k": 1892, "share_of_state": 1.0, "lat": 53.55, "lon": 10.0}, {"code": "Muenchen", "name": "M\u00fcnchen", "state": "BY", "region": "TenneT", "pop_k": 1510, "share_of_state": 0.1129, "lat": 48.14, "lon": 11.58}, {"code": "Nuernberg", "name": "N\u00fcrnberg", "state": "BY", "region": "TenneT", "pop_k": 526, "share_of_state": 0.0393, "lat": 49.45, "lon": 11.08}, {"code": "Koeln", "name": "K\u00f6ln", "state": "NW", "region": "Amprion", "pop_k": 1084, "share_of_state": 0.0598, "lat": 50.94, "lon": 6.96}, {"code": "Dortmund", "name": "Dortmund", "state": "NW", "region": "Amprion", "pop_k": 595, "share_of_state": 0.0328, "lat": 51.51, "lon": 7.47}, {"code": "Stuttgart", "name": "Stuttgart", "state": "BW", "region": "TransnetBW", "pop_k": 633, "share_of_state": 0.0561, "lat": 48.78, "lon": 9.18}, {"code": "Freiburg", "name": "Freiburg im Breisgau", "state": "BW", "region": "TransnetBW", "pop_k": 237, "share_of_state": 0.021, "lat": 47.99, "lon": 7.85}, {"code": "Hannover", "name": "Hannover", "state": "NI", "region": "TenneT", "pop_k": 548, "share_of_state": 0.0673, "lat": 52.37, "lon": 9.73}, {"code": "Frankfurt", "name": "Frankfurt am Main", "state": "HE", "region": "TenneT", "pop_k": 776, "share_of_state": 0.1214, "lat": 50.11, "lon": 8.68}, {"code": "Leipzig", "name": "Leipzig", "state": "SN", "region": "50Hertz", "pop_k": 619, "share_of_state": 0.1514, "lat": 51.34, "lon": 12.37}, {"code": "Mainz", "name": "Mainz", "state": "RP", "region": "Amprion", "pop_k": 221, "share_of_state": 0.0531, "lat": 50.0, "lon": 8.27}, {"code": "Kiel", "name": "Kiel", "state": "SH", "region": "TenneT", "pop_k": 248, "share_of_state": 0.084, "lat": 54.32, "lon": 10.13}, {"code": "Potsdam", "name": "Potsdam", "state": "BB", "region": "50Hertz", "pop_k": 187, "share_of_state": 0.0727, "lat": 52.39, "lon": 13.06}, {"code": "Magdeburg", "name": "Magdeburg", "state": "ST", "region": "50Hertz", "pop_k": 241, "share_of_state": 0.1102, "lat": 52.13, "lon": 11.62}, {"code": "Erfurt", "name": "Erfurt", "state": "TH", "region": "50Hertz", "pop_k": 216, "share_of_state": 0.1016, "lat": 50.98, "lon": 11.03}, {"code": "Rostock", "name": "Rostock", "state": "MV", "region": "50Hertz", "pop_k": 210, "share_of_state": 0.129, "lat": 54.09, "lon": 12.1}, {"code": "Saarbruecken", "name": "Saarbr\u00fccken", "state": "SL", "region": "Amprion", "pop_k": 181, "share_of_state": 0.1823, "lat": 49.24, "lon": 6.99}, {"code": "Bremen", "name": "Bremen", "state": "HB", "region": "TenneT", "pop_k": 577, "share_of_state": 0.8423, "lat": 53.08, "lon": 8.8}]}, "status": {"started_utc": "2026-10-10T15:21:55+00:00", "download": {"smard": "ok", "smard_50Hertz": "ok", "smard_TenneT": "ok", "smard_Amprion": "ok", "smard_TransnetBW": "ok", "energy_charts_filled_hours": 0, "dwd": "ok"}, "data_check": "passed", "range_scale": 1.55, "forecast_for": "2026-10-11", "forecast_total_gwh": 1090.0, "days_scored": 29, "areas": {"50Hertz": {"range_scale": 1.0, "forecast_for": "2026-10-11", "forecast_total_gwh": 237.1, "days_scored": 0}, "TenneT": {"range_scale": 1.0, "forecast_for": "2026-10-11", "forecast_total_gwh": 329.3, "days_scored": 0}, "Amprion": {"range_scale": 1.0, "forecast_for": "2026-10-11", "forecast_total_gwh": 399.1, "days_scored": 0}, "TransnetBW": {"range_scale": 1.0, "forecast_for": "2026-10-11", "forecast_total_gwh": 122.0, "days_scored": 0}}, "finished_utc": "2026-10-10T15:36:42+00:00"}, "areas": {"50Hertz": {"retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 15:00:00+00:00", "window_end": "2026-10-10 15:00:00+00:00", "model_mape": 4.7057538725395105, "baseline_mape": 8.988929419136179, "passed": true}}, "range_calibration": {"scale": 1.0, "days_used": 0, "computed_utc": "2026-10-10T15:36:14+00:00"}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [9.13, 8.88, 8.71, 8.59, 8.66, 8.65, 8.68, 9.14, 9.64, 10.36, 10.89, 11.2, 11.02, 10.59, 10.3, 10.07, 10.04, 10.49, 10.83, 10.71, 10.35, 10.23, 10.08, 9.85], "low_gw": [8.39, 8.26, 8.14, 8.03, 8.09, 8.09, 8.21, 8.65, 9.09, 9.87, 10.19, 10.52, 10.3, 10.08, 9.63, 9.4, 9.46, 9.93, 10.1, 10.07, 9.68, 9.46, 9.14, 8.9], "high_gw": [10.31, 9.99, 9.77, 9.55, 9.55, 9.53, 9.76, 10.29, 10.88, 11.61, 12.04, 12.42, 12.2, 12.04, 11.57, 11.06, 10.99, 11.75, 12.29, 12.3, 11.75, 11.63, 11.31, 10.95], "baseline_gw": [9.77, 9.54, 9.58, 9.57, 9.74, 9.75, 10.01, 10.39, 10.89, 11.44, 11.55, 11.85, 11.58, 10.87, 10.58, 10.35, 10.55, 11.16, 11.87, 11.76, 11.1, 10.54, 10.1, 9.82], "total_gwh": 237.0, "total_low_gwh": 222.0, "total_high_gwh": 266.0, "peak_gw": 11.2, "peak_hour": "11:00"}, "data_until": "2026-10-10 16:00", "data_days": 4301}, "TenneT": {"retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 14:00:00+00:00", "window_end": "2026-10-10 14:00:00+00:00", "model_mape": 4.298134664341926, "baseline_mape": 5.493521017339305, "passed": true}}, "range_calibration": {"scale": 1.0, "days_used": 0, "computed_utc": "2026-10-10T15:36:23+00:00"}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [12.24, 11.7, 11.54, 11.48, 11.58, 12.0, 12.42, 12.9, 13.66, 14.21, 14.76, 14.78, 14.7, 14.36, 13.84, 13.73, 14.3, 15.19, 15.54, 15.88, 15.3, 14.9, 14.38, 13.93], "low_gw": [11.4, 11.07, 10.93, 10.93, 10.95, 11.28, 11.79, 12.27, 13.02, 13.5, 13.79, 13.69, 13.56, 13.03, 12.25, 12.21, 12.89, 14.05, 14.58, 14.87, 14.59, 14.3, 13.77, 13.19], "high_gw": [13.09, 12.61, 12.57, 12.57, 12.59, 12.89, 13.29, 13.93, 14.61, 15.14, 15.66, 15.41, 15.23, 15.05, 14.31, 14.22, 14.96, 16.41, 16.37, 16.77, 16.34, 15.92, 15.49, 14.85], "baseline_gw": [11.83, 11.28, 10.94, 10.77, 10.87, 11.23, 11.66, 12.42, 13.34, 14.33, 14.89, 15.39, 15.41, 14.93, 14.42, 14.17, 14.23, 15.01, 15.67, 15.71, 14.87, 14.16, 13.75, 12.86], "total_gwh": 329.0, "total_low_gwh": 308.0, "total_high_gwh": 350.0, "peak_gw": 15.9, "peak_hour": "19:00"}, "data_until": "2026-10-10 15:00", "data_days": 4301}, "Amprion": {"retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 15:00:00+00:00", "window_end": "2026-10-10 15:00:00+00:00", "model_mape": 3.9759795126817497, "baseline_mape": 5.194281743419019, "passed": true}}, "range_calibration": {"scale": 1.0, "days_used": 0, "computed_utc": "2026-10-10T15:36:32+00:00"}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [15.36, 14.8, 14.43, 14.46, 14.43, 14.43, 14.71, 15.17, 16.14, 17.15, 17.78, 18.07, 17.96, 17.57, 16.95, 16.83, 17.02, 17.8, 18.43, 19.2, 18.66, 17.99, 17.31, 16.45], "low_gw": [13.99, 13.63, 13.47, 13.38, 13.26, 13.45, 13.67, 13.93, 15.11, 15.99, 16.72, 16.8, 16.45, 16.24, 15.75, 15.55, 15.75, 16.61, 17.63, 18.51, 17.76, 17.05, 16.17, 15.52], "high_gw": [16.07, 15.52, 15.25, 15.08, 15.05, 15.17, 15.78, 16.25, 17.47, 18.36, 18.87, 18.9, 18.81, 18.5, 17.84, 17.53, 18.02, 19.03, 19.75, 20.33, 19.61, 19.06, 18.3, 17.48], "baseline_gw": [15.0, 14.1, 13.58, 13.33, 13.37, 13.44, 13.78, 14.46, 15.17, 16.1, 16.58, 17.29, 17.75, 17.49, 16.75, 16.43, 16.56, 17.66, 18.71, 19.13, 18.35, 17.71, 17.01, 15.96], "total_gwh": 399.0, "total_low_gwh": 372.0, "total_high_gwh": 422.0, "peak_gw": 19.2, "peak_hour": "19:00"}, "data_until": "2026-10-10 16:00", "data_days": 4301}, "TransnetBW": {"retrain": {"date": "2026-10-10", "gate": {"window_start": "2026-09-12 15:00:00+00:00", "window_end": "2026-10-10 15:00:00+00:00", "model_mape": 3.384654036469285, "baseline_mape": 6.130968293869602, "passed": true}}, "range_calibration": {"scale": 1.0, "days_used": 0, "computed_utc": "2026-10-10T15:36:42+00:00"}, "tomorrow": {"date": "2026-10-11", "issued_utc": "2026-10-10 03:00:00+00:00", "weather_source": "brightsky", "hours": ["2026-10-11T00:00", "2026-10-11T01:00", "2026-10-11T02:00", "2026-10-11T03:00", "2026-10-11T04:00", "2026-10-11T05:00", "2026-10-11T06:00", "2026-10-11T07:00", "2026-10-11T08:00", "2026-10-11T09:00", "2026-10-11T10:00", "2026-10-11T11:00", "2026-10-11T12:00", "2026-10-11T13:00", "2026-10-11T14:00", "2026-10-11T15:00", "2026-10-11T16:00", "2026-10-11T17:00", "2026-10-11T18:00", "2026-10-11T19:00", "2026-10-11T20:00", "2026-10-11T21:00", "2026-10-11T22:00", "2026-10-11T23:00"], "hour_labels": ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"], "forecast_gw": [4.65, 4.41, 4.28, 4.23, 4.24, 4.25, 4.42, 4.64, 5.13, 5.35, 5.38, 5.47, 5.36, 5.1, 4.99, 4.91, 5.11, 5.54, 5.82, 6.09, 5.92, 5.73, 5.64, 5.33], "low_gw": [4.41, 4.21, 4.15, 4.11, 4.11, 4.15, 4.25, 4.45, 4.83, 5.01, 4.98, 4.9, 4.73, 4.52, 4.43, 4.4, 4.68, 5.2, 5.51, 5.73, 5.66, 5.44, 5.39, 5.11], "high_gw": [4.81, 4.61, 4.5, 4.44, 4.44, 4.43, 4.64, 4.83, 5.23, 5.5, 5.59, 5.69, 5.7, 5.41, 5.15, 5.03, 5.31, 5.89, 6.19, 6.4, 6.18, 5.92, 5.82, 5.58], "baseline_gw": [4.47, 4.28, 4.13, 4.09, 4.16, 4.21, 4.31, 4.53, 4.87, 5.25, 5.44, 5.69, 5.67, 5.38, 5.15, 4.98, 5.04, 5.35, 5.71, 5.89, 5.66, 5.46, 5.35, 5.07], "total_gwh": 122.0, "total_low_gwh": 114.0, "total_high_gwh": 127.0, "peak_gw": 6.1, "peak_hour": "19:00"}, "data_until": "2026-10-10 16:00", "data_days": 4301}}};
 const $ = (id) => document.getElementById(id);
-const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
 const fmt = (x, d = 1) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toLocaleString("en-GB", {minimumFractionDigits: d, maximumFractionDigits: d});
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
-
-function tile(k, v, n) { return `<div class="tile"><div class="k">${esc(k)}</div><div class="v">${v}</div><div class="n">${n || ""}</div></div>`; }
-function table(cols, rows) {
+const cssv = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const mq = (q) => { try { return matchMedia(q).matches; } catch (e) { return false; } };
+const reduceMotion = mq("(prefers-reduced-motion: reduce)");
+const isLight = () => (document.documentElement.getAttribute("data-theme") || (mq("(prefers-color-scheme: light)") ? "light" : "dark")) === "light";
+function table(cols, rows, cls) {
   return `<table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join("")}</tr></thead><tbody>` +
-    rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
+    rows.map(r => `<tr>${r.map((c, i) => `<td${cls && cls[i] ? ` class="${cls[i]}"` : ""}>${c}</td>`).join("")}</tr>`).join("") + "</tbody></table>";
 }
-// ---------------------------------------------------------------- charts
-// Drawn with plain SVG by this page itself: no outside library that could fail to load.
+function section(name, fn) { try { fn(); } catch (e) { console.error(name, e); } }
+const signed = (x, d = 1) => (x > 0 ? "+" : x < 0 ? "−" : "") + fmt(Math.abs(x), d);
+
+// ---------------------------------------------------------------- 2D charts (plain SVG, drawn by the page itself)
 const NS = "http://www.w3.org/2000/svg";
-function el(tag, attrs, parent) {
-  const e = document.createElementNS(NS, tag);
-  for (const k in attrs) e.setAttribute(k, attrs[k]);
-  if (parent) parent.appendChild(e);
-  return e;
-}
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 const ok = (v) => v !== null && v !== undefined && Number.isFinite(v);
 function niceTicks(lo, hi, n = 5) {
-  if (!(hi > lo)) { hi = lo + 1; }
+  if (!(hi > lo)) hi = lo + 1;
   const raw = (hi - lo) / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(st => st >= raw);
   const out = [];
@@ -176,276 +355,639 @@ function niceTicks(lo, hi, n = 5) {
   return out;
 }
 function setupChart(id) {
-  const box = $(id);
-  if (!box) return null;
-  box.classList.remove("chart-missing");
-  box.innerHTML = "";
-  const W = box.clientWidth > 0 ? Math.max(box.clientWidth, 280) : 800, H = box.clientHeight || 320;
-  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none", role: "img"}, box);
-  const tip = document.createElement("div");
-  tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
+  const box = $(id); if (!box) return null;
+  box.classList.remove("chart-missing"); box.innerHTML = "";
+  const W = box.clientWidth > 0 ? Math.max(box.clientWidth, 280) : 800, H = box.clientHeight || 300;
+  const svg = el("svg", {viewBox: `0 0 ${W} ${H}`, preserveAspectRatio: "none"}, box);
+  const tip = document.createElement("div"); tip.className = "tip"; tip.hidden = true; box.appendChild(tip);
   return {box, svg, tip, W, H};
 }
 function chartFailed(id, tableId, e) {
   const box = $(id);
   if (box) { box.classList.add("chart-missing"); box.textContent = "This chart could not be drawn. The numbers are in the table below."; }
-  const t = tableId && $(tableId);
-  if (t && t.closest("details")) t.closest("details").open = true;
+  const t = tableId && $(tableId); if (t && t.closest("details")) t.closest("details").open = true;
   console.error(e);
 }
-
-// Line chart: evenly spaced points (one per hour or day), optional range band and shaded area.
 function lineChart(id, o) {
   try {
     const c = setupChart(id); if (!c) return;
-    const {svg, tip, W, H} = c;
-    const m = {l: 46, r: 12, t: 10, b: 30};
-    const n = o.labels.length;
+    const {svg, tip, W, H} = c, m = {l: 46, r: 12, t: 10, b: 30}, n = o.labels.length;
     const all = [];
     o.series.forEach(s => s.y.forEach(v => ok(v) && all.push(v)));
     if (o.band) [o.band.low, o.band.high].forEach(a => a.forEach(v => ok(v) && all.push(v)));
     if (!all.length) throw new Error("no data");
     let lo = Math.min(...all), hi = Math.max(...all);
-    const pad = (hi - lo || 1) * 0.08;
-    lo = o.fromZero ? 0 : lo - pad; hi = hi + pad;
-    const ticks = niceTicks(lo, hi);
-    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const pad = (hi - lo || 1) * 0.08; lo = o.fromZero ? 0 : lo - pad; hi += pad;
+    const ticks = niceTicks(lo, hi); lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
     const X = i => m.l + (n <= 1 ? 0 : i * (W - m.l - m.r) / (n - 1));
     const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
-    // grid + y labels
     ticks.forEach(v => {
-      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: "stroke: var(--grid)", "stroke-width": 1}, svg);
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: "stroke: var(--line)", "stroke-width": 1}, svg);
       el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : (o.decimals ?? 1));
     });
     el("text", {x: 4, y: m.t + 8}, svg).textContent = o.unit || "";
-    // shaded area (e.g. backfilled days)
     if (o.shadeTo > 0) {
       el("rect", {x: X(0), y: m.t, width: X(o.shadeTo) - X(0), height: H - m.t - m.b, style: "fill: var(--shade)"}, svg);
       el("text", {x: X(0) + 6, y: m.t + 14}, svg).textContent = o.shadeLabel || "";
     }
-    // x labels
     const every = Math.max(1, Math.ceil(n / Math.max(2, Math.floor((W - m.l - m.r) / 90))));
-    for (let i = 0; i < n; i += every) {
-      el("text", {x: X(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = o.xLabel(o.labels[i]);
-    }
-    // band
+    for (let i = 0; i < n; i += every) el("text", {x: X(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = o.xLabel(o.labels[i]);
     if (o.band) {
       let pts = [];
       const flush = () => {
         if (pts.length > 1) {
-          const d = pts.map(([i, h], k) => `${k ? "L" : "M"}${X(i)},${Y(h)}`).join("") +
-            pts.slice().reverse().map(([i, , l]) => `L${X(i)},${Y(l)}`).join("") + "Z";
-          el("path", {d, style: "fill: var(--band); stroke: none"}, svg);
+          const d = pts.map(([i, h], k) => `${k ? "L" : "M"}${X(i)},${Y(h)}`).join("") + pts.slice().reverse().map(([i, , l]) => `L${X(i)},${Y(l)}`).join("") + "Z";
+          el("path", {d, style: "fill: var(--gold-soft); stroke: none"}, svg);
         }
         pts = [];
       };
-      for (let i = 0; i < n; i++) {
-        const h = o.band.high[i], l = o.band.low[i];
-        if (ok(h) && ok(l)) pts.push([i, h, l]); else flush();
-      }
+      for (let i = 0; i < n; i++) { const h = o.band.high[i], l = o.band.low[i]; if (ok(h) && ok(l)) pts.push([i, h, l]); else flush(); }
       flush();
     }
-    // lines (breaks where values are missing)
     o.series.forEach(s => {
       let d = "", pen = false;
       s.y.forEach((v, i) => { if (ok(v)) { d += `${pen ? "L" : "M"}${X(i)},${Y(v)}`; pen = true; } else pen = false; });
-      el("path", {d, fill: "none", style: `stroke: var(${s.color})`, "stroke-width": s.width || 2,
-        "stroke-dasharray": s.dash ? "4 4" : "none", "stroke-linejoin": "round", "stroke-linecap": "round"}, svg);
+      el("path", {d, fill: "none", style: `stroke: var(${s.color})`, "stroke-width": s.width || 2, "stroke-dasharray": s.dash ? "5 4" : "none", "stroke-linejoin": "round", "stroke-linecap": "round"}, svg);
       if (s.markers) s.y.forEach((v, i) => ok(v) && el("circle", {cx: X(i), cy: Y(v), r: 3, style: `fill: var(${s.color})`}, svg));
     });
-    // hover: vertical line + values
-    const guide = el("line", {y1: m.t, y2: H - m.b, style: "stroke: var(--text-muted)", "stroke-width": 1, visibility: "hidden"}, svg);
+    const guide = el("line", {y1: m.t, y2: H - m.b, style: "stroke: var(--muted)", "stroke-width": 1, visibility: "hidden"}, svg);
     const hit = el("rect", {x: m.l, y: m.t, width: W - m.l - m.r, height: H - m.t - m.b, fill: "transparent"}, svg);
     const move = (ev) => {
       const r = svg.getBoundingClientRect();
-      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
-      const sx = px * W / r.width;
+      const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left, sx = px * W / r.width;
       const i = Math.max(0, Math.min(n - 1, Math.round((sx - m.l) / ((W - m.l - m.r) / Math.max(1, n - 1)))));
       guide.setAttribute("x1", X(i)); guide.setAttribute("x2", X(i)); guide.setAttribute("visibility", "visible");
-      let html = `<div style="color:var(--text-secondary);margin-bottom:3px">${esc(o.tipLabel(o.labels[i]))}</div>`;
-      o.series.slice().reverse().forEach(s => {
-        html += `<div><i style="background:var(${s.color})"></i>${esc(s.name)}: <b>${ok(s.y[i]) ? fmt(s.y[i], o.tipDecimals ?? 1) : "–"}</b> ${esc(o.tipUnit || "")}</div>`;
-      });
-      if (o.band && ok(o.band.low[i])) html += `<div style="color:var(--text-secondary)">90% range ${fmt(o.band.low[i])}–${fmt(o.band.high[i])} ${esc(o.tipUnit || "")}</div>`;
+      let html = `<div style="color:var(--ink-2);margin-bottom:3px">${esc(o.tipLabel(o.labels[i]))}</div>`;
+      o.series.slice().reverse().forEach(s => { html += `<div><i style="background:var(${s.color})"></i>${esc(s.name)}: <b>${ok(s.y[i]) ? fmt(s.y[i], o.tipDecimals ?? 1) : "–"}</b> ${esc(o.tipUnit || "")}</div>`; });
+      if (o.band && ok(o.band.low[i])) html += `<div style="color:var(--ink-2)">90% range ${fmt(o.band.low[i])}–${fmt(o.band.high[i])} ${esc(o.tipUnit || "")}</div>`;
       tip.innerHTML = html; tip.hidden = false;
-      const left = X(i) * r.width / W;
-      tip.style.left = Math.min(Math.max(0, left + 12), r.width - tip.offsetWidth - 4) + "px";
-      tip.style.top = "8px";
+      tip.style.left = Math.min(Math.max(0, X(i) * r.width / W + 12), r.width - tip.offsetWidth - 4) + "px"; tip.style.top = "8px";
     };
     const leave = () => { tip.hidden = true; guide.setAttribute("visibility", "hidden"); };
     hit.addEventListener("mousemove", move); hit.addEventListener("touchmove", move, {passive: true});
     hit.addEventListener("mouseleave", leave); hit.addEventListener("touchend", leave);
   } catch (e) { chartFailed(id, o.tableId, e); }
 }
-
-// Bar chart with a range line on each bar.
 function barChart(id, o) {
   try {
     const c = setupChart(id); if (!c) return;
-    const {svg, tip, W, H} = c;
-    const m = {l: 46, r: 12, t: 22, b: 40};
-    const n = o.values.length;
+    const {svg, tip, W, H} = c, m = {l: 46, r: 12, t: 24, b: 44}, n = o.values.length;
     if (!n) throw new Error("no data");
     let lo = Math.min(0, ...o.low.filter(ok)), hi = Math.max(0, ...o.high.filter(ok));
     const pad = (hi - lo || 1) * 0.1; lo -= lo < 0 ? pad : 0; hi += pad;
-    const ticks = niceTicks(lo, hi);
-    lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
+    const ticks = niceTicks(lo, hi); lo = Math.min(lo, ticks[0]); hi = Math.max(hi, ticks[ticks.length - 1]);
     const Y = v => m.t + (hi - v) * (H - m.t - m.b) / (hi - lo);
-    const slot = (W - m.l - m.r) / n, bw = Math.min(56, slot * 0.55);
-    const cx = i => m.l + slot * (i + 0.5);
+    const slot = (W - m.l - m.r) / n, bw = Math.min(52, slot * 0.55), cx = i => m.l + slot * (i + 0.5);
     ticks.forEach(v => {
-      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: `stroke: var(${v === 0 ? "--text-muted" : "--grid"})`, "stroke-width": 1}, svg);
-      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = fmt(v, Number.isInteger(v) ? 0 : 1) + "%";
+      el("line", {x1: m.l, x2: W - m.r, y1: Y(v), y2: Y(v), style: `stroke: var(${v === 0 ? "--muted" : "--line"})`, "stroke-width": 1}, svg);
+      el("text", {x: m.l - 6, y: Y(v) + 4, "text-anchor": "end"}, svg).textContent = signed(v, Number.isInteger(v) ? 0 : 1) + "%";
     });
     for (let i = 0; i < n; i++) {
-      const v = o.values[i];
-      const top = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
-      const bar = el("rect", {x: cx(i) - bw / 2, y: top, width: bw, height: Math.max(h, 1), rx: 3, style: `fill: var(${o.colors[i]})`}, svg);
+      const v = o.values[i], top = Math.min(Y(v), Y(0)), h = Math.abs(Y(v) - Y(0));
+      const bar = el("rect", {x: cx(i) - bw / 2, y: top, width: bw, height: Math.max(h, 1.5), rx: 3, style: `fill: var(${o.colors[i]})`}, svg);
       if (ok(o.low[i]) && ok(o.high[i])) {
-        const s = "stroke: var(--text-primary)";
+        const s = "stroke: var(--ink)";
         el("line", {x1: cx(i), x2: cx(i), y1: Y(o.low[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
         el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.low[i]), y2: Y(o.low[i]), style: s, "stroke-width": 1.3}, svg);
         el("line", {x1: cx(i) - 5, x2: cx(i) + 5, y1: Y(o.high[i]), y2: Y(o.high[i]), style: s, "stroke-width": 1.3}, svg);
       }
-      const lbl = el("text", {x: cx(i), y: Y(Math.max(o.high[i] ?? v, v)) - 6, "text-anchor": "middle", style: "fill: var(--text-primary)"}, svg);
-      lbl.textContent = fmt(v) + "%";
+      const below = v < 0, ly = below ? Y(Math.min(o.low[i] ?? v, v)) + 15 : Y(Math.max(o.high[i] ?? v, v)) - 7;
+      el("text", {x: cx(i), y: ly, "text-anchor": "middle", style: "fill: var(--ink)"}, svg).textContent = signed(v) + "%";
       const [a, b] = o.labels[i].split(" ");
-      const xl = el("text", {x: cx(i), y: H - 22, "text-anchor": "middle"}, svg);
-      xl.textContent = a;
-      if (b) el("text", {x: cx(i), y: H - 8, "text-anchor": "middle"}, svg).textContent = b;
+      el("text", {x: cx(i), y: H - 24, "text-anchor": "middle", style: "fill: var(--ink-2)"}, svg).textContent = a;
+      if (b) el("text", {x: cx(i), y: H - 9, "text-anchor": "middle"}, svg).textContent = b;
       const hit = el("rect", {x: cx(i) - slot / 2, y: m.t, width: slot, height: H - m.t - m.b, fill: "transparent"}, svg);
       const show = () => {
-        tip.innerHTML = `<b>${esc(o.labels[i])}</b><br>${fmt(v)}% less than expected<br><span style="color:var(--text-secondary)">90% range ${fmt(o.low[i])}% to ${fmt(o.high[i])}%</span>`;
-        tip.hidden = false;
-        const r = svg.getBoundingClientRect();
-        tip.style.left = Math.min(Math.max(0, cx(i) * r.width / W - 60), r.width - tip.offsetWidth - 4) + "px";
-        tip.style.top = "4px";
-        bar.style.opacity = "0.8";
+        tip.innerHTML = `<b>${esc(o.labels[i].replace(" ", " · "))}</b><br>${signed(v)}% vs. expected<br><span style="color:var(--ink-2)">90% range ${signed(o.low[i])}% to ${signed(o.high[i])}%</span>`;
+        tip.hidden = false; const r = svg.getBoundingClientRect();
+        tip.style.left = Math.min(Math.max(0, cx(i) * r.width / W - 60), r.width - tip.offsetWidth - 4) + "px"; tip.style.top = "4px"; bar.style.opacity = "0.8";
       };
       const hide = () => { tip.hidden = true; bar.style.opacity = ""; };
-      hit.addEventListener("mouseenter", show); hit.addEventListener("mouseleave", hide);
-      hit.addEventListener("touchstart", show, {passive: true});
+      hit.addEventListener("mouseenter", show); hit.addEventListener("mouseleave", hide); hit.addEventListener("touchstart", show, {passive: true});
+      if (o.onPick) { hit.style.cursor = "pointer"; hit.addEventListener("click", () => o.onPick(i)); }
     }
   } catch (e) { chartFailed(id, o.tableId, e); }
 }
-
 const hm = (s) => s.slice(11, 16);
 const dayMon = (s) => new Date(s.slice(0, 10) + "T12:00:00").toLocaleDateString("en-GB", {day: "numeric", month: "short"});
 const dayMonHm = (s) => dayMon(s) + " " + hm(s);
 
-function section(name, fn) {
-  try { fn(); } catch (e) { console.error(name, e); }
+
+// ---------------------------------------------------------------- areas: Germany → grid regions → states → cities
+// Germany and the 4 grid regions are measured (SMARD, every hour). States and cities are estimates made from
+// their grid region by share of people, and are labelled as such. Towns and villages have no public data.
+const Area = (() => {
+  let cur = {level: "country", code: "DE"};
+  const H = () => (D && D.hierarchy) || {regions: [], states: [], cities: []};
+  const region = (c) => H().regions.find(r => r.code === c);
+  const state = (c) => H().states.find(r => r.code === c);
+  const city = (c) => H().cities.find(r => r.code === c);
+  function find(code) {
+    if (code === "DE") return {level: "country", code};
+    if (region(code)) return {level: "region", code};
+    if (state(code)) return {level: "state", code};
+    if (city(code)) return {level: "city", code};
+    return null;
+  }
+  const measuredBadge = ["measured", "Measured · SMARD, every hour"];
+  function view() {
+    const c = cur, A = (D && D.areas) || {};
+    if (c.level === "region") {
+      const r = region(c.code);
+      return {name: `${r.name} grid region`, short: r.name, level: "region", base: A[r.code] || {}, factor: 1, badge: measuredBadge,
+              note: `${r.area_name}. Measured separately, with its own weather stations and holidays. Grid regions don't follow state borders exactly.`,
+              region: r.code, states: r.states};
+    }
+    if (c.level === "state") {
+      const st = state(c.code), r = region(st.region);
+      return {name: st.name, short: st.name, level: "state", base: A[st.region] || {}, factor: st.share_of_region,
+              badge: ["estimate", `Estimate · from ${r.name}`],
+              note: `States are not measured separately. ${st.name}'s amounts are the ${r.name} region's measurements times the state's share of the region's people (${fmt(100 * st.share_of_region, 1)}%), so its percentages are the region's.`,
+              region: st.region, states: [st.code], estimate: true};
+    }
+    if (c.level === "city") {
+      const ci = city(c.code), st = state(ci.state), r = region(ci.region);
+      return {name: ci.name, short: ci.name, level: "city", base: A[ci.region] || {}, factor: st.share_of_region * ci.share_of_state,
+              badge: ["rough", "Rough estimate"],
+              note: `Cities are not measured. ${ci.name}'s amounts are the ${st.name} estimate times the city's share of the state's people (${fmt(100 * ci.share_of_state, 1)}%). Real city demand also depends on local industry, so treat this as a rough guide; percentages are the ${r.name} region's.`,
+              region: ci.region, states: [st.code], city: ci.code, estimate: true};
+    }
+    return {name: "Germany", short: "Germany", level: "country", base: D || {}, factor: 1, badge: measuredBadge, note: "", region: null};
+  }
+  function members(v) {
+    const cs = H().cities;
+    if (v.level === "country") return new Set(((D && D.points) || []).map(p => p.name));
+    if (v.level === "city") return new Set([v.city]);
+    const st = new Set(v.states || []);
+    return new Set(cs.filter(c => st.has(c.state)).map(c => c.code));
+  }
+  function buildPicker() {
+    const h = H(), opt = (v, t, dis) => `<option value="${esc(v)}"${dis ? " disabled" : ""}>${esc(t)}</option>`;
+    const by = (a, b) => a.name.localeCompare(b.name, "de");
+    let html = `<optgroup label="Country (measured)">${opt("DE", "Germany")}</optgroup>`;
+    if (h.regions.length) html += `<optgroup label="Grid regions (measured)">${h.regions.map(r => opt(r.code, `${r.name} · ${r.area_name}`)).join("")}</optgroup>`;
+    if (h.states.length) html += `<optgroup label="States (estimated)">${h.states.slice().sort(by).map(x => opt(x.code, x.name)).join("")}</optgroup>`;
+    if (h.cities.length) html += `<optgroup label="Cities (rough estimate)">${h.cities.slice().sort(by).map(x => opt(x.code, x.name)).join("")}</optgroup>`;
+    html += `<optgroup label="Towns and villages">${opt("", "No public data exists", true)}</optgroup>`;
+    $("area").innerHTML = html;
+    $("area").addEventListener("change", e => set(e.target.value));
+    $("chips").innerHTML = [["DE", "Germany"], ...h.regions.map(r => [r.code, r.name])]
+      .map(([c, t]) => `<button type="button" data-area="${esc(c)}" aria-pressed="false">${esc(t)}</button>`).join("");
+    $("chips").querySelectorAll("button").forEach(b => b.addEventListener("click", () => set(b.dataset.area)));
+  }
+  function showBar() {
+    const v = view(), parts = [["DE", "Germany"]];
+    if (v.region) { const r = region(v.region); parts.push([r.code, r.name]); }
+    if (v.level === "state" || v.level === "city") { const st = state(v.states[0]); parts.push([st.code, st.name]); }
+    if (v.level === "city") parts.push([v.city, v.name]);
+    $("crumbs").innerHTML = parts.map(([c, t], i) => (i ? `<span class="sep" aria-hidden="true">›</span>` : "") +
+      `<button type="button" data-area="${esc(c)}"${i === parts.length - 1 ? ' aria-current="true"' : ""}>${esc(t)}</button>`).join("");
+    $("crumbs").querySelectorAll("button").forEach(b => b.addEventListener("click", () => set(b.dataset.area)));
+    $("area").value = cur.code;
+    $("badge").className = "badge " + v.badge[0]; $("badge").textContent = v.badge[1];
+    $("area-note").textContent = v.note; $("area-note").hidden = !v.note;
+    const chip = v.level === "country" ? "DE" : v.region;
+    $("chips").querySelectorAll("button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.area === chip)));
+  }
+  function set(code, quiet) {
+    const a = find(code); if (!a) return;
+    cur = a;
+    try { history.replaceState(null, "", code === "DE" ? location.pathname + location.search : "#area-" + encodeURIComponent(code)); } catch (e) {}
+    showBar();
+    if (!quiet) { render(); Grid3D.focus(view(), members(view())); Hero.refresh(); }
+  }
+  function init() {
+    buildPicker();
+    const m = (location.hash || "").match(/^#area-(.+)$/), want = m ? decodeURIComponent(m[1]) : "DE";
+    set(find(want) ? want : "DE", true);
+  }
+  return {init, set, view, members, region};
+})();
+const mul = (arr, k) => (arr ? arr.map(v => (ok(v) ? v * k : v)) : arr);
+
+// ---------------------------------------------------------------- hero controls (shared by the 3D map and the flat map)
+const Hero = (() => {
+  let hour = 19, playing = !reduceMotion, lastShown = -1, startedAt = 0, base = 19;
+  const f = () => {
+    const v = Area.view(), t = v.base && v.base.tomorrow;
+    return t && t.forecast_gw && t.forecast_gw.length >= 23 ? mul(t.forecast_gw.slice(0, 24), v.factor) : Array(24).fill(50);
+  };
+  const now = () => (typeof performance !== "undefined" ? performance.now() : Date.now());
+  function hourFloat() { return playing ? (base + (now() - startedAt) / 1000) % 24 : hour; }   // one hour per second
+  function tick(hf) {
+    const h = Math.floor(hf) % 24;
+    if (h === lastShown) return;
+    lastShown = h; $("hour").value = h;
+    const v = Area.view(), t = v.base && v.base.tomorrow;
+    const date = t ? new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"}) : "";
+    const val = f()[h] ?? f()[0];
+    $("hud").innerHTML = `MORGEN · ${esc(date)} · ${String(h).padStart(2, "0")}:00<br><b>${fmt(val, val < 10 ? 2 : 1)} GW</b> ${esc(v.short)}${v.estimate ? " (est.)" : ""}`;
+  }
+  function setPlaying(p) {
+    if (playing && !p) hour = Math.floor(hourFloat()) % 24;
+    playing = p; base = hour; startedAt = now();
+    $("play").setAttribute("aria-label", p ? "Pause the animation" : "Play the animation");
+    $("play").innerHTML = p ? `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M4 2v10M10 2v10" style="stroke: var(--ink)" stroke-width="2.4" stroke-linecap="round"/></svg>`
+                            : `<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3.5 2l8 5-8 5z" style="fill: var(--ink)"/></svg>`;
+  }
+  function init() {
+    const ff = f(), peak = ff.indexOf(Math.max(...ff));
+    hour = base = peak >= 0 ? peak : 19;
+    $("hour").addEventListener("input", e => { playing = true; setPlaying(false); hour = +e.target.value; lastShown = -1; tick(hour); });
+    $("play").addEventListener("click", () => setPlaying(!playing));
+    setPlaying(playing);
+    tick(hour);
+    setInterval(() => { if (!Grid3D.active) tick(hourFloat()); }, 250);   // the flat map has no animation loop of its own
+  }
+  return {init, tick, hourFloat, forecast: f, refresh: () => { lastShown = -1; tick(hourFloat()); }};
+})();
+
+// ---------------------------------------------------------------- the 3D grid
+// Germany is lifted out of its real outline. Cities glow and grow with tomorrow's forecast, hour by hour;
+// light pulses run along the main power corridors (north to south, the way wind power travels);
+// wind turbines turn in the North Sea and the Baltic. Drag to turn.
+const Grid3D = (() => {
+  const CORRIDORS = [
+    ["Kiel", "Hamburg"], ["Hamburg", "Hannover"], ["Bremen", "Hannover"], ["Hannover", "Frankfurt"], ["Frankfurt", "Stuttgart"],
+    ["Stuttgart", "Muenchen"], ["Stuttgart", "Freiburg"], ["Rostock", "Berlin"], ["Berlin", "Leipzig"], ["Magdeburg", "Leipzig"],
+    ["Leipzig", "Nuernberg"], ["Erfurt", "Nuernberg"], ["Nuernberg", "Muenchen"], ["Hannover", "Dortmund"], ["Dortmund", "Koeln"],
+    ["Koeln", "Mainz"], ["Mainz", "Frankfurt"], ["Mainz", "Saarbruecken"], ["Hannover", "Magdeburg"], ["Magdeburg", "Berlin"],
+    ["Hamburg", "Rostock"], ["Leipzig", "Erfurt"], ["Berlin", "Potsdam"],
+  ];
+  const LABELS = ["Berlin", "Hamburg", "Muenchen", "Koeln", "Frankfurt"];
+  const NAMES = {Muenchen: "München", Koeln: "Köln", Nuernberg: "Nürnberg", Saarbruecken: "Saarbrücken"};
+  const WIND = [[54.05, 6.55], [54.35, 7.05], [54.65, 6.25], [54.75, 13.85], [54.55, 14.25]];
+  const K = Math.cos(51.2 * Math.PI / 180), S = 10;
+  const P = (lat, lon) => [(lon - 10.4) * K * S, (lat - 51.2) * -S];   // x east, z south
+  let st = null;
+
+  function glowTexture(THREE) {
+    const c = document.createElement("canvas"); c.width = c.height = 64;
+    const g = c.getContext("2d"), r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    r.addColorStop(0, "rgba(255,255,255,1)"); r.addColorStop(0.25, "rgba(255,255,255,0.55)"); r.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = r; g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+
+  function init(stage, data) {
+    const THREE = window.THREE;
+    if (!THREE) throw new Error("3D library not loaded");
+    const probe = document.createElement("canvas");
+    if (!(probe.getContext("webgl2") || probe.getContext("webgl"))) throw new Error("WebGL not available");
+    const renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, powerPreference: "low-power"});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.domElement.setAttribute("aria-hidden", "true");
+    stage.insertBefore(renderer.domElement, stage.firstChild);
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 500);
+    const root = new THREE.Group(); scene.add(root);
+    scene.add(new THREE.HemisphereLight(0xbfd4ff, 0x0a0d12, 0.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 0.8); sun.position.set(-20, 40, 25); scene.add(sun);
+
+    // land: the real outline, extruded (main land and islands)
+    const shapes = data.geo.map(ring => { const s = new THREE.Shape(); ring.forEach(([lon, lat], i) => { const [x, z] = P(lat, lon); if (i) s.lineTo(x, -z); else s.moveTo(x, -z); }); return s; });
+    const landGeo = new THREE.ExtrudeGeometry(shapes, {depth: 1.1, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.18, bevelSegments: 2});
+    landGeo.rotateX(-Math.PI / 2);
+    const landMat = new THREE.MeshStandardMaterial({color: 0x141b24, roughness: 0.85, metalness: 0.1});
+    root.add(new THREE.Mesh(landGeo, landMat));
+    const edgeMat = new THREE.LineBasicMaterial({color: 0x3b5068, transparent: true, opacity: 0.9});
+    root.add(new THREE.LineSegments(new THREE.EdgesGeometry(landGeo, 30), edgeMat));
+    const gridHelper = new THREE.GridHelper(160, 32, 0x1e2833, 0x1e2833);
+    gridHelper.position.y = -0.4; gridHelper.material.transparent = true; gridHelper.material.opacity = 0.5; root.add(gridHelper);
+
+    // cities: a pillar and a glow each, sized by population
+    const glow = glowTexture(THREE), top = 1.45, byName = {};
+    const pillarGeo = new THREE.CylinderGeometry(0.28, 0.28, 1, 18); pillarGeo.translate(0, 0.5, 0);
+    const pillarMat = new THREE.MeshStandardMaterial({color: 0xf2b705, emissive: 0xf2b705, emissiveIntensity: 0.7, roughness: 0.4, transparent: true, opacity: 0.92});
+    const cities = data.points.map(p => {
+      const [x, z] = P(p.lat, p.lon);
+      const mat = pillarMat.clone();   // one light per city, so cities outside the chosen area can be dimmed
+      const pillar = new THREE.Mesh(pillarGeo, mat); pillar.position.set(x, top, z); root.add(pillar);
+      const halo = new THREE.Sprite(new THREE.SpriteMaterial({map: glow, color: 0xf2b705, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending}));
+      halo.position.set(x, top + 0.1, z); root.add(halo);
+      return (byName[p.name] = {name: p.name, x, z, w: p.weight, pillar, halo, mat, dim: false});
+    });
+
+    // power corridors with travelling pulses
+    const lineMat = new THREE.LineBasicMaterial({color: 0xf2b705, transparent: true, opacity: 0.45});
+    const pulseGeo = new THREE.SphereGeometry(0.22, 10, 10), pulseMat = new THREE.MeshBasicMaterial({color: 0xffe38a});
+    const corridors = [];
+    CORRIDORS.forEach(([a, b], idx) => {
+      const A = byName[a], B = byName[b]; if (!A || !B) return;
+      const mid = new THREE.Vector3((A.x + B.x) / 2, top + 1.6 + Math.hypot(A.x - B.x, A.z - B.z) * 0.08, (A.z + B.z) / 2);
+      const curve = new THREE.QuadraticBezierCurve3(new THREE.Vector3(A.x, top + 0.2, A.z), mid, new THREE.Vector3(B.x, top + 0.2, B.z));
+      root.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)), lineMat));
+      const pulses = [0, 0.33, 0.66].map(off => { const m = new THREE.Mesh(pulseGeo, pulseMat); root.add(m); return {m, off}; });
+      corridors.push({curve, pulses, speed: 0.08 + (idx % 5) * 0.012});
+    });
+
+    // offshore wind farms, with cables to the coast
+    const towerMat = new THREE.MeshStandardMaterial({color: 0xdfe6ee, roughness: 0.5});
+    const turbines = WIND.map(([lat, lon]) => {
+      const [x, z] = P(lat, lon), g = new THREE.Group(); g.position.set(x, 0, z);
+      const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 3.4, 8), towerMat); tower.position.y = 1.7; g.add(tower);
+      const rotor = new THREE.Group(); rotor.position.set(0, 3.45, 0.12);
+      for (let k = 0; k < 3; k++) {
+        const blade = new THREE.Mesh(new THREE.BoxGeometry(0.09, 1.5, 0.03), towerMat); blade.position.y = 0.75;
+        const arm = new THREE.Group(); arm.rotation.z = k * 2 * Math.PI / 3; arm.add(blade); rotor.add(arm);
+      }
+      g.add(rotor); root.add(g); return rotor;
+    });
+    const cableMat = new THREE.LineDashedMaterial({color: 0x4a9eff, dashSize: 0.5, gapSize: 0.4, transparent: true, opacity: 0.7});
+    [[WIND[1], "Bremen"], [WIND[3], "Rostock"]].forEach(([[lat, lon], to]) => {
+      const [x, z] = P(lat, lon), B = byName[to]; if (!B) return;
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x, 0.3, z), new THREE.Vector3(B.x, top, B.z)]), cableMat);
+      l.computeLineDistances(); root.add(l);
+    });
+
+    const nice = {}; ((data.hierarchy && data.hierarchy.cities) || []).forEach(c => { nice[c.code] = c.name; });
+    const labels = cities.map(c => { const d = document.createElement("div"); d.className = "city"; d.textContent = nice[c.name] || NAMES[c.name] || c.name; d.hidden = true; stage.appendChild(d); return {d, c}; });
+
+    st = {THREE, renderer, scene, camera, cities, corridors, turbines, labels, stage, landMat, edgeMat, gridHelper, lineMat, pillarMat, pulseMat, cableMat,
+      yaw: -0.28, targetYaw: -0.28, pitch: 1.0, dist: 172, visible: true, t0: performance.now(), last: performance.now(), drag: null,
+      look: new THREE.Vector3(0, 0, 6), lookTarget: new THREE.Vector3(0, 0, 6), zoom: 1, zoomTarget: 1, labelSet: new Set(LABELS)};
+    applyTheme(); resize(); bind();
+    requestAnimationFrame(loop);
+  }
+
+  function applyTheme() {
+    if (!st) return;
+    const light = isLight(), hex = (v, d) => { const s = cssv(v); return /^#[0-9a-f]{6}$/i.test(s) ? parseInt(s.slice(1), 16) : d; };
+    st.landMat.color.setHex(light ? 0xe4e0d4 : 0x141b24);
+    st.edgeMat.color.setHex(light ? 0x8c8574 : 0x3b5068);
+    st.gridHelper.material.color.setHex(light ? 0xd9d5c9 : 0x1e2833);
+    const gold = hex("--gold", 0xf2b705);
+    st.lineMat.color.setHex(gold);
+    st.pulseMat.color.setHex(light ? 0xa87a00 : 0xffe38a);
+    st.cableMat.color.setHex(hex("--blue", 0x4a9eff));
+    st.cities.forEach(c => {
+      c.mat.color.setHex(gold); c.mat.emissive.setHex(gold);
+      c.mat.emissiveIntensity = (light ? 0.25 : 0.7) * (c.dim ? 0.2 : 1);
+      c.mat.opacity = c.dim ? 0.18 : 0.92;
+      c.halo.material.color.setHex(gold); c.halo.material.opacity = (light ? 0.45 : 1) * (c.dim ? 0.12 : 1);
+    });
+  }
+
+  function resize() {
+    if (!st) return;
+    const w = st.stage.clientWidth || 600, h = st.stage.clientHeight || 520;
+    st.renderer.setSize(w, h, false);
+    st.camera.aspect = w / h; st.dist = w / h < 0.95 ? 240 : 182;
+    st.camera.updateProjectionMatrix();
+  }
+
+  function focus(v, mem) {
+    if (!st) return;
+    const sel = st.cities.filter(c => mem.has(c.name));
+    if (v.level === "country" || !sel.length) { st.lookTarget.set(0, 0, 6); st.zoomTarget = 1; }
+    else {
+      const cx = sel.reduce((a, c) => a + c.x, 0) / sel.length, cz = sel.reduce((a, c) => a + c.z, 0) / sel.length;
+      const ext = Math.max(7, ...sel.map(c => Math.hypot(c.x - cx, c.z - cz)));
+      st.lookTarget.set(cx, 0, cz + 2); st.zoomTarget = Math.min(1, 0.32 + ext / 38);
+    }
+    st.labelSet = v.level === "country" ? new Set(LABELS) : new Set(sel.map(c => c.name));
+    st.cities.forEach(c => { c.dim = !mem.has(c.name); });
+    applyTheme();
+  }
+
+  function pick(e) {
+    const cv = st.renderer.domElement, r = cv.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+    let best = null, bd = 28;
+    const v = new st.THREE.Vector3();
+    st.cities.forEach(c => {
+      v.set(c.x, (c.pillar.position.y + c.halo.position.y) / 2, c.z).project(st.camera);
+      const dd = Math.hypot((v.x + 1) / 2 * r.width - mx, (1 - v.y) / 2 * r.height - my);
+      if (dd < bd) { bd = dd; best = c; }
+    });
+    if (best) Area.set(best.name);
+  }
+
+  function bind() {
+    const cv = st.renderer.domElement;
+    cv.addEventListener("pointerdown", e => { st.drag = {x: e.clientX, y: e.clientY, yaw: st.targetYaw}; try { cv.setPointerCapture(e.pointerId); } catch (_) {} });
+    cv.addEventListener("pointermove", e => { if (st.drag) st.targetYaw = Math.max(-1.1, Math.min(1.1, st.drag.yaw + (e.clientX - st.drag.x) * 0.006)); });
+    cv.addEventListener("pointerup", e => { if (st.drag && Math.hypot(e.clientX - st.drag.x, e.clientY - st.drag.y) < 6) pick(e); });
+    const end = () => { st.drag = null; };
+    cv.addEventListener("pointerup", end); cv.addEventListener("pointercancel", end);
+    if ("IntersectionObserver" in window) new IntersectionObserver(es => { st.visible = es[0].isIntersecting; }).observe(st.stage);
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - st.last) / 1000); st.last = now;
+    const t = (now - st.t0) / 1000, f = Hero.forecast(), hf = Hero.hourFloat();
+    const fmax = Math.max(...f), fmin = Math.min(...f);
+    const i0 = Math.floor(hf) % 24, i1 = (i0 + 1) % 24, a = hf - Math.floor(hf);
+    const gw = f[i0] * (1 - a) + f[i1] * a, level = (gw - fmin) / Math.max(1e-6, fmax - fmin);
+    st.cities.forEach(c => {
+      const h = 0.5 + c.w * 42 * (0.5 + 0.5 * level);
+      c.pillar.scale.set(1, h, 1);
+      c.halo.position.y = 1.45 + h + 0.15;
+      const s = 2.2 + c.w * 22 * (0.6 + 0.6 * level); c.halo.scale.set(s, s, s);
+    });
+    const speed = reduceMotion ? 0 : 0.6 + 1.4 * level;
+    st.corridors.forEach(k => k.pulses.forEach(p => { const u = ((t * k.speed * speed) + p.off) % 1; p.m.position.copy(k.curve.getPoint(u)); }));
+    if (!reduceMotion) st.turbines.forEach(r => { r.rotation.z -= dt * 1.8; });
+    if (!st.drag && !reduceMotion) st.targetYaw += (Math.sin(t * 0.12) * 0.35 - 0.28 - st.targetYaw) * Math.min(1, dt * 0.5);
+    st.yaw += (st.targetYaw - st.yaw) * Math.min(1, dt * 3);
+    const ease = Math.min(1, dt * 2.5);
+    st.look.lerp(st.lookTarget, ease); st.zoom += (st.zoomTarget - st.zoom) * ease;
+    const cam = st.camera, d = st.dist * st.zoom;
+    cam.position.set(st.look.x + Math.sin(st.yaw) * Math.cos(st.pitch) * d * 0.55, Math.sin(st.pitch) * d * 0.62,
+                     st.look.z + Math.cos(st.yaw) * Math.cos(st.pitch) * d * 0.55 + 1);
+    cam.lookAt(st.look);
+    st.renderer.render(st.scene, cam);
+    const w = st.stage.clientWidth, hgt = st.stage.clientHeight, v = new st.THREE.Vector3();
+    st.labels.forEach(({d: el2, c}) => {
+      v.set(c.x, c.halo.position.y, c.z).project(cam);
+      el2.style.left = ((v.x + 1) / 2 * w) + "px"; el2.style.top = ((1 - v.y) / 2 * hgt) + "px";
+      el2.hidden = v.z > 1 || !st.labelSet.has(c.name);
+    });
+    Hero.tick(hf);
+  }
+  function loop(now) {
+    if (!st) return;
+    requestAnimationFrame(loop);
+    if (!st.visible || document.hidden) { st.last = now; return; }
+    try { frame(now); } catch (e) { console.error("3D frame", e); st = null; }
+  }
+  return {init, resize, applyTheme, focus, frame: (n) => st && frame(n), get active() { return !!st; }};
+})();
+
+// when 3D is not possible (very old device, WebGL switched off): the same map, flat and tilted
+function map2D(stage, data) {
+  const K = Math.cos(51.2 * Math.PI / 180), W = 440, H = 560;
+  const ring = data.geo[0], xs = ring.map(p => (p[0] - 5.8) * K), ys = ring.map(p => 55.1 - p[1]);
+  const s = Math.min((W - 20) / (Math.max(...xs) - Math.min(...xs)), (H - 20) / (Math.max(...ys) - Math.min(...ys)));
+  const ox = (W - (Math.max(...xs) - Math.min(...xs)) * s) / 2 - Math.min(...xs) * s, oy = (H - (Math.max(...ys) - Math.min(...ys)) * s) / 2 - Math.min(...ys) * s;
+  const P = (lon, lat) => [((lon - 5.8) * K * s + ox).toFixed(1), ((55.1 - lat) * s + oy).toFixed(1)];
+  const d = data.geo.map(r => "M" + r.map(([lon, lat]) => P(lon, lat).join(",")).join("L") + "Z").join("");
+  const by = {}; data.points.forEach(p => { by[p.name] = P(p.lon, p.lat); });
+  const lines = [["Kiel", "Hamburg", "Hannover", "Frankfurt", "Stuttgart", "Muenchen"], ["Rostock", "Berlin", "Leipzig", "Nuernberg", "Muenchen"],
+    ["Hannover", "Dortmund", "Koeln", "Mainz", "Frankfurt"], ["Hannover", "Magdeburg", "Berlin"]]
+    .map(path => path.filter(n => by[n]).map((n, i) => (i ? "L" : "M") + by[n].join(",")).join(""));
+  const wrap = document.createElement("div"); wrap.className = "map2d"; wrap.setAttribute("aria-hidden", "true");
+  wrap.innerHTML = `<div><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="max-width: 100%">
+    <defs><radialGradient id="g2" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color: var(--gold); stop-opacity: 0.9"/><stop offset="100%" style="stop-color: var(--gold); stop-opacity: 0"/></radialGradient></defs>
+    <path d="${d}" style="fill: var(--map-land); stroke: var(--map-edge)" stroke-width="1.5"/>
+    ${lines.map(l => `<path d="${l}" fill="none" style="stroke: var(--gold)" stroke-width="2" opacity="0.8"/><path class="flow" d="${l}" fill="none" style="stroke: var(--gold-hi)" stroke-width="4" stroke-linecap="round"/>`).join("")}
+    ${data.points.map(p => { const [x, y] = by[p.name]; const r = 6 + p.weight * 90; return `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#g2)"/><circle cx="${x}" cy="${y}" r="3.5" style="fill: var(--ink)"/>`; }).join("")}
+  </svg></div>`;
+  stage.insertBefore(wrap, stage.firstChild);
 }
 
+// ---------------------------------------------------------------- page content (follows the chosen area)
 function render() {
   if (!D) return;
+  const V = Area.view(), B = V.base || {}, k = V.factor, est = V.estimate ? " (estimated)" : "";
   const meta = [];
-  if (D.data_until) meta.push(`Demand data up to ${esc(D.data_until.replace("T", " "))}`);
-  if (D.retrain && D.retrain.date) meta.push(`last model retrain: ${esc(D.retrain.date)}`);
+  if (D.data_until) meta.push(`demand data up to ${esc(D.data_until.replace("T", " "))}`);
+  if (D.retrain && D.retrain.date) meta.push(`model retrained ${esc(D.retrain.date)}`);
   meta.push(`page built ${esc(D.generated_utc.slice(0, 16).replace("T", " "))} UTC`);
   $("meta").textContent = meta.join(" · ");
   let b = "";
-  if (D.demo) b += `<div class="banner"><b>Demo data.</b> These numbers come from realistic stand-in data, not from SMARD and DWD. Run the project on your own computer to see the real figures.</div>`;
+  if (D.demo) b += `<div class="banner"><b>Demo data.</b> These numbers come from realistic stand-in data, not from SMARD and DWD.</div>`;
   if (D.status && D.status.error) b += `<div class="banner"><b>Today's update failed:</b> ${esc(D.status.error)}. The page shows the last good results.</div>`;
+  const regErr = V.region && D.status && D.status.areas && D.status.areas[V.region] && D.status.areas[V.region].error;
+  if (regErr) b += `<div class="banner"><b>Today's update for ${esc(V.region)} failed:</b> ${esc(regErr)}.</div>`;
   $("banners").innerHTML = b;
 
-  section("tomorrow", () => {
-  const t = D.tomorrow;
-  if (t) {
-    const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "long", day: "numeric", month: "long", year: "numeric"});
-    $("tomorrow-sub").textContent = `${day}. Made ${t.issued_utc.slice(0, 16)} UTC using the ${t.weather_source} weather forecast.`;
-    $("tomorrow-tiles").innerHTML =
-      tile("Total for the day", `${fmt(t.total_gwh, 0)} GWh`, `90% range ${fmt(t.total_low_gwh, 0)}–${fmt(t.total_high_gwh, 0)} GWh`) +
-      tile("Highest hour", `${fmt(t.peak_gw, 1)} GW`, `at ${esc(t.peak_hour)}`);
-    const x = t.hours;
-    lineChart("chart-tomorrow", {
-      labels: t.hours, unit: "GW", xLabel: hm, tipLabel: hm, tipUnit: "GW", tableId: "table-tomorrow",
-      band: {low: t.low_gw, high: t.high_gw},
-      series: [{name: "Same week last year", y: t.baseline_gw, color: "--base", width: 2, dash: true},
-               {name: "Forecast", y: t.forecast_gw, color: "--model", width: 2.5, markers: true}],
-    });
-    $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
-      t.hour_labels.map((h, i) => [h, fmt(t.forecast_gw[i]), fmt(t.low_gw[i]), fmt(t.high_gw[i]), fmt(t.baseline_gw[i])]));
-  } else {
-    $("tomorrow").insertAdjacentHTML("beforeend", `<p class="empty">No forecast yet. Run the daily job.</p>`);
-  }
-
+  section("hero", () => {
+    const v = B.savings;
+    $("hero-eyebrow").textContent = `Energiekrise · Winter 2022/23 · ${V.short}`;
+    if (!v || !v.headline) { $("big").textContent = "…"; $("lede").textContent = "No savings result for this area yet."; $("range").textContent = ""; $("facts").innerHTML = ""; $("verdict").textContent = ""; return; }
+    const h = v.headline;
+    $("big").innerHTML = `−${fmt(h.saving_pct)}<small>%</small>`;
+    $("big").setAttribute("aria-label", `${fmt(h.saving_pct)} percent less`);
+    $("lede").textContent = "less grid electricity than the weather and calendar predicted.";
+    const twh = h.saving_twh * k;
+    $("range").textContent = `90% range ${fmt(h.low_pct)}% to ${fmt(h.high_pct)}% · about ${fmt(twh, twh < 1 ? 2 : 1)} TWh${est} · October to March`;
+    const facts = [];
+    const latest = (v.winters || []).filter(w => w.complete).slice(-1)[0];
+    if (latest && latest.winter !== "2022/23") {
+      const maybe = latest.low_pct <= 0;
+      facts.push(`<div class="fact"><div class="k">Has it come back?</div><div class="v">${maybe ? "Maybe. The gap was" : "Not fully. Still"} <b class="r">${signed(-latest.saving_pct)}%</b> in winter ${esc(latest.winter)}.</div></div>`);
+    }
+    if (v.dark) facts.push(`<div class="fact"><div class="k">Night hours only</div><div class="v"><b class="r">${signed(-v.dark.saving_pct)}%</b>, so rooftop solar doesn't explain it.</div></div>`);
+    $("facts").innerHTML = facts.join("");
+    $("verdict").textContent = V.level === "country" ? (v.verdict || "") : (V.estimate ? "" : (v.verdict || ""));
   });
 
-  section("history", () => {
-  const h = D.last30;
-  if (h) {
-    const shadeTo = h.backfilled_until ? h.time.filter(x => x <= h.backfilled_until).length - 1 : 0;
-    lineChart("chart-history", {
-      labels: h.time, unit: "GW", xLabel: dayMon, tipLabel: dayMonHm, tipUnit: "GW",
-      shadeTo, shadeLabel: "backfilled (measured weather)",
-      series: [{name: "Same week last year", y: h.baseline_gw, color: "--base", width: 1.2, dash: true},
-               {name: "Forecast", y: h.forecast_gw, color: "--model", width: 1.6},
-               {name: "Real", y: h.actual_gw, color: "--actual", width: 2}],
-    });
-  } else {
-    $("chart-history").outerHTML = `<p class="empty">Not enough forecasts yet.</p>`;
-  }
-
-  });
-
-  section("scores", () => {
-  const s = D.scores;
-  if (s) {
-    const better = s.model_mape < s.baseline_mape;
-    $("score-tiles").innerHTML =
-      tile("Our model", `${fmt(s.model_mape, 2)}%`, "average hourly error") +
-      tile("Same week last year", `${fmt(s.baseline_mape, 2)}%`, better ? `our model is ${fmt(100 * (1 - s.model_mape / s.baseline_mape), 0)}% better` : "baseline is currently better") +
-      tile("Inside the 90% range", `${fmt(s.inside_range_pct, 0)}%`, "of hours (should be about 90%)") +
-      (s.backfilled_days ? tile("Backfilled days", s.backfilled_days, "made later with measured weather") : "");
-    lineChart("chart-scores", {
-      labels: s.dates, unit: "%", fromZero: true, decimals: 1, xLabel: dayMon, tipLabel: dayMon, tipUnit: "%", tipDecimals: 2,
-      tableId: "table-scores",
-      series: [{name: "Same week last year", y: s.running_baseline, color: "--base", width: 2},
-               {name: "Model", y: s.running_model, color: "--model", width: 2.5, markers: true}],
-    });
-    $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
-      s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", (r.model_daily_error_pct > 0 ? "+" : "") + fmt(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
-  } else {
-    $("score-tiles").innerHTML = `<p class="empty">No scored days yet.</p>`;
-  }
-
+  section("kpis", () => {
+    const t = B.tomorrow, s = B.scores, kk = [], c = B.range_calibration;
+    if (t) {
+      const day = new Date(t.date + "T12:00:00").toLocaleDateString("en-GB", {weekday: "short", day: "numeric", month: "short"});
+      const tot = t.total_gwh * k, d0 = tot < 100 ? 1 : 0, pk = t.peak_gw * k;
+      kk.push(`<div class="kpi"><div class="k">Tomorrow, ${esc(day)}</div><div class="v">${fmt(tot, d0)} GWh</div><div class="n">range ${fmt(t.total_low_gwh * k, d0)}–${fmt(t.total_high_gwh * k, d0)}${est}</div></div>`);
+      kk.push(`<div class="kpi"><div class="k">Peak hour</div><div class="v">${fmt(pk, pk < 10 ? 2 : 1)} GW</div><div class="n">at ${esc(t.peak_hour)}</div></div>`);
+    }
+    if (s) {
+      const whose = V.estimate ? ` (${esc(V.region)} region)` : "";
+      kk.push(`<div class="kpi b"><div class="k">Forecast error, ${s.days} days</div><div class="v">${fmt(s.model_mape, 1)}%</div><div class="n">vs ${fmt(s.baseline_mape, 1)}% for “same week last year”${whose}</div></div>`);
+      kk.push(`<div class="kpi b"><div class="k">Hours inside 90% range</div><div class="v">${fmt(s.inside_range_pct, 0)}%</div><div class="n">${c && c.scale > 1.001 ? `range now widened ×${fmt(c.scale, 2)} to match reality` : "should be about 90%"}${whose}</div></div>`);
+    }
+    $("kpis").innerHTML = kk.length ? kk.join("") : `<p class="empty">No daily forecast for this area yet.</p>`;
   });
 
   section("savings", () => {
-  const v = D.savings;
-  if (v && v.headline) {
-    const hd = v.headline;
-    $("headline").textContent = `Germany used ${fmt(hd.saving_pct)}% less grid electricity in winter 2022/23 than the weather predicted (90% range ${fmt(hd.low_pct)}% to ${fmt(hd.high_pct)}%).`;
-    $("verdict").textContent = v.verdict;
-    const rows = v.checks.map(r => Object.assign({}, r, {kind: "check"})).concat(v.winters.map(r => Object.assign({}, r, {kind: "crisis"})));
-    const labels = rows.map(r => r.winter + (r.kind === "check" ? " (test)" : (r.complete === false ? " (so far)" : "")));
-    barChart("chart-savings", {
-      labels, values: rows.map(r => r.saving_pct), low: rows.map(r => r.low_pct), high: rows.map(r => r.high_pct),
-      colors: rows.map(r => r.kind === "check" ? "--check" : "--model"), tableId: "table-savings",
-    });
-    $("table-savings").innerHTML = table(["Winter", "Saving", "90% range", "Saving (TWh)"],
-      rows.map(r => [labels[rows.indexOf(r)], fmt(r.saving_pct) + "%", `${fmt(r.low_pct)}% to ${fmt(r.high_pct)}%`, r.saving_twh !== undefined ? fmt(r.saving_twh) : "–"]));
-  } else {
-    $("headline").textContent = "The savings analysis has not been run yet.";
-  }
+    const v = B.savings;
+    if (!v || !v.winters) { $("chart-savings").innerHTML = `<p class="empty">No savings result for this area yet.</p>`; $("table-savings").innerHTML = ""; return; }
+    const rows = (v.checks || []).map(r => Object.assign({}, r, {kind: "check"})).concat(v.winters.map(r => Object.assign({}, r, {kind: "crisis"})));
+    const labels = rows.map(r => r.winter + (r.kind === "check" ? " test" : (r.complete === false ? " so-far" : "")));
+    barChart("chart-savings", {labels, values: rows.map(r => -r.saving_pct), low: rows.map(r => -r.high_pct), high: rows.map(r => -r.low_pct),
+      colors: rows.map(r => r.kind === "check" ? "--check" : "--red"), tableId: "table-savings"});
+    $("table-savings").innerHTML = table(["Winter", "Change vs expected", "90% range", "Saved (TWh)" + est],
+      rows.map(r => [esc(r.winter) + (r.kind === "check" ? " (test)" : ""), signed(-r.saving_pct) + "%", `${signed(-r.high_pct)}% to ${signed(-r.low_pct)}%`,
+        r.saving_twh !== undefined ? fmt(r.saving_twh * k, k < 0.2 ? 2 : 1) : "–"]));
+  });
+
+  section("regions", () => {
+    const H = D.hierarchy || {regions: []}, A = D.areas || {};
+    const regs = H.regions.filter(r => A[r.code] && A[r.code].savings && A[r.code].savings.winters);
+    $("regions").classList.toggle("hidden-sec", !regs.length);
+    if (!regs.length) return;
+    const latestW = regs.map(r => A[r.code].savings.winters.filter(w => w.complete).slice(-1)[0]).filter(Boolean).map(w => w.winter).sort().slice(-1)[0];
+    $("regions-latest-label").textContent = latestW ? `Winter ${latestW}` : "Latest winter";
+    const bars = [];
+    regs.forEach(r => ["2022/23", latestW].forEach((w, j) => {
+      const row = A[r.code].savings.winters.find(x => x.winter === w); if (!row || (j && w === "2022/23")) return;
+      bars.push({code: r.code, label: `${r.name} ${w}`, v: -row.saving_pct, lo: -row.high_pct, hi: -row.low_pct, color: j ? "--gold" : "--red", row});
+    }));
+    barChart("chart-regions", {labels: bars.map(x => x.label), values: bars.map(x => x.v), low: bars.map(x => x.lo), high: bars.map(x => x.hi),
+      colors: bars.map(x => x.color), tableId: "table-regions", onPick: (i) => Area.set(bars[i].code)});
+    $("table-regions").innerHTML = table(["Region", "Covers", "Winter", "Change vs expected", "90% range", "Saved (TWh)"],
+      bars.map(x => { const r = Area.region(x.code); return [esc(r.name), esc(r.area_name), esc(x.row.winter), signed(x.v) + "%", `${signed(x.lo)}% to ${signed(x.hi)}%`, fmt(x.row.saving_twh, 1)]; }));
+  });
+
+  section("official", () => {
+    $("check").classList.toggle("hidden-sec", V.level !== "country");
+    const o = D.official;
+    if (!o || !o.rows || !o.rows.length) { $("table-official").innerHTML = `<p class="empty" style="padding: 14px">Appears after the next monthly analysis.</p>`; return; }
+    $("table-official").innerHTML = table(["Year", "Official grid load", "Official change", "Our total", "Our change", "Difference"],
+      o.rows.map(r => [r.year, r.official_twh != null ? fmt(r.official_twh) + " TWh" : "–", r.official_change_pct != null ? signed(r.official_change_pct) + "%" : "–",
+        r.ours_twh != null ? fmt(r.ours_twh) + " TWh" : "–", r.ours_change_pct != null ? signed(r.ours_change_pct) + "%" : "–",
+        r.diff_pct != null ? `<span class="ok-pill" style="color: ${Math.abs(r.diff_pct) < 1 ? "var(--blue)" : "var(--red)"}">${signed(r.diff_pct, 2)}%</span>` : "–"]),
+      [null, null, "neg", null, "neg", null]);
+    $("official-note").innerHTML = esc(o.note || "") + (o.sources && o.sources.length ? " Sources: " + o.sources.map(x => `<a href="${esc(x.url)}" rel="noopener">${esc(x.name)}</a>`).join(", ") + "." : "");
+  });
+
+  section("tomorrow", () => {
+    const t = B.tomorrow;
+    if (!t) { $("tomorrow-sub").textContent = "No forecast for this area yet."; $("chart-tomorrow").innerHTML = ""; $("table-tomorrow").innerHTML = ""; return; }
+    $("tomorrow-sub").textContent = `${V.name}${est}. Made ${t.issued_utc.slice(0, 16)} UTC with the ${t.weather_source} weather forecast, saved, and never changed afterwards.`;
+    const fc = mul(t.forecast_gw, k), lo = mul(t.low_gw, k), hi = mul(t.high_gw, k), bl = mul(t.baseline_gw, k), d = k < 0.2 ? 2 : 1;
+    lineChart("chart-tomorrow", {labels: t.hours, unit: "GW", xLabel: hm, tipLabel: hm, tipUnit: "GW", tipDecimals: d, decimals: d, tableId: "table-tomorrow",
+      band: {low: lo, high: hi},
+      series: [{name: "Same week last year", y: bl, color: "--grey", width: 1.6, dash: true},
+               {name: "Forecast", y: fc, color: "--gold", width: 2.6, markers: true}]});
+    $("table-tomorrow").innerHTML = table(["Hour", "Forecast (GW)", "Low", "High", "Same week last year"],
+      t.hour_labels.map((h, i) => [h, fmt(fc[i], d), fmt(lo[i], d), fmt(hi[i], d), fmt(bl[i], d)]));
+  });
+
+  section("history", () => {
+    const h = B.last30;
+    if (!h) { $("chart-history").innerHTML = `<p class="empty">Not enough forecasts for this area yet.</p>`; return; }
+    const shadeTo = h.backfilled_until ? h.time.filter(x => x <= h.backfilled_until).length - 1 : 0, d = k < 0.2 ? 2 : 1;
+    lineChart("chart-history", {labels: h.time, unit: "GW", xLabel: dayMon, tipLabel: dayMonHm, tipUnit: "GW", tipDecimals: d, decimals: d, shadeTo, shadeLabel: "backfilled (measured weather)",
+      series: [{name: "Same week last year", y: mul(h.baseline_gw, k), color: "--grey", width: 1.2, dash: true},
+               {name: "Forecast", y: mul(h.forecast_gw, k), color: "--gold", width: 1.6},
+               {name: "Real" + est, y: mul(h.actual_gw, k), color: "--blue", width: 2}]});
+  });
+
+  section("accuracy", () => {
+    const s = B.scores;
+    if (!s) { $("chart-scores").innerHTML = `<p class="empty">No scored days for this area yet.</p>`; $("table-scores").innerHTML = ""; $("range-note").textContent = ""; return; }
+    lineChart("chart-scores", {labels: s.dates, unit: "%", fromZero: true, decimals: 1, xLabel: dayMon, tipLabel: dayMon, tipUnit: "%", tipDecimals: 2, tableId: "table-scores",
+      series: [{name: "Same week last year", y: s.running_baseline, color: "--grey", width: 2},
+               {name: "Model", y: s.running_model, color: "--gold", width: 2.6, markers: true}]});
+    $("table-scores").innerHTML = table(["Day", "Model error", "Baseline error", "Model daily total", "Hours in range"],
+      s.table.map(r => [r.date, fmt(r.model_mape, 2) + "%", fmt(r.baseline_mape, 2) + "%", signed(r.model_daily_error_pct, 2) + "%", fmt(r.inside_range_pct, 0) + "%"]));
+    const c = B.range_calibration;
+    $("range-note").textContent = (V.estimate ? `These are the ${V.region} region's scores; estimated areas have no forecast of their own. ` : "") +
+      (c && c.days_used ? `Range check: before widening, ${fmt(c.coverage_before, 0)}% of hours fell inside the 90% range over the last ${c.days_used} days. The range is now ${c.scale > 1.001 ? "widened ×" + fmt(c.scale, 2) : "kept as it is"}, which would have covered ${fmt(c.coverage_after, 0)}%.` : "");
   });
 }
 
+// ---------------------------------------------------------------- start
 (function theme() {
   const root = document.documentElement;
   try { const t = localStorage.getItem("theme"); if (t) root.setAttribute("data-theme", t); } catch (e) {}
   $("theme").addEventListener("click", () => {
-    const dark = root.getAttribute("data-theme") ? root.getAttribute("data-theme") === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
-    const next = dark ? "light" : "dark";
+    const next = isLight() ? "dark" : "light";
     root.setAttribute("data-theme", next);
     try { localStorage.setItem("theme", next); } catch (e) {}
-    render();
+    render(); Grid3D.applyTheme();
   });
 })();
+section("areas", () => Area.init());
 render();
+section("stage", () => {
+  Hero.init();
+  if (!D || !D.geo || !D.points) { $("stage-note").textContent = ""; return; }
+  try { Grid3D.init($("stage"), D); Grid3D.focus(Area.view(), Area.members(Area.view())); }
+  catch (e) { console.warn("3D map not shown:", e.message); map2D($("stage"), D); $("stage-note").textContent = ""; }
+});
 let resizeTimer;
-window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(render, 150); });
+window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { render(); Grid3D.resize(); }, 150); });
 </script>
 </body>
 </html>

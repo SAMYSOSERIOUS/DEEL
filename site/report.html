@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Netzlast Report</title>
+<meta name="description" content="Full method, tests and results: did Germany really save electricity in the 2022 energy crisis?">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root { color-scheme: dark; --ground: #0A0D12; --panel: #11161D; --line: #1E2833; --ink: #ECEFF3; --ink-2: #A3AEBA; --muted: #7A8693; --gold: #F2B705; --gold-hi: #FFE38A;
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif; --body: Barlow, system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace; }
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { color-scheme: light; --ground: #F3F1EA; --panel: #FBFAF6; --line: #D9D5C9; --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A; --gold: #A87A00; --gold-hi: #D9A100; } }
+:root[data-theme="light"] { color-scheme: light; --ground: #F3F1EA; --panel: #FBFAF6; --line: #D9D5C9; --ink: #14181D; --ink-2: #4A525C; --muted: #6A717A; --gold: #A87A00; --gold-hi: #D9A100; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 17px/1.65 var(--body); }
+a { color: var(--gold); } a:hover { color: var(--gold-hi); }
+.flag { display: flex; height: 4px; } .flag span { flex: 1; }
+.top { max-width: 900px; margin: 0 auto; padding: 16px 24px; display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; }
+.top a.home { font: 700 20px/1 var(--display); letter-spacing: 0.06em; color: var(--ink); text-decoration: none; }
+main { max-width: 900px; margin: 0 auto; padding: 8px 24px 64px; }
+@media (max-width: 560px) { main, .top { padding-inline: 16px; } }
+h1 { font: 700 clamp(36px, 6vw, 56px)/1.05 var(--display); margin: 16px 0 8px; text-wrap: balance; }
+h2 { font: 600 32px/1.15 var(--display); margin: 48px 0 12px; padding-top: 20px; border-top: 1px solid var(--line); text-wrap: balance; }
+h3 { font: 600 22px/1.2 var(--display); margin: 28px 0 8px; }
+p, li { color: var(--ink-2); max-width: 70ch; }
+strong { color: var(--ink); }
+em { color: var(--muted); }
+img { display: block; max-width: 100%; height: auto; margin: 16px 0; border-radius: 10px; background: #fff; padding: 8px; border: 1px solid var(--line); }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; margin: 16px 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+th, td { padding: 9px 12px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--muted); font-weight: 500; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+td { font-family: var(--mono); color: var(--ink); }
+tr:last-child td { border-bottom: 0; }
+code { font-family: var(--mono); font-size: 0.9em; }
+</style>
+</head>
+<body>
+<div class="flag" aria-hidden="true"><span style="background:#000"></span><span style="background:#DD0000"></span><span style="background:#FFCE00"></span></div>
+<div class="top"><a class="home" href="index.html">NETZLAST WATCH</a><a href="index.html">← Back to the live page</a></div>
+<main>
+<h1>Did Germany really save electricity in the 2022 energy crisis?</h1>
+<p><em>Generated 2026-10-10T11:29:36+00:00 from data up to 2026-10-10 09:00:00+00:00.</em></p>
+<h2>The short answer</h2>
+<p><strong>Germany used 8.8% less grid electricity in winter 2022/23 than the weather predicted (90% range 6.2% to 11.2%).</strong></p>
+<p>In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electricity than the weather and calendar predicted (90% range 6.2% to 11.2%), about 23.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 4.2% below the pre-crisis pattern (range 1.5% to 6.8%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 9.2%.</p>
+<h2>Saving per winter (October to March)</h2>
+<div class="tablebox"><table>
+<thead>
+<tr>
+<th>Winter</th>
+<th>Real use (TWh)</th>
+<th>Expected without crisis (TWh)</th>
+<th>Saving (TWh)</th>
+<th>Saving</th>
+<th>90% range</th>
+<th>Years past training</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2021/22</td>
+<td>264.5</td>
+<td>264.5</td>
+<td>-0.0</td>
+<td>-0.0%</td>
+<td>-2.8% to 2.7%</td>
+<td>0.0</td>
+</tr>
+<tr>
+<td>2022/23</td>
+<td>240.4</td>
+<td>263.5</td>
+<td>23.1</td>
+<td>8.8%</td>
+<td>6.2% to 11.2%</td>
+<td>0.08</td>
+</tr>
+<tr>
+<td>2023/24</td>
+<td>245.1</td>
+<td>263.5</td>
+<td>18.4</td>
+<td>7.0%</td>
+<td>4.3% to 9.5%</td>
+<td>1.08</td>
+</tr>
+<tr>
+<td>2024/25</td>
+<td>246.1</td>
+<td>263.2</td>
+<td>17.1</td>
+<td>6.5%</td>
+<td>3.8% to 9.0%</td>
+<td>2.08</td>
+</tr>
+<tr>
+<td>2025/26</td>
+<td>251.9</td>
+<td>263.1</td>
+<td>11.2</td>
+<td>4.2%</td>
+<td>1.5% to 6.8%</td>
+<td>3.08</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="Savings by winter" src="figures/11_savings_by_winter.png" loading="lazy"></p>
+<p><img alt="Winter 2022/23 day by day" src="figures/12_winter_2022_23.png" loading="lazy"></p>
+<h2>Step 4: does the method work? Tests on normal winters</h2>
+<p>Each normal winter was forecast using only older data, as if it were unknown, from the same distances ahead as the crisis winters. In a normal winter the 'saving' should be about 0.</p>
+<div class="tablebox"><table>
+<thead>
+<tr>
+<th>Test winter</th>
+<th>Years ahead</th>
+<th>Whole-winter error</th>
+<th>Daily error</th>
+<th>Hourly error</th>
+<th>Hourly error of 'same week last year'</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2016/17</td>
+<td>0</td>
+<td>1.2%</td>
+<td>1.7%</td>
+<td>1.9%</td>
+<td>4.0%</td>
+</tr>
+<tr>
+<td>2017/18</td>
+<td>0</td>
+<td>1.1%</td>
+<td>2.2%</td>
+<td>2.5%</td>
+<td>3.7%</td>
+</tr>
+<tr>
+<td>2017/18</td>
+<td>1</td>
+<td>2.3%</td>
+<td>2.6%</td>
+<td>2.9%</td>
+<td>3.7%</td>
+</tr>
+<tr>
+<td>2018/19</td>
+<td>0</td>
+<td>-1.0%</td>
+<td>1.9%</td>
+<td>2.2%</td>
+<td>4.3%</td>
+</tr>
+<tr>
+<td>2018/19</td>
+<td>1</td>
+<td>-0.0%</td>
+<td>1.8%</td>
+<td>2.1%</td>
+<td>4.3%</td>
+</tr>
+<tr>
+<td>2018/19</td>
+<td>2</td>
+<td>0.9%</td>
+<td>2.0%</td>
+<td>2.3%</td>
+<td>4.3%</td>
+</tr>
+<tr>
+<td>2019/20</td>
+<td>0</td>
+<td>-1.3%</td>
+<td>2.6%</td>
+<td>2.9%</td>
+<td>3.8%</td>
+</tr>
+<tr>
+<td>2019/20</td>
+<td>1</td>
+<td>-2.4%</td>
+<td>3.2%</td>
+<td>3.5%</td>
+<td>3.8%</td>
+</tr>
+<tr>
+<td>2019/20</td>
+<td>2</td>
+<td>-1.4%</td>
+<td>2.8%</td>
+<td>3.1%</td>
+<td>3.8%</td>
+</tr>
+<tr>
+<td>2019/20</td>
+<td>3</td>
+<td>-0.5%</td>
+<td>2.6%</td>
+<td>2.9%</td>
+<td>3.8%</td>
+</tr>
+</tbody>
+</table></div>
+<p>Typical whole-winter error: about 1.5% for the next winter, growing with each year ahead. On average the model was off by +0.0% plus -0.1% per year ahead (mostly because demand was slowly falling before 2022). The ranges above are built from these errors.</p>
+<p><img alt="Test on a normal winter" src="figures/10_test_normal_winter.png" loading="lazy"></p>
+<h2>Why the weather adjustment matters</h2>
+<div class="tablebox"><table>
+<thead>
+<tr>
+<th>Winter</th>
+<th>Raw change vs. 2016-2020 winters</th>
+<th>Explained by weather &amp; calendar</th>
+<th>Saving</th>
+<th>Left over</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2021/22</td>
+<td>0.6%</td>
+<td>0.5%</td>
+<td>-0.0%</td>
+<td>0.1%</td>
+</tr>
+<tr>
+<td>2022/23</td>
+<td>-8.6%</td>
+<td>0.1%</td>
+<td>8.8%</td>
+<td>0.1%</td>
+</tr>
+<tr>
+<td>2023/24</td>
+<td>-7.3%</td>
+<td>-0.4%</td>
+<td>7.0%</td>
+<td>0.1%</td>
+</tr>
+<tr>
+<td>2024/25</td>
+<td>-6.4%</td>
+<td>0.0%</td>
+<td>6.5%</td>
+<td>0.1%</td>
+</tr>
+<tr>
+<td>2025/26</td>
+<td>-4.2%</td>
+<td>-0.0%</td>
+<td>4.2%</td>
+<td>0.1%</td>
+</tr>
+</tbody>
+</table></div>
+<p>Comparing with a plain 2017-2019 average (no weather adjustment) would give 8.9% for 2022/23, instead of 8.8%.</p>
+<h2>Does the answer depend on our choices?</h2>
+<div class="tablebox"><table>
+<thead>
+<tr>
+<th>View</th>
+<th>Winter</th>
+<th>Saving</th>
+<th>90% range</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cutoff 2021-09-01</td>
+<td>2022/23</td>
+<td>7.9%</td>
+<td>5.3% to 10.4%</td>
+</tr>
+<tr>
+<td>cutoff 2021-09-01</td>
+<td>2025/26</td>
+<td>3.3%</td>
+<td>0.5% to 5.9%</td>
+</tr>
+<tr>
+<td>cutoff 2022-03-01</td>
+<td>2022/23</td>
+<td>8.9%</td>
+<td>6.3% to 11.4%</td>
+</tr>
+<tr>
+<td>cutoff 2022-03-01</td>
+<td>2025/26</td>
+<td>4.4%</td>
+<td>1.7% to 7.0%</td>
+</tr>
+<tr>
+<td>cutoff 2022-09-01</td>
+<td>2022/23</td>
+<td>8.8%</td>
+<td>6.2% to 11.2%</td>
+</tr>
+<tr>
+<td>cutoff 2022-09-01</td>
+<td>2025/26</td>
+<td>4.2%</td>
+<td>1.5% to 6.8%</td>
+</tr>
+<tr>
+<td>Dec-Feb only</td>
+<td>2022/23</td>
+<td>8.8%</td>
+<td>6.3% to 11.3%</td>
+</tr>
+<tr>
+<td>Dec-Feb only</td>
+<td>2025/26</td>
+<td>2.1%</td>
+<td>-0.6% to 4.8%</td>
+</tr>
+<tr>
+<td>dark hours only (no solar)</td>
+<td>2022/23</td>
+<td>9.2%</td>
+<td>6.6% to 11.6%</td>
+</tr>
+<tr>
+<td>dark hours only (no solar)</td>
+<td>2025/26</td>
+<td>3.8%</td>
+<td>1.1% to 6.4%</td>
+</tr>
+<tr>
+<td>lockdown months left out</td>
+<td>2022/23</td>
+<td>8.7%</td>
+<td>6.1% to 11.1%</td>
+</tr>
+<tr>
+<td>lockdown months left out</td>
+<td>2025/26</td>
+<td>4.1%</td>
+<td>1.4% to 6.7%</td>
+</tr>
+<tr>
+<td>corrected for known model bias (trend)</td>
+<td>2022/23</td>
+<td>8.8%</td>
+<td>6.2% to 11.2%</td>
+</tr>
+<tr>
+<td>corrected for known model bias (trend)</td>
+<td>2025/26</td>
+<td>3.8%</td>
+<td>1.1% to 6.4%</td>
+</tr>
+<tr>
+<td>dark hours + bias corrected (most cautious)</td>
+<td>2022/23</td>
+<td>9.2%</td>
+<td>6.6% to 11.6%</td>
+</tr>
+<tr>
+<td>dark hours + bias corrected (most cautious)</td>
+<td>2025/26</td>
+<td>3.4%</td>
+<td>0.6% to 6.0%</td>
+</tr>
+<tr>
+<td>simple average of 2017-19 (no weather adjustment)</td>
+<td>2022/23</td>
+<td>8.9%</td>
+<td>6.3% to 11.3%</td>
+</tr>
+<tr>
+<td>simple average of 2017-19 (no weather adjustment)</td>
+<td>2025/26</td>
+<td>4.5%</td>
+<td>1.8% to 7.1%</td>
+</tr>
+</tbody>
+</table></div>
+<p><img alt="Robustness" src="figures/15_robustness.png" loading="lazy"></p>
+<h2>When did the saving happen, and who might have saved?</h2>
+<p>In winter 2022/23 the saving was 8.8% on workdays and 8.8% on weekends and holidays (8.4% in workday daytime, 7:00-18:00).</p>
+<p><img alt="Saving by hour" src="figures/14_saving_by_hour.png" loading="lazy"></p>
+<p>Energy-hungry industries (Paper, Chemicals, Glass, cement, ceramics, Basic metals) produced -12.6% compared with 2021 during winter 2022/23. Month by month, the saving and the drop in industrial output move together with a correlation of -0.40 (1 = in perfect step, 0 = unrelated) over 48 months.</p>
+<p><img alt="Monthly saving and industry" src="figures/13_monthly_and_industry.png" loading="lazy"></p>
+<p><strong>What this analysis can and can't tell apart</strong></p>
+<ol>
+<li><strong>Grid demand is not total use.</strong> SMARD measures electricity flowing through the public grid.
+   Power that rooftop solar panels make and use on the spot never shows up. Rooftop solar grew fast
+   after 2022, so part of the "saving" in daytime hours may just be self-made solar power. The
+   <em>dark hours only</em> view removes this: at night no panel produces anything.</li>
+<li><strong>Industry or households?</strong> One national number per hour can't say who saved. Two hints only:
+   <em>when</em> the saving happened (workdays and daytime point to industry and offices; evenings and
+   weekends point to homes), and whether energy-hungry industries produced less at the same time
+   (Eurostat). A match in timing is a hint, not proof.</li>
+<li><strong>Saving or cutting back?</strong> A factory that stops making ammonia "saves" electricity, but that
+   is lost production, not efficiency. The data can't tell a smarter fridge from a closed plant.</li>
+<li><strong>Prices or appeals?</strong> Prices jumped and the government asked people to save at the same time.
+   Both pushed the same way in the same months, so their effects can't be separated here.</li>
+<li><strong>New demand hides savings.</strong> Heat pumps and electric cars added demand after 2022. The
+   estimate is the <em>net</em> change: real savings could be larger than shown.</li>
+<li><strong>The further ahead, the less sure.</strong> The "no crisis" model learned from 2015 to August 2022.
+   Every winter after that is forecast further into the future, so the ranges get wider. The model
+   holds the last pre-crisis year's level; it can't know about slow changes after that.</li>
+<li><strong>Starting date matters a little.</strong> Prices already rose from autumn 2021. Training up to
+   September 2022 may already include some early crisis behaviour, which would make the saving
+   look smaller. The <em>cutoff</em> views show how much this changes the answer.</li>
+</ol>
+<h2>Data checks</h2>
+<ul>
+<li>Demand data: 103211 hours from 2014-12-31 23:00:00+00:00 to 2026-10-10 09:00:00+00:00; 12 23-hour days and 11 25-hour days (clock changes); 0 missing hours filled (no gap longer than 2 hours allowed).</li>
+<li>Cross-check with Open Power System Data (2015-01-01 to 2020-09-30): daily correlation 0.9883, SMARD is on average 1.028× OPSD (different definition of 'load', steady over the years: 2015: 1.0469, 2016: 1.0348, 2017: 1.0298, 2018: 1.0207, 2019: 1.0141, 2020: 1.0235).</li>
+</ul>
+<h2>Exploring the data (step 2)</h2>
+<p><img alt="History" src="figures/01_history.png" loading="lazy"></p>
+<p><img alt="Daily rhythm" src="figures/02_daily_rhythm.png" loading="lazy"></p>
+<p><img alt="Temperature" src="figures/03_temperature.png" loading="lazy"></p>
+<p><img alt="Christmas" src="figures/04_christmas.png" loading="lazy"></p>
+<p><img alt="Lockdown" src="figures/05_lockdown.png" loading="lazy"></p>
+<p><img alt="Clock change" src="figures/06_clock_change.png" loading="lazy"></p>
+<h2>Sources</h2>
+<ul>
+<li>Electricity: Bundesnetzagentur | SMARD.de (CC BY 4.0)</li>
+<li>Weather: Deutscher Wetterdienst (DWD), opendata.dwd.de</li>
+<li>Cross-check: Open Power System Data, time series package 2020-10-06</li>
+<li>Industry: Eurostat, sts_inpr_m</li>
+<li>Holidays: python-holidays</li>
+</ul>
+</main>
+</body>
+</html>
