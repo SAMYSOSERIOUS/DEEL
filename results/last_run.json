@@ -1,5 +1,5 @@
 {
-  "started_utc": "2026-10-11T03:37:59+00:00",
+  "started_utc": "2026-10-12T03:43:44+00:00",
   "download": {
     "smard": "ok",
     "smard_50Hertz": "ok",
@@ -11,34 +11,34 @@
   },
   "data_check": "passed",
   "range_scale": 1.55,
-  "forecast_for": "2026-10-12",
-  "forecast_total_gwh": 1290.6,
-  "days_scored": 30,
+  "forecast_for": "2026-10-13",
+  "forecast_total_gwh": 1340.1,
+  "days_scored": 31,
   "areas": {
     "50Hertz": {
       "range_scale": 1.0,
-      "forecast_for": "2026-10-12",
-      "forecast_total_gwh": 275.1,
-      "days_scored": 0
+      "forecast_for": "2026-10-13",
+      "forecast_total_gwh": 276.1,
+      "days_scored": 1
     },
     "TenneT": {
       "range_scale": 1.0,
-      "forecast_for": "2026-10-12",
-      "forecast_total_gwh": 395.6,
-      "days_scored": 0
+      "forecast_for": "2026-10-13",
+      "forecast_total_gwh": 408.1,
+      "days_scored": 1
     },
     "Amprion": {
       "range_scale": 1.0,
-      "forecast_for": "2026-10-12",
-      "forecast_total_gwh": 474.4,
-      "days_scored": 0
+      "forecast_for": "2026-10-13",
+      "forecast_total_gwh": 488.8,
+      "days_scored": 1
     },
     "TransnetBW": {
       "range_scale": 1.0,
-      "forecast_for": "2026-10-12",
-      "forecast_total_gwh": 161.4,
-      "days_scored": 0
+      "forecast_for": "2026-10-13",
+      "forecast_total_gwh": 167.0,
+      "days_scored": 1
     }
   },
-  "finished_utc": "2026-10-11T03:39:00+00:00"
+  "finished_utc": "2026-10-12T03:44:40+00:00"
 }

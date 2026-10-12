@@ -1,0 +1,2 @@
+date,hours,model_mape,baseline_mape,model_daily_error_pct,inside_range_pct,actual_gwh,forecast_gwh,backfilled
+2026-10-11,24,2.6768417399643534,2.703175571243006,-0.7559458714036071,75.0,123.56225,122.6281862725116,False
