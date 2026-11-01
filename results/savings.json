@@ -1,9 +1,10 @@
 {
-  "generated_utc": "2026-10-10T11:29:36+00:00",
+  "generated_utc": "2026-11-01T02:50:00+00:00",
+  "area": "DE",
   "data": {
     "first_hour_utc": "2014-12-31 23:00:00+00:00",
-    "last_hour_utc": "2026-10-10 09:00:00+00:00",
-    "hours": 103211
+    "last_hour_utc": "2026-11-01 01:00:00+00:00",
+    "hours": 103731
   },
   "settings": {
     "main_cutoff": "2022-09-01",
@@ -161,7 +162,7 @@
       "hours": 4368,
       "error_pct": 1.2279843686735958,
       "hourly_mape": 1.9143543351401064,
-      "daily_mape": 1.6737302533653864,
+      "daily_mape": 1.6737302533653857,
       "baseline_last_year_error_pct": 2.4146667262036736,
       "baseline_last_year_hourly_mape": 3.986010925002071,
       "baseline_avg_years_error_pct": 1.515912104001349
@@ -187,7 +188,7 @@
       "hours": 4368,
       "error_pct": 2.2883132815462615,
       "hourly_mape": 2.8912273277173552,
-      "daily_mape": 2.6267862814914924,
+      "daily_mape": 2.6267862814914915,
       "baseline_last_year_error_pct": 0.5135217085794119,
       "baseline_last_year_hourly_mape": 3.6947101897894643,
       "baseline_avg_years_error_pct": 1.9032729309403695
@@ -200,7 +201,7 @@
       "hours": 4368,
       "error_pct": -1.038012158966517,
       "hourly_mape": 2.187778560002253,
-      "daily_mape": 1.9267173142810166,
+      "daily_mape": 1.9267173142810148,
       "baseline_last_year_error_pct": -1.9542652573470987,
       "baseline_last_year_hourly_mape": 4.312989415821164,
       "baseline_avg_years_error_pct": -0.5363606625510942
@@ -213,7 +214,7 @@
       "hours": 4368,
       "error_pct": -0.04966997532049877,
       "hourly_mape": 2.1061417309077646,
-      "daily_mape": 1.8025733980521441,
+      "daily_mape": 1.8025733980521466,
       "baseline_last_year_error_pct": -1.9542652573470987,
       "baseline_last_year_hourly_mape": 4.312989415821164,
       "baseline_avg_years_error_pct": -0.5363606625510942
@@ -226,7 +227,7 @@
       "hours": 4368,
       "error_pct": 0.8547793988606278,
       "hourly_mape": 2.337267549378539,
-      "daily_mape": 2.0154845237091905,
+      "daily_mape": 2.015484523709192,
       "baseline_last_year_error_pct": -1.9542652573470987,
       "baseline_last_year_hourly_mape": 4.312989415821164,
       "baseline_avg_years_error_pct": -0.5363606625510942
@@ -239,7 +240,7 @@
       "hours": 4392,
       "error_pct": -1.3056222511420246,
       "hourly_mape": 2.9151606077473464,
-      "daily_mape": 2.627915985677521,
+      "daily_mape": 2.6279159856775194,
       "baseline_last_year_error_pct": -1.5641107479491545,
       "baseline_last_year_hourly_mape": 3.838899853799671,
       "baseline_avg_years_error_pct": -2.2841827842468354
@@ -252,7 +253,7 @@
       "hours": 4392,
       "error_pct": -2.3721084290338257,
       "hourly_mape": 3.5298983138970583,
-      "daily_mape": 3.2295247578469453,
+      "daily_mape": 3.2295247578469457,
       "baseline_last_year_error_pct": -1.5641107479491545,
       "baseline_last_year_hourly_mape": 3.838899853799671,
       "baseline_avg_years_error_pct": -2.2841827842468354
@@ -265,7 +266,7 @@
       "hours": 4392,
       "error_pct": -1.3538859138270132,
       "hourly_mape": 3.1305936286032017,
-      "daily_mape": 2.839111555122097,
+      "daily_mape": 2.839111555122096,
       "baseline_last_year_error_pct": -1.5641107479491545,
       "baseline_last_year_hourly_mape": 3.838899853799671,
       "baseline_avg_years_error_pct": -2.2841827842468354
@@ -278,7 +279,7 @@
       "hours": 4392,
       "error_pct": -0.4613272880836239,
       "hourly_mape": 2.930602914197362,
-      "daily_mape": 2.569423484915968,
+      "daily_mape": 2.5694234849159674,
       "baseline_last_year_error_pct": -1.5641107479491545,
       "baseline_last_year_hourly_mape": 3.838899853799671,
       "baseline_avg_years_error_pct": -2.2841827842468354
@@ -1001,9 +1002,9 @@
     {
       "month": "2019-02",
       "actual": 41353014.25,
-      "expected": 41362764.93710793,
+      "expected": 41362764.93710792,
       "hours": 672,
-      "saving_pct": 0.023573586346936626
+      "saving_pct": 0.02357358634691442
     },
     {
       "month": "2019-03",
@@ -1022,16 +1023,16 @@
     {
       "month": "2019-05",
       "actual": 40628170.5,
-      "expected": 40628600.50908553,
+      "expected": 40628600.50908551,
       "hours": 744,
-      "saving_pct": 0.0010583900999283635
+      "saving_pct": 0.0010583900998950568
     },
     {
       "month": "2019-06",
       "actual": 38116875.0,
-      "expected": 38171366.20226485,
+      "expected": 38171366.202264845,
       "hours": 720,
-      "saving_pct": 0.1427541313981595
+      "saving_pct": 0.1427541313981373
     },
     {
       "month": "2019-07",
@@ -1050,14 +1051,14 @@
     {
       "month": "2019-09",
       "actual": 39399779.25,
-      "expected": 39357845.23247209,
+      "expected": 39357845.232472084,
       "hours": 720,
       "saving_pct": -0.10654551152438074
     },
     {
       "month": "2019-10",
       "actual": 42372450.0,
-      "expected": 42370251.71459418,
+      "expected": 42370251.714594185,
       "hours": 745,
       "saving_pct": -0.00518827553970258
     },
@@ -1099,9 +1100,9 @@
     {
       "month": "2020-04",
       "actual": 36521290.0,
-      "expected": 38191294.99220221,
+      "expected": 38191294.9922022,
       "hours": 720,
-      "saving_pct": 4.372737275714755
+      "saving_pct": 4.372737275714734
     },
     {
       "month": "2020-05",
@@ -1134,9 +1135,9 @@
     {
       "month": "2020-09",
       "actual": 38675427.75,
-      "expected": 38743145.38139813,
+      "expected": 38743145.38139812,
       "hours": 720,
-      "saving_pct": 0.17478609630554587
+      "saving_pct": 0.17478609630552366
     },
     {
       "month": "2020-10",
@@ -1148,9 +1149,9 @@
     {
       "month": "2020-11",
       "actual": 42717181.5,
-      "expected": 42967046.30094741,
+      "expected": 42967046.300947405,
       "hours": 720,
-      "saving_pct": 0.5815265941189529
+      "saving_pct": 0.5815265941189307
     },
     {
       "month": "2020-12",
@@ -1218,9 +1219,9 @@
     {
       "month": "2021-09",
       "actual": 39504161.5,
-      "expected": 39482099.24663068,
+      "expected": 39482099.24663069,
       "hours": 720,
-      "saving_pct": -0.05587912950499874
+      "saving_pct": -0.05587912950497653
     },
     {
       "month": "2021-10",
@@ -1281,23 +1282,23 @@
     {
       "month": "2022-06",
       "actual": 37360445.0,
-      "expected": 37375580.54631027,
+      "expected": 37375580.54631026,
       "hours": 720,
-      "saving_pct": 0.04049581595532148
+      "saving_pct": 0.04049581595531038
     },
     {
       "month": "2022-07",
       "actual": 38359781.75,
-      "expected": 38378251.16741659,
+      "expected": 38378251.16741658,
       "hours": 744,
-      "saving_pct": 0.048124697855611576
+      "saving_pct": 0.04812469785558937
     },
     {
       "month": "2022-08",
       "actual": 37448427.0,
-      "expected": 37462848.18883805,
+      "expected": 37462848.18883804,
       "hours": 744,
-      "saving_pct": 0.038494640784803025
+      "saving_pct": 0.03849464078478082
     },
     {
       "month": "2022-09",
@@ -1309,9 +1310,9 @@
     {
       "month": "2022-10",
       "actual": 38545247.0,
-      "expected": 42237130.34127108,
+      "expected": 42237130.34127107,
       "hours": 745,
-      "saving_pct": 8.740847949283237
+      "saving_pct": 8.740847949283214
     },
     {
       "month": "2022-11",
@@ -1323,9 +1324,9 @@
     {
       "month": "2022-12",
       "actual": 40912897.25,
-      "expected": 44751958.62452915,
+      "expected": 44751958.624529146,
       "hours": 744,
-      "saving_pct": 8.578532633038572
+      "saving_pct": 8.57853263303856
     },
     {
       "month": "2023-01",
@@ -1337,30 +1338,30 @@
     {
       "month": "2023-02",
       "actual": 38138075.5,
-      "expected": 42085315.46427401,
+      "expected": 42085315.46427402,
       "hours": 672,
-      "saving_pct": 9.379138354385875
+      "saving_pct": 9.379138354385885
     },
     {
       "month": "2023-03",
       "actual": 40877975.25,
-      "expected": 44811326.8812647,
+      "expected": 44811326.88126471,
       "hours": 743,
-      "saving_pct": 8.777583492867313
+      "saving_pct": 8.777583492867326
     },
     {
       "month": "2023-04",
       "actual": 36156149.75,
-      "expected": 40090138.889840916,
+      "expected": 40090138.88984091,
       "hours": 720,
-      "saving_pct": 9.812859842293564
+      "saving_pct": 9.812859842293554
     },
     {
       "month": "2023-05",
       "actual": 36323273.25,
-      "expected": 39341940.92887175,
+      "expected": 39341940.92887176,
       "hours": 744,
-      "saving_pct": 7.672899728890725
+      "saving_pct": 7.672899728890748
     },
     {
       "month": "2023-06",
@@ -1372,16 +1373,16 @@
     {
       "month": "2023-07",
       "actual": 36253498.0,
-      "expected": 38490998.87355218,
+      "expected": 38490998.87355217,
       "hours": 744,
-      "saving_pct": 5.8130496454577685
+      "saving_pct": 5.813049645457758
     },
     {
       "month": "2023-08",
       "actual": 36307265.0,
-      "expected": 38131766.80347117,
+      "expected": 38131766.80347116,
       "hours": 744,
-      "saving_pct": 4.784729259660436
+      "saving_pct": 4.7847292596604145
     },
     {
       "month": "2023-09",
@@ -1393,9 +1394,9 @@
     {
       "month": "2023-10",
       "actual": 38794876.75,
-      "expected": 42709809.939564966,
+      "expected": 42709809.93956497,
       "hours": 745,
-      "saving_pct": 9.16635591472932
+      "saving_pct": 9.16635591472934
     },
     {
       "month": "2023-11",
@@ -1421,9 +1422,9 @@
     {
       "month": "2024-02",
       "actual": 39956911.0,
-      "expected": 43225404.90209086,
+      "expected": 43225404.902090855,
       "hours": 696,
-      "saving_pct": 7.561511360030693
+      "saving_pct": 7.5615113600306705
     },
     {
       "month": "2024-03",
@@ -1442,16 +1443,16 @@
     {
       "month": "2024-05",
       "actual": 35983512.75,
-      "expected": 39151790.28306061,
+      "expected": 39151790.28306062,
       "hours": 744,
-      "saving_pct": 8.092292868741168
+      "saving_pct": 8.092292868741179
     },
     {
       "month": "2024-06",
       "actual": 35704641.25,
-      "expected": 37775281.0255754,
+      "expected": 37775281.02557541,
       "hours": 720,
-      "saving_pct": 5.481467561216801
+      "saving_pct": 5.481467561216813
     },
     {
       "month": "2024-07",
@@ -1470,9 +1471,9 @@
     {
       "month": "2024-09",
       "actual": 36646160.53,
-      "expected": 39134431.2274327,
+      "expected": 39134431.227432705,
       "hours": 720,
-      "saving_pct": 6.358264626287591
+      "saving_pct": 6.3582646262876015
     },
     {
       "month": "2024-10",
@@ -1491,37 +1492,37 @@
     {
       "month": "2024-12",
       "actual": 41383116.0,
-      "expected": 43700347.5806288,
+      "expected": 43700347.580628805,
       "hours": 744,
-      "saving_pct": 5.302547254008494
+      "saving_pct": 5.3025472540085055
     },
     {
       "month": "2025-01",
       "actual": 44170689.75,
-      "expected": 46727779.79826447,
+      "expected": 46727779.798264466,
       "hours": 744,
-      "saving_pct": 5.472312314653238
+      "saving_pct": 5.472312314653216
     },
     {
       "month": "2025-02",
-      "actual": 40067317.23,
+      "actual": 40067317.230000004,
       "expected": 42430863.68742297,
       "hours": 672,
-      "saving_pct": 5.570347270879516
+      "saving_pct": 5.570347270879495
     },
     {
       "month": "2025-03",
-      "actual": 40563594.77,
+      "actual": 40563594.769999996,
       "expected": 43553108.99596108,
       "hours": 743,
-      "saving_pct": 6.8640661823667015
+      "saving_pct": 6.864066182366724
     },
     {
       "month": "2025-04",
       "actual": 36341729.39,
-      "expected": 39342030.205506146,
+      "expected": 39342030.20550614,
       "hours": 720,
-      "saving_pct": 7.626197224276021
+      "saving_pct": 7.6261972242760105
     },
     {
       "month": "2025-05",
@@ -1553,17 +1554,17 @@
     },
     {
       "month": "2025-09",
-      "actual": 36471748.95,
+      "actual": 36471748.949999996,
       "expected": 39401874.49597032,
       "hours": 720,
-      "saving_pct": 7.436513068102856
+      "saving_pct": 7.4365130681028795
     },
     {
       "month": "2025-10",
       "actual": 40475526.45,
-      "expected": 43542748.13114349,
+      "expected": 43542748.131143495,
       "hours": 745,
-      "saving_pct": 7.044161916251879
+      "saving_pct": 7.044161916251889
     },
     {
       "month": "2025-11",
@@ -1575,58 +1576,58 @@
     {
       "month": "2025-12",
       "actual": 42304479.65,
-      "expected": 43612329.39620628,
+      "expected": 43612329.39620629,
       "hours": 744,
-      "saving_pct": 2.9988073655154213
+      "saving_pct": 2.9988073655154435
     },
     {
       "month": "2026-01",
       "actual": 46291746.62,
-      "expected": 46371836.91935835,
+      "expected": 46371836.91935834,
       "hours": 744,
-      "saving_pct": 0.17271323432287433
+      "saving_pct": 0.17271323432286323
     },
     {
       "month": "2026-02",
-      "actual": 40842544.58,
+      "actual": 40842544.580000006,
       "expected": 42279221.503373556,
       "hours": 672,
-      "saving_pct": 3.398068536477006
+      "saving_pct": 3.3980685364769836
     },
     {
       "month": "2026-03",
-      "actual": 40563325.42,
+      "actual": 40563325.419999994,
       "expected": 43851288.020090535,
       "hours": 743,
-      "saving_pct": 7.497984092472154
+      "saving_pct": 7.497984092472166
     },
     {
       "month": "2026-04",
-      "actual": 36814310.31,
+      "actual": 36814310.309999995,
       "expected": 39643684.84905531,
       "hours": 720,
-      "saving_pct": 7.137011985208364
+      "saving_pct": 7.137011985208385
     },
     {
       "month": "2026-05",
-      "actual": 35640342.56,
+      "actual": 35640342.559999995,
       "expected": 38967340.45491436,
       "hours": 744,
-      "saving_pct": 8.537913688935816
+      "saving_pct": 8.537913688935838
     },
     {
       "month": "2026-06",
-      "actual": 36189502.91,
-      "expected": 38470754.60812845,
+      "actual": 36189502.910000004,
+      "expected": 38470730.14670531,
       "hours": 720,
-      "saving_pct": 5.929833509547144
+      "saving_pct": 5.929773695497875
     },
     {
       "month": "2026-07",
-      "actual": 37495153.31,
-      "expected": 38833027.14280414,
+      "actual": 37495153.309999995,
+      "expected": 38823950.01300597,
       "hours": 744,
-      "saving_pct": 3.4451958326201404
+      "saving_pct": 3.4226210948675506
     },
     {
       "month": "2026-08",
@@ -1644,10 +1645,17 @@
     },
     {
       "month": "2026-10",
-      "actual": 12089649.97,
-      "expected": 12882209.667987939,
-      "hours": 228,
-      "saving_pct": 6.152358317513141
+      "actual": 39997139.74,
+      "expected": 43321551.90646092,
+      "hours": 745,
+      "saving_pct": 7.673806731667698
+    },
+    {
+      "month": "2026-11",
+      "actual": 126100.86000000002,
+      "expected": 135302.87674489836,
+      "hours": 3,
+      "saving_pct": 6.801050329659974
     }
   ],
   "profile_2022_23": {
@@ -1878,7 +1886,7 @@
         "industry_change_pct": -19.75
       },
       "2026-07": {
-        "saving_pct": 3.45,
+        "saving_pct": 3.42,
         "industry_change_pct": -20.4
       },
       "2026-08": {
@@ -1920,10 +1928,10 @@
     "load": {
       "gaps_total_hours": 0,
       "first": "2014-12-31 23:00:00+00:00",
-      "last": "2026-10-10 09:00:00+00:00",
-      "hours": 103211,
+      "last": "2026-11-01 01:00:00+00:00",
+      "hours": 103731,
       "days_23h": 12,
-      "days_25h": 11
+      "days_25h": 12
     },
     "opsd": {
       "overlap_hours": 50400,
@@ -1943,6 +1951,412 @@
         "2020": 1.0235
       },
       "hours_differing_more_than_10pct": 136
+    }
+  },
+  "official_check": {
+    "rows": [
+      {
+        "year": 2021,
+        "official_twh": 504.5,
+        "official_change_pct": null,
+        "ours_twh": 504.6,
+        "ours_change_pct": 3.97,
+        "diff_pct": 0.02,
+        "source": "bnetza_2022"
+      },
+      {
+        "year": 2022,
+        "official_twh": 484.2,
+        "official_change_pct": -4.0,
+        "ours_twh": 482.3,
+        "ours_change_pct": -4.42,
+        "diff_pct": -0.39,
+        "source": "bnetza_2022"
+      },
+      {
+        "year": 2023,
+        "official_twh": 456.8,
+        "official_change_pct": -5.3,
+        "ours_twh": 458.4,
+        "ours_change_pct": -4.96,
+        "diff_pct": 0.35,
+        "source": "bnetza_2023"
+      }
+    ],
+    "note": "Official figures as first published each January; SMARD values are revised later, so differences under about 1% are expected.",
+    "sources": [
+      {
+        "name": "Bundesnetzagentur, Strommarkt 2022 (4 Jan 2023)",
+        "url": "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2023/20230104_smard.html"
+      },
+      {
+        "name": "Bundesnetzagentur, Strommarkt 2023 (3 Jan 2024)",
+        "url": "https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2024/20240103_SMARD.html"
+      }
+    ],
+    "max_abs_diff_pct": 0.39,
+    "matches": true
+  },
+  "regions": {
+    "50Hertz": {
+      "area_name": "East and Hamburg",
+      "headline": {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 52.887088,
+        "expected_twh": 57.55774606786038,
+        "saving_twh": 4.67065806786038,
+        "saving_pct": 8.11473413561693,
+        "low_pct": 3.0230408382208585,
+        "high_pct": 12.69842933545572,
+        "typical_error_pct": 2.8234901149289273
+      },
+      "winters": [
+        {
+          "winter": "2021/22",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.0,
+          "actual_twh": 58.3262985,
+          "expected_twh": 58.28574763314499,
+          "saving_twh": -0.040550866855010394,
+          "saving_pct": -0.06957252587758145,
+          "low_pct": -5.614787712557523,
+          "high_pct": 4.92239669706378,
+          "typical_error_pct": 2.8234901149289273
+        },
+        {
+          "winter": "2022/23",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.08,
+          "actual_twh": 52.887088,
+          "expected_twh": 57.55774606786038,
+          "saving_twh": 4.67065806786038,
+          "saving_pct": 8.11473413561693,
+          "low_pct": 3.0230408382208585,
+          "high_pct": 12.69842933545572,
+          "typical_error_pct": 2.8234901149289273
+        },
+        {
+          "winter": "2023/24",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4392,
+          "years_ahead": 1.08,
+          "actual_twh": 53.56532375,
+          "expected_twh": 57.86336735411983,
+          "saving_twh": 4.2980436041198296,
+          "saving_pct": 7.427918216055584,
+          "low_pct": 2.2981659765508144,
+          "high_pct": 12.045875218415713,
+          "typical_error_pct": 2.8234901149289273
+        },
+        {
+          "winter": "2024/25",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 2.08,
+          "actual_twh": 54.048526380000006,
+          "expected_twh": 57.72097207432646,
+          "saving_twh": 3.6724456943264605,
+          "saving_pct": 6.362411377267707,
+          "low_pct": 1.1736155688256367,
+          "high_pct": 11.033521173347294,
+          "typical_error_pct": 2.8234901149289273
+        },
+        {
+          "winter": "2025/26",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 3.08,
+          "actual_twh": 55.65308645999999,
+          "expected_twh": 57.87356332263443,
+          "saving_twh": 2.220476862634435,
+          "saving_pct": 3.83677232773052,
+          "low_pct": -1.4919782307925011,
+          "high_pct": 8.633873592398512,
+          "typical_error_pct": 2.8234901149289273
+        }
+      ],
+      "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 8.1% less electricity than the weather and calendar predicted (90% range 3.0% to 12.7%), about 4.7 TWh. By 2025/26 the gap was 3.8% and its range includes zero, so demand may have come back. Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 8.2%."
+    },
+    "TenneT": {
+      "area_name": "North, Hesse and Bavaria",
+      "headline": {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 73.5871195,
+        "expected_twh": 78.71338787931472,
+        "saving_twh": 5.126268379314721,
+        "saving_pct": 6.512574947446604,
+        "low_pct": 5.34838735325086,
+        "high_pct": 7.64847216049287,
+        "typical_error_pct": 0.6614355717170266
+      },
+      "winters": [
+        {
+          "winter": "2021/22",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.0,
+          "actual_twh": 78.89025675,
+          "expected_twh": 78.89211281128917,
+          "saving_twh": 0.0018560612891614437,
+          "saving_pct": 0.0023526576016563716,
+          "low_pct": -1.036252459465059,
+          "high_pct": 1.0198222940062784,
+          "typical_error_pct": 0.5527971898574884
+        },
+        {
+          "winter": "2022/23",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.08,
+          "actual_twh": 73.5871195,
+          "expected_twh": 78.71338787931472,
+          "saving_twh": 5.126268379314721,
+          "saving_pct": 6.512574947446604,
+          "low_pct": 5.34838735325086,
+          "high_pct": 7.64847216049287,
+          "typical_error_pct": 0.6614355717170266
+        },
+        {
+          "winter": "2023/24",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4392,
+          "years_ahead": 1.08,
+          "actual_twh": 74.18673375,
+          "expected_twh": 78.8135661169534,
+          "saving_twh": 4.626832366953403,
+          "saving_pct": 5.87060400247279,
+          "low_pct": 3.300776599914035,
+          "high_pct": 8.30737859903522,
+          "typical_error_pct": 1.4291360274498721
+        },
+        {
+          "winter": "2024/25",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 2.08,
+          "actual_twh": 74.18179286,
+          "expected_twh": 78.69889205695536,
+          "saving_twh": 4.517099196955353,
+          "saving_pct": 5.739724002323021,
+          "low_pct": 2.266755785901853,
+          "high_pct": 8.974337122893683,
+          "typical_error_pct": 1.9109577783034306
+        },
+        {
+          "winter": "2025/26",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 3.08,
+          "actual_twh": 74.58545425999999,
+          "expected_twh": 78.68932446537177,
+          "saving_twh": 4.103870205371782,
+          "saving_pct": 5.215282038896829,
+          "low_pct": 0.9941946331497808,
+          "high_pct": 9.09115748662811,
+          "typical_error_pct": 2.292747783747911
+        }
+      ],
+      "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 6.5% less electricity than the weather and calendar predicted (90% range 5.3% to 7.6%), about 5.1 TWh. Demand has NOT fully come back: in 2025/26 it was still 5.2% below the pre-crisis pattern (range 1.0% to 9.1%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 6.7%."
+    },
+    "Amprion": {
+      "area_name": "West",
+      "headline": {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 83.53398675,
+        "expected_twh": 95.13124262089437,
+        "saving_twh": 11.597255870894372,
+        "saving_pct": 12.19079615842964,
+        "low_pct": 7.468298256712669,
+        "high_pct": 16.454661188494235,
+        "typical_error_pct": 2.7445669064627083
+      },
+      "winters": [
+        {
+          "winter": "2021/22",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.0,
+          "actual_twh": 94.93914525,
+          "expected_twh": 94.91838030676941,
+          "saving_twh": -0.020764943230599166,
+          "saving_pct": -0.02187663038863974,
+          "low_pct": -5.401188614187591,
+          "high_pct": 4.835014940741256,
+          "typical_error_pct": 2.7445669064627083
+        },
+        {
+          "winter": "2022/23",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.08,
+          "actual_twh": 83.53398675,
+          "expected_twh": 95.13124262089437,
+          "saving_twh": 11.597255870894372,
+          "saving_pct": 12.19079615842964,
+          "low_pct": 7.468298256712669,
+          "high_pct": 16.454661188494235,
+          "typical_error_pct": 2.7445669064627083
+        },
+        {
+          "winter": "2023/24",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4392,
+          "years_ahead": 1.08,
+          "actual_twh": 87.3222465,
+          "expected_twh": 95.06659561947984,
+          "saving_twh": 7.744349119479835,
+          "saving_pct": 8.146235877087582,
+          "low_pct": 3.206216045932919,
+          "high_pct": 12.606497849512778,
+          "typical_error_pct": 2.7445669064627083
+        },
+        {
+          "winter": "2024/25",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 2.08,
+          "actual_twh": 87.552416,
+          "expected_twh": 94.63343129789901,
+          "saving_twh": 7.0810152978990075,
+          "saving_pct": 7.482572702672585,
+          "low_pct": 2.50686016720556,
+          "high_pct": 11.975061025836997,
+          "typical_error_pct": 2.7445669064627083
+        },
+        {
+          "winter": "2025/26",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 3.08,
+          "actual_twh": 91.16732186,
+          "expected_twh": 94.64532002734778,
+          "saving_twh": 3.477998167347774,
+          "saving_pct": 3.67477035984749,
+          "low_pct": -1.5057309424848953,
+          "high_pct": 8.352159064072906,
+          "typical_error_pct": 2.7445669064627083
+        }
+      ],
+      "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 12.2% less electricity than the weather and calendar predicted (90% range 7.5% to 16.5%), about 11.6 TWh. By 2025/26 the gap was 3.7% and its range includes zero, so demand may have come back. Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 13.0%."
+    },
+    "TransnetBW": {
+      "area_name": "Baden-W\u00fcrttemberg",
+      "headline": {
+        "winter": "2022/23",
+        "complete": true,
+        "coverage": 1.0,
+        "hours": 4368,
+        "years_ahead": 0.08,
+        "actual_twh": 30.394389,
+        "expected_twh": 32.17091777555801,
+        "saving_twh": 1.7765287755580097,
+        "saving_pct": 5.522157583293241,
+        "low_pct": 1.3022229023441745,
+        "high_pct": 9.396032321716874,
+        "typical_error_pct": 2.2992752014476743
+      },
+      "winters": [
+        {
+          "winter": "2021/22",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.0,
+          "actual_twh": 32.39041075,
+          "expected_twh": 32.39195690933831,
+          "saving_twh": 0.001546159338310361,
+          "saving_pct": 0.004773281659509188,
+          "low_pct": -4.461600149021949,
+          "high_pct": 4.104877314926714,
+          "typical_error_pct": 2.2992752014476743
+        },
+        {
+          "winter": "2022/23",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 0.08,
+          "actual_twh": 30.394389,
+          "expected_twh": 32.17091777555801,
+          "saving_twh": 1.7765287755580097,
+          "saving_pct": 5.522157583293241,
+          "low_pct": 1.3022229023441745,
+          "high_pct": 9.396032321716874,
+          "typical_error_pct": 2.2992752014476743
+        },
+        {
+          "winter": "2023/24",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4392,
+          "years_ahead": 1.08,
+          "actual_twh": 30.0562365,
+          "expected_twh": 32.08951623831164,
+          "saving_twh": 2.033279738311637,
+          "saving_pct": 6.336274199995906,
+          "low_pct": 2.1527027430291112,
+          "high_pct": 10.176767716802882,
+          "typical_error_pct": 2.2992752014476743
+        },
+        {
+          "winter": "2024/25",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 2.08,
+          "actual_twh": 30.31646875,
+          "expected_twh": 32.274637589040445,
+          "saving_twh": 1.958168839040447,
+          "saving_pct": 6.067206281211302,
+          "low_pct": 1.8716166725491923,
+          "high_pct": 9.918732389225248,
+          "typical_error_pct": 2.2992752014476743
+        },
+        {
+          "winter": "2025/26",
+          "complete": true,
+          "coverage": 1.0,
+          "hours": 4368,
+          "years_ahead": 3.08,
+          "actual_twh": 30.542081950000004,
+          "expected_twh": 32.2554214989142,
+          "saving_twh": 1.7133395489141978,
+          "saving_pct": 5.311787815179758,
+          "low_pct": 1.0824567862873335,
+          "high_pct": 9.194288344683887,
+          "typical_error_pct": 2.2992752014476743
+        }
+      ],
+      "verdict": "In winter 2022/23 (October to March), Germany's grid delivered 5.5% less electricity than the weather and calendar predicted (90% range 1.3% to 9.4%), about 1.8 TWh. Demand has NOT fully come back: in 2025/26 it was still 5.3% below the pre-crisis pattern (range 1.1% to 9.2%). Counting only dark hours (when rooftop solar can't hide demand), the 2022/23 saving was 5.9%."
     }
   }
 }

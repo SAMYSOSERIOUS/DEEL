@@ -1,6 +1,6 @@
 # Did Germany really save electricity in the 2022 energy crisis?
 
-*Generated 2026-10-10T11:29:36+00:00 from data up to 2026-10-10 09:00:00+00:00.*
+*Generated 2026-11-01T02:50:00+00:00 from data up to 2026-11-01 01:00:00+00:00.*
 
 ## The short answer
 
@@ -21,6 +21,19 @@ In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electri
 ![Savings by winter](figures/11_savings_by_winter.png)
 
 ![Winter 2022/23 day by day](figures/12_winter_2022_23.png)
+
+## The four grid regions
+
+The same analysis, run separately for each transmission grid region with its own weather stations and its own state holidays. Each is measured (SMARD), not estimated.
+
+| Region | Covers | 2021/22 | 2022/23 | 2023/24 | 2024/25 | 2025/26 |
+|---|---|---|---|---|---|---|
+| 50Hertz | East and Hamburg | -0.1% (-5.6 to 4.9) | 8.1% (3.0 to 12.7) | 7.4% (2.3 to 12.0) | 6.4% (1.2 to 11.0) | 3.8% (-1.5 to 8.6) |
+| TenneT | North, Hesse and Bavaria | 0.0% (-1.0 to 1.0) | 6.5% (5.3 to 7.6) | 5.9% (3.3 to 8.3) | 5.7% (2.3 to 9.0) | 5.2% (1.0 to 9.1) |
+| Amprion | West | -0.0% (-5.4 to 4.8) | 12.2% (7.5 to 16.5) | 8.1% (3.2 to 12.6) | 7.5% (2.5 to 12.0) | 3.7% (-1.5 to 8.4) |
+| TransnetBW | Baden-Württemberg | 0.0% (-4.5 to 4.1) | 5.5% (1.3 to 9.4) | 6.3% (2.2 to 10.2) | 6.1% (1.9 to 9.9) | 5.3% (1.1 to 9.2) |
+
+States and cities are not measured separately. On the website they are shown as estimates: a state's demand is its grid region's demand times the state's share of the region's people, so its *percentage* saving is its region's. Grid regions don't follow state borders exactly; each state is counted in the region that covers most of it. Towns and villages have no public data.
 
 ## Step 4: does the method work? Tests on normal winters
 
@@ -114,9 +127,23 @@ Energy-hungry industries (Paper, Chemicals, Glass, cement, ceramics, Basic metal
    look smaller. The *cutoff* views show how much this changes the answer.
 
 
+## Check against the official figures
+
+Before any weather adjustment, our yearly totals should match what the Bundesnetzagentur published from the same SMARD data.
+
+| Year | Official grid load | Official change | Our total | Our change | Difference |
+|---|---|---|---|---|---|
+| 2021 | 504.5 TWh | – | 504.6 TWh | +4.0% | +0.02% |
+| 2022 | 484.2 TWh | -4.0% | 482.3 TWh | -4.4% | -0.39% |
+| 2023 | 456.8 TWh | -5.3% | 458.4 TWh | -5.0% | +0.35% |
+
+Our totals match the official ones closely, so the download is complete and correct. Official figures as first published each January; SMARD values are revised later, so differences under about 1% are expected. Sources: [Bundesnetzagentur, Strommarkt 2022 (4 Jan 2023)](https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2023/20230104_smard.html), [Bundesnetzagentur, Strommarkt 2023 (3 Jan 2024)](https://www.bundesnetzagentur.de/SharedDocs/Pressemitteilungen/DE/2024/20240103_SMARD.html).
+
+For context: these raw yearly drops (about 4-5% a year) mix weather, the economy and real saving together. The weather-adjusted winter figures above separate them.
+
 ## Data checks
 
-- Demand data: 103211 hours from 2014-12-31 23:00:00+00:00 to 2026-10-10 09:00:00+00:00; 12 23-hour days and 11 25-hour days (clock changes); 0 missing hours filled (no gap longer than 2 hours allowed).
+- Demand data: 103731 hours from 2014-12-31 23:00:00+00:00 to 2026-11-01 01:00:00+00:00; 12 23-hour days and 12 25-hour days (clock changes); 0 missing hours filled (no gap longer than 2 hours allowed).
 - Cross-check with Open Power System Data (2015-01-01 to 2020-09-30): daily correlation 0.9883, SMARD is on average 1.028× OPSD (different definition of 'load', steady over the years: 2015: 1.0469, 2016: 1.0348, 2017: 1.0298, 2018: 1.0207, 2019: 1.0141, 2020: 1.0235).
 
 ## Exploring the data (step 2)

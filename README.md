@@ -13,13 +13,15 @@ In winter 2022/23 (October to March), Germany's grid delivered 8.8% less electri
 
 | Winter (Oct-Mar) | Less than expected | 90% range | Saved |
 |---|---|---|---|
-| 2021/22 | 0.0% | -2.8% to 2.7% | -0.0 TWh |
+| 2021/22 | -0.0% | -2.8% to 2.7% | -0.0 TWh |
 | 2022/23 | 8.8% | 6.2% to 11.2% | 23.1 TWh |
 | 2023/24 | 7.0% | 4.3% to 9.5% | 18.4 TWh |
 | 2024/25 | 6.5% | 3.8% to 9.0% | 17.1 TWh |
 | 2025/26 | 4.2% | 1.5% to 6.8% | 11.2 TWh |
 
-*Updated automatically on 2026-10-10. Full report: [reports/REPORT.md](reports/REPORT.md)*
+Raw yearly totals match the Bundesnetzagentur's published figures to within 0.39%.
+
+*Updated automatically on 2026-11-01. Full report: [reports/REPORT.md](reports/REPORT.md)*
 <!-- HEADLINE:END -->
 
 In winter 2022/23 Germany was asked to save energy, and electricity use did fall. But was that a real
