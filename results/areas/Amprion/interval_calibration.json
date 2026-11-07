@@ -1,9 +1,9 @@
 {
-  "scale": 2.35,
-  "days_used": 27,
-  "hours_used": 629,
-  "coverage_before": 53.3,
-  "coverage_after": 90.9,
+  "scale": 2.4,
+  "days_used": 28,
+  "hours_used": 653,
+  "coverage_before": 52.2,
+  "coverage_after": 90.2,
   "target": 90,
-  "computed_utc": "2026-11-06T03:21:50+00:00"
+  "computed_utc": "2026-11-07T03:20:19+00:00"
 }
