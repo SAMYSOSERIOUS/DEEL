@@ -1,5 +1,5 @@
 {
-  "started_utc": "2026-11-19T03:21:33+00:00",
+  "started_utc": "2026-11-20T03:21:34+00:00",
   "download": {
     "smard": "ok",
     "smard_50Hertz": "ok",
@@ -9,5 +9,36 @@
     "energy_charts_filled_hours": 0,
     "dwd": "ok"
   },
-  "error": "ValueError: Data check failed:\n  - 1 gaps longer than 2 h; longest 6 h starting 2026-11-18 08:00:00+00:00"
+  "data_check": "passed",
+  "range_scale": 1.45,
+  "forecast_for": "2026-11-21",
+  "forecast_total_gwh": 1309.4,
+  "days_scored": 70,
+  "areas": {
+    "50Hertz": {
+      "range_scale": 1.35,
+      "forecast_for": "2026-11-21",
+      "forecast_total_gwh": 275.0,
+      "days_scored": 40
+    },
+    "TenneT": {
+      "range_scale": 1.9,
+      "forecast_for": "2026-11-21",
+      "forecast_total_gwh": 388.6,
+      "days_scored": 40
+    },
+    "Amprion": {
+      "range_scale": 2.2,
+      "forecast_for": "2026-11-21",
+      "forecast_total_gwh": 475.5,
+      "days_scored": 40
+    },
+    "TransnetBW": {
+      "range_scale": 2.0,
+      "forecast_for": "2026-11-21",
+      "forecast_total_gwh": 153.3,
+      "days_scored": 40
+    }
+  },
+  "finished_utc": "2026-11-20T03:22:26+00:00"
 }
